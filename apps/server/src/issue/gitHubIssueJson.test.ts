@@ -2,11 +2,14 @@ import { assert, describe, it } from "@effect/vitest";
 import * as Result from "effect/Result";
 
 import {
+  ISSUE_SEARCH_MAX_ROWS,
   buildIssueSearchQuery,
   decodeIssueActivityJson,
   decodeIssueDetailJson,
   decodeIssueListJson,
+  decodeIssuePermissionsJson,
   decodeIssueSearchJson,
+  issueSearchGraphQlQuery,
 } from "./gitHubIssueJson.ts";
 
 describe("buildIssueSearchQuery", () => {
@@ -64,6 +67,11 @@ describe("buildIssueSearchQuery", () => {
       query,
       'is:issue is:open author:"kev" sort:updated-desc repo:fusebox/t3code',
     );
+  });
+
+  it("clamps the search page size to GitHub's ceiling", () => {
+    assert.include(issueSearchGraphQlQuery(500), `first: ${ISSUE_SEARCH_MAX_ROWS},`);
+    assert.include(issueSearchGraphQlQuery(0), "first: 1,");
   });
 
   it("refuses a repository selector GitHub cannot address", () => {
@@ -193,6 +201,21 @@ describe("decoders", () => {
     assert.strictEqual(decoded.success?.commentCount, 60);
     assert.isTrue(decoded.success?.hasNextPage);
     assert.strictEqual(decoded.success?.endCursor, "abc");
+  });
+
+  it("decodes viewer permissions with locked/canUpdate defaults, null for a missing issue", () => {
+    const decoded = decodeIssuePermissionsJson(
+      JSON.stringify({ data: { repository: { issue: { viewerCanUpdate: true } } } }),
+    );
+    assert.isTrue(Result.isSuccess(decoded));
+    if (!Result.isSuccess(decoded)) return;
+    // `locked` absent defaults to false, so commenting stays open rather than refused.
+    assert.deepStrictEqual(decoded.success, { canUpdate: true, locked: false });
+
+    const missing = decodeIssuePermissionsJson(JSON.stringify({ data: { repository: null } }));
+    assert.isTrue(Result.isSuccess(missing));
+    if (!Result.isSuccess(missing)) return;
+    assert.isNull(missing.success);
   });
 
   it("decodes `gh issue list` rows and skips a malformed one", () => {

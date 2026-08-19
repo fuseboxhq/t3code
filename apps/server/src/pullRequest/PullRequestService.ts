@@ -1831,15 +1831,22 @@ export const make = Effect.gen(function* () {
   // scope re-entering `refEpochs` after eviction can never mint a key an old entry still has.
   let epochCounter = 0;
   let listingsEpoch = 0;
+  // Every scope absent from the map reads this floor. Evicting a scope raises it past the
+  // evicted epoch, so the scope can never fall back onto an epoch a live cache entry still
+  // holds — dropping to a plain 0 would resurrect entries keyed before its mutations.
+  let refEpochFloor = 0;
   const refEpochs = new Map<string, number>();
   const REF_EPOCH_CAPACITY = 2_048;
   const refScope = (ref: PullRequestRef) => `${ref.projectId} ${ref.repository} ${ref.number}`;
-  const refEpoch = (ref: PullRequestRef) => refEpochs.get(refScope(ref)) ?? 0;
+  const refEpoch = (ref: PullRequestRef) => refEpochs.get(refScope(ref)) ?? refEpochFloor;
   const bumpRefEpoch = (ref: PullRequestRef) => {
     const scope = refScope(ref);
     if (!refEpochs.has(scope) && refEpochs.size >= REF_EPOCH_CAPACITY) {
       const oldest = refEpochs.keys().next().value;
-      if (oldest !== undefined) refEpochs.delete(oldest);
+      if (oldest !== undefined) {
+        refEpochs.delete(oldest);
+        refEpochFloor = ++epochCounter;
+      }
     }
     refEpochs.set(scope, ++epochCounter);
   };

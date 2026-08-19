@@ -5,6 +5,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
+import * as Semaphore from "effect/Semaphore";
 import {
   IssueOperationError,
   IssueUnavailableError,
@@ -510,19 +511,25 @@ export const make = Effect.gen(function* () {
       }
 
       const limit = input.limit ?? DEFAULT_LIST_LIMIT;
+      // One budget across the batch reads and their nested fallbacks: each read is a `gh`
+      // process, and two fan-out levels at the same concurrency would multiply — worst on the
+      // degraded paths, which run exactly when a host is already slow or rate-limited.
+      const readSlots = yield* Semaphore.make(REPOSITORY_CONCURRENCY);
 
       /** The fallback for a repository the host's search index answers with silence. */
       const readRepositoryAlone = (project: SupportedProject): Effect.Effect<ListBatch> =>
-        project.api
-          .listIssues({
-            cwd: project.project.workspaceRoot,
-            repository: project.repository,
-            host: project.host,
-            state: input.state,
-            viewer: viewers[project.host]!,
-            limit,
-            filters: input.filters,
-          })
+        readSlots
+          .withPermits(1)(
+            project.api.listIssues({
+              cwd: project.project.workspaceRoot,
+              repository: project.repository,
+              host: project.host,
+              state: input.state,
+              viewer: viewers[project.host]!,
+              limit,
+              filters: input.filters,
+            }),
+          )
           .pipe(
             Effect.map(
               (page): ListBatch => ({
@@ -536,20 +543,22 @@ export const make = Effect.gen(function* () {
                 nextCursor: null,
               }),
             ),
-            // One unreachable repository must not blank the page.
-            Effect.orElseSucceed(
-              (): ListBatch => ({
-                key: repositoryKey(project.host, project.repository),
-                entries: [],
-                errors: [
-                  {
-                    projectId: project.project.id,
-                    projectTitle: project.project.title,
-                    message: `${project.repository} could not be read.`,
-                  },
-                ],
-                nextCursor: null,
-              }),
+            // One unreachable repository must not blank the page, and its error row carries
+            // the actionable reason rather than a generic sentence.
+            Effect.catch(
+              (error): Effect.Effect<ListBatch> =>
+                Effect.succeed({
+                  key: repositoryKey(project.host, project.repository),
+                  entries: [],
+                  errors: [
+                    {
+                      projectId: project.project.id,
+                      projectTitle: project.project.title,
+                      message: `${project.repository} could not be read: ${providerDetail(error)}`,
+                    },
+                  ],
+                  nextCursor: null,
+                }),
             ),
           );
 
@@ -560,18 +569,20 @@ export const make = Effect.gen(function* () {
         const byRepository = new Map(
           batch.members.map((member) => [member.repository.toLowerCase(), member]),
         );
-        return first.api
-          .listIssuesAcross({
-            cwd: first.project.workspaceRoot,
-            host: batch.host,
-            repositories: batch.members.map((member) => member.repository),
-            state: input.state,
-            viewer,
-            limit,
-            query: input.query,
-            filters: input.filters,
-            ...(cursor === undefined ? {} : { cursor: cursor.after }),
-          })
+        return readSlots
+          .withPermits(1)(
+            first.api.listIssuesAcross({
+              cwd: first.project.workspaceRoot,
+              host: batch.host,
+              repositories: batch.members.map((member) => member.repository),
+              state: input.state,
+              viewer,
+              limit,
+              query: input.query,
+              filters: input.filters,
+              ...(cursor === undefined ? {} : { cursor: cursor.after }),
+            }),
+          )
           .pipe(
             Effect.flatMap((page) => {
               const rows = new Map<string, ProviderBatchedIssue[]>();
@@ -603,21 +614,42 @@ export const make = Effect.gen(function* () {
                 cursor !== undefined || (input.query?.trim().length ?? 0) > 0
                   ? []
                   : batch.members.filter((member) => !rows.has(member.repository.toLowerCase()));
+              // Unbounded because `readSlots` is the bound; the same holds below.
               return Effect.forEach(silent, readRepositoryAlone, {
-                concurrency: REPOSITORY_CONCURRENCY,
+                concurrency: "unbounded",
               }).pipe(Effect.map((alone) => [searched, ...alone]));
             }),
-            // A failed search degrades to a read per repository rather than a blank host.
-            Effect.catch(() =>
-              Effect.forEach(batch.members, readRepositoryAlone, {
-                concurrency: REPOSITORY_CONCURRENCY,
-              }),
+            Effect.catch((error) =>
+              // An unusable or paused host would refuse every per-repository read the same
+              // way, so those errors skip the fallback and carry their actionable reason into
+              // the rows instead of N copies of a generic failure. An ordinary failure still
+              // degrades to a read per repository rather than a blank host.
+              error.reason !== "failed"
+                ? Effect.succeed(
+                    batch.members.map(
+                      (member): ListBatch => ({
+                        key: repositoryKey(member.host, member.repository),
+                        entries: [],
+                        errors: [
+                          {
+                            projectId: member.project.id,
+                            projectTitle: member.project.title,
+                            message: `${member.repository} could not be read: ${providerDetail(error)}`,
+                          },
+                        ],
+                        nextCursor: null,
+                      }),
+                    ),
+                  )
+                : Effect.forEach(batch.members, readRepositoryAlone, {
+                    concurrency: "unbounded",
+                  }),
             ),
           );
       };
 
       const results = (yield* Effect.forEach(readable, readBatch, {
-        concurrency: REPOSITORY_CONCURRENCY,
+        concurrency: "unbounded",
       })).flat();
 
       const nextCursors: Record<string, string> = {};
@@ -811,15 +843,22 @@ export const make = Effect.gen(function* () {
   // re-entering after eviction can never mint a key an old entry still has.
   let epochCounter = 0;
   let listingsEpoch = 0;
+  // Every scope absent from the map reads this floor. Evicting a scope raises it past the
+  // evicted epoch, so the scope can never fall back onto an epoch a live cache entry still
+  // holds — dropping to a plain 0 would resurrect entries keyed before its mutations.
+  let refEpochFloor = 0;
   const refEpochs = new Map<string, number>();
   const REF_EPOCH_CAPACITY = 2_048;
   const refScope = (ref: IssueRef) => `${ref.projectId} ${ref.repository} ${ref.number}`;
-  const refEpoch = (ref: IssueRef) => refEpochs.get(refScope(ref)) ?? 0;
+  const refEpoch = (ref: IssueRef) => refEpochs.get(refScope(ref)) ?? refEpochFloor;
   const bumpRefEpoch = (ref: IssueRef) => {
     const scope = refScope(ref);
     if (!refEpochs.has(scope) && refEpochs.size >= REF_EPOCH_CAPACITY) {
       const oldest = refEpochs.keys().next().value;
-      if (oldest !== undefined) refEpochs.delete(oldest);
+      if (oldest !== undefined) {
+        refEpochs.delete(oldest);
+        refEpochFloor = ++epochCounter;
+      }
     }
     refEpochs.set(scope, ++epochCounter);
   };

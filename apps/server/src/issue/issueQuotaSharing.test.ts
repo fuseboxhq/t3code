@@ -7,6 +7,11 @@ import * as GitHubGraphQlBudget from "../sourceControl/githubGraphQlBudget.ts";
 import * as GitHubPullRequestCli from "../pullRequest/GitHubPullRequestCli.ts";
 import * as GitHubIssueCli from "./GitHubIssueCli.ts";
 
+// A fixed instant, deliberately: `it.effect` runs under the TestClock, whose now is epoch 0,
+// and the budget compares resetAt against that clock — so this window can never lapse out
+// from under the test, whatever wall-clock date it runs on.
+const RESET_AT = "2027-01-01T00:00:00Z";
+
 /**
  * The issue feed and the pull-request feature draw on one GitHub GraphQL point budget. This
  * proves the sharing is real: an issue search that observes a nearly spent quota pauses the
@@ -20,7 +25,7 @@ it.effect("an issue read's observed quota pauses the pull-request feature's next
     const depletedSearchAnswer = `{
       "data": {
         "search": { "pageInfo": { "hasNextPage": false, "endCursor": null }, "nodes": [] },
-        "rateLimit": { "cost": 1, "limit": 5000, "remaining": 400, "resetAt": "2027-01-01T00:00:00Z" }
+        "rateLimit": { "cost": 1, "limit": 5000, "remaining": 400, "resetAt": "${RESET_AT}" }
       }
     }`;
     const budget = yield* GitHubGraphQlBudget.make;

@@ -320,6 +320,38 @@ it.effect("a comment invalidates the listing, the detail, and the activity for e
   }),
 );
 
+it.effect("refuses a comment the host's own permission read does not allow", () =>
+  Effect.gen(function* () {
+    let commentWrites = 0;
+    const service = yield* makeService({
+      projects: [
+        project({ id: "p1", title: "t3code", workspaceRoot: "/a", repository: "fusebox/t3code" }),
+      ],
+      provider: fakeProvider({
+        getViewerPermissions: () =>
+          Effect.succeed({ actions: ["close", "reopen"], comment: false }),
+        comment: () => {
+          commentWrites += 1;
+          return Effect.void;
+        },
+      }),
+    });
+
+    const error = yield* service
+      .comment({
+        projectId: "p1" as ProjectId,
+        repository: "fusebox/t3code",
+        number: 1,
+        body: "On it.",
+      })
+      .pipe(Effect.flip);
+
+    if (error._tag !== "IssueOperationError") return assert.fail(`unexpected ${error._tag}`);
+    assert.include(error.detail, "does not accept comments");
+    assert.strictEqual(commentWrites, 0);
+  }),
+);
+
 it.effect("refuses a mutation the host's own permission read does not allow", () =>
   Effect.gen(function* () {
     let stateWrites = 0;
