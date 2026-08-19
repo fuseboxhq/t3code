@@ -572,6 +572,8 @@ function LeadsRouteView() {
                 <PullRequestSearchInput
                   value={search.q ?? ""}
                   busy={typedQuery.length > 0 && !querySettled}
+                  placeholder="Search leads"
+                  ariaLabel="Search leads"
                   onChange={(query) => updateSearch({ q: query || undefined })}
                 />
                 <div className="flex shrink-0 items-center gap-1" role="group" aria-label="State">
