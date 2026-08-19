@@ -605,7 +605,7 @@ function isCommitSha(value: string): boolean {
  *
  * The phrase is one argv element, so nothing in it can become a flag of its own either.
  */
-function searchPhrase(query: string): string {
+export function searchPhrase(query: string): string {
   return `"${query.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"`;
 }
 
@@ -622,7 +622,7 @@ const REVIEW_QUALIFIERS = {
  * one character that could end the quoted value early is dropped rather than escaped: no GitHub
  * label or login holds a double quote, so there is nothing to preserve and everything to lose.
  */
-function qualifierValue(value: string): string {
+export function qualifierValue(value: string): string {
   return `"${value.replaceAll('"', "").trim()}"`;
 }
 
@@ -745,7 +745,7 @@ function matchesUnsortedListing(
 }
 
 /** What a repository selector may hold before it goes into a search as itself. */
-const SEARCH_REPOSITORY = /^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/;
+export const SEARCH_REPOSITORY = /^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/;
 
 /**
  * The same listing as one GitHub search across several repositories, which is the only way to

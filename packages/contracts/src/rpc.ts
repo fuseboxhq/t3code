@@ -66,6 +66,19 @@ import {
   OrchestrationRpcSchemas,
   OrchestrationGetWorkflowScriptError,
 } from "./orchestration.ts";
+import {
+  IssueActivity,
+  IssueActivityInput,
+  IssueCommentInput,
+  IssueDetail,
+  IssueInvalidateInput,
+  IssueListInput,
+  IssueListResult,
+  IssueOperationError,
+  IssueRef,
+  IssueSetStateInput,
+  IssueUnavailableError,
+} from "./issue.ts";
 import { ProviderInstanceId } from "./providerInstance.ts";
 import {
   PullRequestActionInput,
@@ -296,6 +309,14 @@ export const WS_METHODS = {
   pullRequestsInvalidate: "pullRequests.invalidate",
   pullRequestsReviewerCandidates: "pullRequests.reviewerCandidates",
   pullRequestsRequestReviewers: "pullRequests.requestReviewers",
+
+  // Issue methods
+  issuesList: "issues.list",
+  issuesDetail: "issues.detail",
+  issuesActivity: "issues.activity",
+  issuesComment: "issues.comment",
+  issuesSetState: "issues.setState",
+  issuesInvalidate: "issues.invalidate",
 
   // Source control methods
   sourceControlLookupRepository: "sourceControl.lookupRepository",
@@ -592,6 +613,48 @@ export const WsPullRequestsRequestReviewersRpc = Rpc.make(WS_METHODS.pullRequest
   payload: PullRequestReviewerRequestInput,
   success: Schema.Void,
   error: PullRequestRpcError,
+});
+
+const IssueRpcError = Schema.Union([
+  IssueUnavailableError,
+  IssueOperationError,
+  EnvironmentAuthorizationError,
+]);
+
+export const WsIssuesListRpc = Rpc.make(WS_METHODS.issuesList, {
+  payload: IssueListInput,
+  success: IssueListResult,
+  error: IssueRpcError,
+});
+
+export const WsIssuesDetailRpc = Rpc.make(WS_METHODS.issuesDetail, {
+  payload: IssueRef,
+  success: IssueDetail,
+  error: IssueRpcError,
+});
+
+export const WsIssuesActivityRpc = Rpc.make(WS_METHODS.issuesActivity, {
+  payload: IssueActivityInput,
+  success: IssueActivity,
+  error: IssueRpcError,
+});
+
+export const WsIssuesCommentRpc = Rpc.make(WS_METHODS.issuesComment, {
+  payload: IssueCommentInput,
+  success: Schema.Void,
+  error: IssueRpcError,
+});
+
+export const WsIssuesSetStateRpc = Rpc.make(WS_METHODS.issuesSetState, {
+  payload: IssueSetStateInput,
+  success: Schema.Void,
+  error: IssueRpcError,
+});
+
+export const WsIssuesInvalidateRpc = Rpc.make(WS_METHODS.issuesInvalidate, {
+  payload: IssueInvalidateInput,
+  success: Schema.Void,
+  error: IssueRpcError,
 });
 
 export const WsSourceControlLookupRepositoryRpc = Rpc.make(
@@ -1023,6 +1086,12 @@ export const WsRpcGroup = RpcGroup.make(
   WsPullRequestsInvalidateRpc,
   WsPullRequestsReviewerCandidatesRpc,
   WsPullRequestsRequestReviewersRpc,
+  WsIssuesListRpc,
+  WsIssuesDetailRpc,
+  WsIssuesActivityRpc,
+  WsIssuesCommentRpc,
+  WsIssuesSetStateRpc,
+  WsIssuesInvalidateRpc,
   WsSourceControlLookupRepositoryRpc,
   WsSourceControlCloneRepositoryRpc,
   WsSourceControlPublishRepositoryRpc,

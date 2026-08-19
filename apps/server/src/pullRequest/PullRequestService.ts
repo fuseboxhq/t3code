@@ -51,6 +51,7 @@ import { detectSourceControlProviderFromRemoteUrl } from "@t3tools/shared/source
 import * as ProjectionSnapshotQuery from "../orchestration/Services/ProjectionSnapshotQuery.ts";
 import * as SourceControlProviderRegistry from "../sourceControl/SourceControlProviderRegistry.ts";
 import * as SourceControlRateLimit from "../sourceControl/SourceControlRateLimit.ts";
+import { makeStaleWhileRevalidate } from "../utils/staleWhileRevalidate.ts";
 import {
   type ProviderChangeRequest,
   type ProviderListCursor,
@@ -1822,45 +1823,7 @@ export const make = Effect.gen(function* () {
       return { stats: stats.flat() };
     });
 
-  const context = yield* Effect.context<never>();
-  const runFork = Effect.runForkWith(context);
-
-  /**
-   * Stale answers served while a fresh one is fetched behind them. Every read here leaves the
-   * process for a CLI whose wall clock is the host's — seconds on a good day, tens of them on a
-   * slow network — and the short cache windows below mean almost every page visit pays that
-   * clock again. The last success per key is therefore held a while longer: a read inside the
-   * window answers with it at once and refreshes the cache in the background, so the next read
-   * is fresh without anyone having waited on it.
-   *
-   * Correctness leans on the epochs: an explicit refresh or a mutation bumps them, the epoch is
-   * part of every key, and a held answer under the old key is simply never asked for again — so
-   * "give me truly fresh" still means exactly that.
-   */
-  const staleWhileRevalidate = <A>(staleFor: Duration.Duration, capacity: number) => {
-    const staleMs = Duration.toMillis(staleFor);
-    const held = new Map<string, { readonly at: number; readonly value: A }>();
-    const record = (key: string, value: A) =>
-      Effect.map(Clock.currentTimeMillis, (at) => {
-        held.delete(key);
-        if (held.size >= capacity) {
-          const oldest = held.keys().next().value;
-          if (oldest !== undefined) held.delete(oldest);
-        }
-        held.set(key, { at, value });
-      });
-    return <E>(key: string, read: Effect.Effect<A, E>): Effect.Effect<A, E> => {
-      const recorded = read.pipe(Effect.tap((value) => record(key, value)));
-      return Effect.flatMap(Clock.currentTimeMillis, (now) => {
-        const snapshot = held.get(key);
-        if (snapshot === undefined || now - snapshot.at > staleMs) return recorded;
-        // Run as its own fiber rather than a child: the caller is answered and gone before the
-        // refresh lands. The read still coalesces on the cache key, so ten stale reads in one
-        // window cost one host request — and a failed refresh costs nothing but the retry.
-        return Effect.sync(() => runFork(Effect.ignore(recorded))).pipe(Effect.as(snapshot.value));
-      });
-    };
-  };
+  const staleWhileRevalidate = yield* makeStaleWhileRevalidate;
 
   // Epochs are the invalidation mechanism: a key carries its scope's epoch, so bumping the
   // epoch strands every entry made under the old one — no enumerating a cache whose keys

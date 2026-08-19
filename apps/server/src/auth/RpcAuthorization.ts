@@ -73,6 +73,14 @@ export const RPC_REQUIRED_SCOPES = {
   // write like every other one.
   [WS_METHODS.pullRequestsReviewerCandidates]: AuthOrchestrationReadScope,
   [WS_METHODS.pullRequestsRequestReviewers]: AuthOrchestrationOperateScope,
+  [WS_METHODS.issuesList]: AuthOrchestrationReadScope,
+  [WS_METHODS.issuesDetail]: AuthOrchestrationReadScope,
+  [WS_METHODS.issuesActivity]: AuthOrchestrationReadScope,
+  [WS_METHODS.issuesComment]: AuthOrchestrationOperateScope,
+  [WS_METHODS.issuesSetState]: AuthOrchestrationOperateScope,
+  // Read scope for the same reason the pull-request invalidate is: refreshing is part of
+  // reading, and a read-only client pressing refresh must not be told it may not look again.
+  [WS_METHODS.issuesInvalidate]: AuthOrchestrationReadScope,
   [WS_METHODS.sourceControlLookupRepository]: AuthOrchestrationReadScope,
   [WS_METHODS.sourceControlCloneRepository]: AuthOrchestrationOperateScope,
   [WS_METHODS.sourceControlPublishRepository]: AuthOrchestrationOperateScope,
