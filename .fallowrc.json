@@ -1,8 +1,11 @@
 {
-  "$schema": "https://docs.fallow.tools/schema/fallow-config.json",
-  "rules": {
-    "duplicate-exports": "off"
-  },
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "ignoreExports": [
+    {
+      "file": "apps/server/src/**",
+      "exports": ["layer", "make", "fromProviders"]
+    }
+  ],
   "audit": {
     "gate": "new-only",
     "deadCodeBaseline": ".fallow-baselines/dead-code-baseline.json",
