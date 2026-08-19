@@ -29,6 +29,7 @@ import {
 
 import * as ProjectionSnapshotQuery from "../orchestration/Services/ProjectionSnapshotQuery.ts";
 import * as SourceControlRateLimit from "../sourceControl/SourceControlRateLimit.ts";
+import { makeCacheEpochs } from "../utils/cacheEpochs.ts";
 import { makeStaleWhileRevalidate } from "../utils/staleWhileRevalidate.ts";
 import { repositoryIdentityOf } from "../pullRequest/PullRequestService.ts";
 import {
@@ -838,30 +839,7 @@ export const make = Effect.gen(function* () {
 
   const staleWhileRevalidate = yield* makeStaleWhileRevalidate;
 
-  // Epochs are the invalidation mechanism: a key carries its scope's epoch, so bumping the
-  // epoch strands every entry made under the old one. Shared and monotonic so a scope
-  // re-entering after eviction can never mint a key an old entry still has.
-  let epochCounter = 0;
-  let listingsEpoch = 0;
-  // Every scope absent from the map reads this floor. Evicting a scope raises it past the
-  // evicted epoch, so the scope can never fall back onto an epoch a live cache entry still
-  // holds — dropping to a plain 0 would resurrect entries keyed before its mutations.
-  let refEpochFloor = 0;
-  const refEpochs = new Map<string, number>();
-  const REF_EPOCH_CAPACITY = 2_048;
-  const refScope = (ref: IssueRef) => `${ref.projectId} ${ref.repository} ${ref.number}`;
-  const refEpoch = (ref: IssueRef) => refEpochs.get(refScope(ref)) ?? refEpochFloor;
-  const bumpRefEpoch = (ref: IssueRef) => {
-    const scope = refScope(ref);
-    if (!refEpochs.has(scope) && refEpochs.size >= REF_EPOCH_CAPACITY) {
-      const oldest = refEpochs.keys().next().value;
-      if (oldest !== undefined) {
-        refEpochs.delete(oldest);
-        refEpochFloor = ++epochCounter;
-      }
-    }
-    refEpochs.set(scope, ++epochCounter);
-  };
+  const epochs = makeCacheEpochs();
 
   const filtersOfKey = (
     slots: ReadonlyArray<
@@ -913,7 +891,7 @@ export const make = Effect.gen(function* () {
   const staleList = staleWhileRevalidate<IssueListResult>(LIST_STALE_WINDOW, LIST_CACHE_CAPACITY);
   const list: IssueService["Service"]["list"] = (input) => {
     const key = JSON.stringify([
-      listingsEpoch,
+      epochs.listingsEpoch(),
       input.state,
       input.filters === undefined
         ? null
@@ -946,7 +924,12 @@ export const make = Effect.gen(function* () {
   );
   const staleDetail = staleWhileRevalidate<IssueDetail>(DETAIL_STALE_WINDOW, DETAIL_CACHE_CAPACITY);
   const detail: IssueService["Service"]["detail"] = (input) => {
-    const key = JSON.stringify([refEpoch(input), input.projectId, input.repository, input.number]);
+    const key = JSON.stringify([
+      epochs.refEpoch(input),
+      input.projectId,
+      input.repository,
+      input.number,
+    ]);
     return staleDetail(key, Cache.get(detailCache, key));
   };
 
@@ -977,7 +960,7 @@ export const make = Effect.gen(function* () {
   );
   const activity: IssueService["Service"]["activity"] = (input) => {
     const key = JSON.stringify([
-      refEpoch(input),
+      epochs.refEpoch(input),
       input.projectId,
       input.repository,
       input.number,
@@ -989,11 +972,11 @@ export const make = Effect.gen(function* () {
   const invalidate: IssueService["Service"]["invalidate"] = (input) =>
     Effect.sync(() => {
       if (input.reference === undefined) {
-        listingsEpoch = ++epochCounter;
+        epochs.bumpListingsEpoch();
         viewersByHost.clear();
         return;
       }
-      bumpRefEpoch(input.reference);
+      epochs.bumpRefEpoch(input.reference);
     });
 
   // A mutation's own client re-reads right after it, and every other client's next read must
@@ -1007,8 +990,8 @@ export const make = Effect.gen(function* () {
       method(input).pipe(
         Effect.tap(() =>
           Effect.sync(() => {
-            bumpRefEpoch(input);
-            listingsEpoch = ++epochCounter;
+            epochs.bumpRefEpoch(input);
+            epochs.bumpListingsEpoch();
           }),
         ),
       );

@@ -51,6 +51,7 @@ import { detectSourceControlProviderFromRemoteUrl } from "@t3tools/shared/source
 import * as ProjectionSnapshotQuery from "../orchestration/Services/ProjectionSnapshotQuery.ts";
 import * as SourceControlProviderRegistry from "../sourceControl/SourceControlProviderRegistry.ts";
 import * as SourceControlRateLimit from "../sourceControl/SourceControlRateLimit.ts";
+import { makeCacheEpochs } from "../utils/cacheEpochs.ts";
 import { makeStaleWhileRevalidate } from "../utils/staleWhileRevalidate.ts";
 import {
   type ProviderChangeRequest,
@@ -1825,31 +1826,7 @@ export const make = Effect.gen(function* () {
 
   const staleWhileRevalidate = yield* makeStaleWhileRevalidate;
 
-  // Epochs are the invalidation mechanism: a key carries its scope's epoch, so bumping the
-  // epoch strands every entry made under the old one — no enumerating a cache whose keys
-  // (cursors, commits) nothing holds a list of. The counter is shared and monotonic so a
-  // scope re-entering `refEpochs` after eviction can never mint a key an old entry still has.
-  let epochCounter = 0;
-  let listingsEpoch = 0;
-  // Every scope absent from the map reads this floor. Evicting a scope raises it past the
-  // evicted epoch, so the scope can never fall back onto an epoch a live cache entry still
-  // holds — dropping to a plain 0 would resurrect entries keyed before its mutations.
-  let refEpochFloor = 0;
-  const refEpochs = new Map<string, number>();
-  const REF_EPOCH_CAPACITY = 2_048;
-  const refScope = (ref: PullRequestRef) => `${ref.projectId} ${ref.repository} ${ref.number}`;
-  const refEpoch = (ref: PullRequestRef) => refEpochs.get(refScope(ref)) ?? refEpochFloor;
-  const bumpRefEpoch = (ref: PullRequestRef) => {
-    const scope = refScope(ref);
-    if (!refEpochs.has(scope) && refEpochs.size >= REF_EPOCH_CAPACITY) {
-      const oldest = refEpochs.keys().next().value;
-      if (oldest !== undefined) {
-        refEpochs.delete(oldest);
-        refEpochFloor = ++epochCounter;
-      }
-    }
-    refEpochs.set(scope, ++epochCounter);
-  };
+  const epochs = makeCacheEpochs();
 
   /** The positional filter slot of a cache key, back as the record `listUncached` takes. */
   const filtersOfKey = (
@@ -1922,7 +1899,7 @@ export const make = Effect.gen(function* () {
   );
   const list: PullRequestService["Service"]["list"] = (input) => {
     const key = JSON.stringify([
-      listingsEpoch,
+      epochs.listingsEpoch(),
       input.state,
       input.involvement ?? null,
       // Positional so two identical filter sets key alike however their record was assembled.
@@ -1964,7 +1941,12 @@ export const make = Effect.gen(function* () {
     DETAIL_CACHE_CAPACITY,
   );
   const detail: PullRequestService["Service"]["detail"] = (input) => {
-    const key = JSON.stringify([refEpoch(input), input.projectId, input.repository, input.number]);
+    const key = JSON.stringify([
+      epochs.refEpoch(input),
+      input.projectId,
+      input.repository,
+      input.number,
+    ]);
     return staleDetail(key, Cache.get(detailCache, key));
   };
 
@@ -1983,7 +1965,12 @@ export const make = Effect.gen(function* () {
     DETAIL_CACHE_CAPACITY,
   );
   const activity: PullRequestService["Service"]["activity"] = (input) => {
-    const key = JSON.stringify([refEpoch(input), input.projectId, input.repository, input.number]);
+    const key = JSON.stringify([
+      epochs.refEpoch(input),
+      input.projectId,
+      input.repository,
+      input.number,
+    ]);
     return staleActivity(key, Cache.get(activityCache, key));
   };
 
@@ -2020,7 +2007,7 @@ export const make = Effect.gen(function* () {
   );
   const diff: PullRequestService["Service"]["diff"] = (input) => {
     const key = JSON.stringify([
-      refEpoch(input),
+      epochs.refEpoch(input),
       input.projectId,
       input.repository,
       input.number,
@@ -2053,7 +2040,7 @@ export const make = Effect.gen(function* () {
   const listStats: PullRequestService["Service"]["listStats"] = (input) => {
     if (input.refs.length === 0) return Effect.succeed({ stats: [] });
     const key = JSON.stringify([
-      listingsEpoch,
+      epochs.listingsEpoch(),
       input.refs
         .map((ref) => [ref.projectId, ref.repository, ref.number] as const)
         .toSorted((left, right) =>
@@ -2066,13 +2053,13 @@ export const make = Effect.gen(function* () {
   const invalidate: PullRequestService["Service"]["invalidate"] = (input) =>
     Effect.sync(() => {
       if (input.reference === undefined) {
-        listingsEpoch = ++epochCounter;
+        epochs.bumpListingsEpoch();
         // A whole-workspace refresh is the reader asking to be re-answered from the hosts,
         // and that includes who the hosts say they are.
         viewersByHost.clear();
         return;
       }
-      bumpRefEpoch(input.reference);
+      epochs.bumpRefEpoch(input.reference);
     });
 
   // A mutation's own client re-reads right after it, and every other client's next read must
@@ -2086,8 +2073,8 @@ export const make = Effect.gen(function* () {
       method(input).pipe(
         Effect.tap(() =>
           Effect.sync(() => {
-            bumpRefEpoch(input);
-            listingsEpoch = ++epochCounter;
+            epochs.bumpRefEpoch(input);
+            epochs.bumpListingsEpoch();
           }),
         ),
       );
