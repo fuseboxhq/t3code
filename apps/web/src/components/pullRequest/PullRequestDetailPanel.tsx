@@ -1,4 +1,4 @@
-import { scopedThreadKey, scopeProjectRef } from "@t3tools/client-runtime/environment";
+import { scopeProjectRef } from "@t3tools/client-runtime/environment";
 import { squashAtomCommandFailure } from "@t3tools/client-runtime/state/runtime";
 import type {
   EnvironmentId,
@@ -47,8 +47,13 @@ import {
   useState,
 } from "react";
 
-import { type DraftId, useComposerDraftStore } from "~/composerDraftStore";
+import type { DraftId } from "~/composerDraftStore";
 import { useNewThreadHandler } from "~/hooks/useHandleNewThread";
+import {
+  useComposerHandoff,
+  writeTaskToComposer,
+  type ComposerHandoffTask,
+} from "~/hooks/useComposerHandoff";
 import { useCopyToClipboard, writeTextToClipboard } from "~/hooks/useCopyToClipboard";
 import { usePreparePullRequestThreadAction } from "~/lib/sourceControlActions";
 import { cn } from "~/lib/utils";
@@ -101,8 +106,6 @@ import {
   buildFixFindingHandoff,
   buildFixFindingsHandoff,
   buildResolveConflictsPrompt,
-  handoffPrompt,
-  handoffReviewComments,
   latestPullRequestReviewOutcomes,
   pullRequestActionMenuHasGroup,
   pullRequestActionNeedsHostRefresh,
@@ -205,16 +208,6 @@ const TABS: ReadonlyArray<{ value: DetailTab; label: string }> = [
 // anyone has clicked the tab.
 const loadCodeTab = () => import("./PullRequestCodeTab");
 const PullRequestCodeTab = lazy(loadCodeTab);
-
-/**
- * What the last hand-off wrote into each draft, kept outside React because the panel that wrote it
- * is closed by the time the next one opens. It is how a prompt the reader has since edited is told
- * apart from the one they were handed: only the sentence still exactly as written may be replaced.
- */
-const lastHandoffPromptByDraft = new Map<string, string>();
-
-const composerTargetKey = (target: ScopedThreadRef | DraftId): string =>
-  typeof target === "string" ? target : scopedThreadKey(target);
 
 /**
  * Which server the checkout and the hand-offs land on, where more than one of them holds this
@@ -584,6 +577,7 @@ export function PullRequestDetailPanel({
   const titleDraft = titleScope?.pullRequestKey === pullRequestKey ? titleScope.text : null;
   const [titleSaving, setTitleSaving] = useState(false);
   const newThread = useNewThreadHandler();
+  const { openThreadWithTask } = useComposerHandoff();
   const { environments } = useEnvironments();
   const projects = useProjects();
   // Beside a thread there is nothing to pick: the hand-offs land in that thread's composer, and
@@ -694,60 +688,13 @@ export function PullRequestDetailPanel({
     refreshDetail();
   };
 
-  type ThreadTask = {
-    prompt: string;
-    reviewComments?: ReadonlyArray<ReviewCommentContext>;
-  };
+  type ThreadTask = ComposerHandoffTask;
 
   // Beside the thread whose own pull request this is, a task belongs in that thread's composer:
   // the branch is already checked out under it, so opening a second thread would only scatter
   // the work.
   const attachTarget = pullRequestComposerTarget(context, composerDraftTarget);
   const handoffLabels = pullRequestHandoffLabels(attachTarget !== null);
-
-  const writeTaskToComposer = (target: ScopedThreadRef | DraftId, task: ThreadTask) => {
-    const store = useComposerDraftStore.getState();
-    const draft = store.getComposerDraft(target);
-    const key = composerTargetKey(target);
-    const prompt = handoffPrompt(
-      { prompt: draft?.prompt ?? "", lastHandoffPrompt: lastHandoffPromptByDraft.get(key) },
-      task.prompt,
-    );
-    lastHandoffPromptByDraft.set(key, task.prompt);
-    store.setPrompt(target, prompt);
-    store.setReviewComments(
-      target,
-      handoffReviewComments(draft?.reviewComments ?? [], task.reviewComments ?? []),
-    );
-  };
-
-  /**
-   * Opens a thread on this project and leaves the task in its composer for the reader to send.
-   *
-   * Nothing is checked out: asking a question is not a reason to move somebody's working tree or
-   * to make a worktree they did not ask for. The two hand-offs that do need the code call this
-   * after preparing it, so there is one path from "a task" to "a thread holding it".
-   */
-  const openThreadWithTask = async (
-    projectRef: ReturnType<typeof scopeProjectRef>,
-    task: ThreadTask | null,
-    opened?: { draftId: DraftId },
-  ): Promise<{ draftId: DraftId } | null> => {
-    const session =
-      opened ??
-      (await newThread(projectRef).then(
-        (result) => result,
-        () => null,
-      ));
-    if (session === null) return null;
-    if (task === null) return session;
-    // The latest press is the ask: it takes over what an earlier hand-off left, prompt and chips
-    // both, rather than stacking a second one under the first. What the reader typed themselves
-    // survives — the composer they are handed is not always a fresh one, and a prompt they have
-    // since edited is theirs rather than the hand-off's.
-    writeTaskToComposer(session.draftId, task);
-    return session;
-  };
 
   /** A question about the change, which needs a thread and nothing else. */
   const startAsk = async (kind: string, task: ThreadTask) => {

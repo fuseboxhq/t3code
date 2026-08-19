@@ -3,6 +3,7 @@ import {
   ChartNoAxesColumnIcon,
   GitPullRequestIcon,
   SettingsIcon,
+  TargetIcon,
 } from "lucide-react";
 import { memo, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
@@ -126,13 +127,18 @@ export const SidebarChromeFooter = memo(function SidebarChromeFooter() {
         ? "usage"
         : location.pathname === "/pull-requests"
           ? "pull-requests"
-          : null,
+          : location.pathname === "/leads"
+            ? "leads"
+            : null,
   });
   const { environments } = useEnvironments();
   // The page reads every connected server, so one of them offering pull requests is enough for
   // the link to lead somewhere.
   const pullRequestsSupported = environments.some(
     (environment) => environment.serverConfig?.environment.capabilities.pullRequests === true,
+  );
+  const leadsSupported = environments.some(
+    (environment) => environment.serverConfig?.environment.capabilities.issues === true,
   );
   const closeMobileSidebar = useCallback(() => {
     if (isMobile) {
@@ -142,6 +148,10 @@ export const SidebarChromeFooter = memo(function SidebarChromeFooter() {
   const handlePullRequestsClick = useCallback(() => {
     closeMobileSidebar();
     void navigate({ to: "/pull-requests", search: { involvement: "all", state: "open" } });
+  }, [closeMobileSidebar, navigate]);
+  const handleLeadsClick = useCallback(() => {
+    closeMobileSidebar();
+    void navigate({ to: "/leads", search: { state: "open" } });
   }, [closeMobileSidebar, navigate]);
   const handleSettingsClick = useCallback(() => {
     closeMobileSidebar();
@@ -205,6 +215,20 @@ export const SidebarChromeFooter = memo(function SidebarChromeFooter() {
                     }
                   />
                   <TooltipPopup side="top">Pull Requests</TooltipPopup>
+                </Tooltip>
+              </SidebarMenuItem>
+            ) : null}
+            {leadsSupported ? (
+              <SidebarMenuItem className="shrink-0">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <SidebarMenuButton aria-label="Leads" onClick={handleLeadsClick} size="icon">
+                        <TargetIcon />
+                      </SidebarMenuButton>
+                    }
+                  />
+                  <TooltipPopup side="top">Leads</TooltipPopup>
                 </Tooltip>
               </SidebarMenuItem>
             ) : null}

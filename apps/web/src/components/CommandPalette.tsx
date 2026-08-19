@@ -43,6 +43,7 @@ import {
   PaletteIcon,
   ServerIcon,
   SettingsIcon,
+  TargetIcon,
   SquarePenIcon,
   TextSearchIcon,
 } from "lucide-react";
@@ -1624,6 +1625,25 @@ function OpenCommandPaletteDialog(props: {
       await navigate({ to: "/settings" });
     },
   });
+
+  // Gated the way the sidebar entry is: a server that has not said it can list issues gets no
+  // link to a page that could only explain itself away.
+  if (
+    environments.some(
+      (environment) => environment.serverConfig?.environment.capabilities.issues === true,
+    )
+  ) {
+    actionItems.push({
+      kind: "action",
+      value: "action:leads",
+      searchTerms: ["leads", "lead", "issues", "triage", "backlog"],
+      title: "Open leads",
+      icon: <TargetIcon className={ITEM_ICON_CLASS} />,
+      run: async () => {
+        await navigate({ to: "/leads", search: { state: "open" } });
+      },
+    });
+  }
 
   // There is no projects listing page; the action targets the contextual
   // project (active thread/draft, falling back to the first sidebar group).

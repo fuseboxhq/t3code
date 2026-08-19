@@ -21,6 +21,7 @@ export const RIGHT_PANEL_KINDS = [
   "preview",
   "terminal",
   "pull-request",
+  "lead",
   "agents",
 ] as const;
 export type RightPanelKind = (typeof RIGHT_PANEL_KINDS)[number];
@@ -62,19 +63,35 @@ export type RightPanelSurface =
       repository: string;
       number: number;
     }
+  | {
+      /**
+       * A lead (a host-tracked issue) opened in the Leads list's shared panel. The reference
+       * lives in the id so several leads can remain open as peer tabs, the way pull requests do.
+       */
+      id: `lead:${string}`;
+      kind: "lead";
+      /** Which server the issue was read from; the list spans every connected one. */
+      environmentId?: string;
+      projectId: string;
+      repository: string;
+      number: number;
+    }
   | { id: "agents"; kind: "agents" };
 
 const RIGHT_PANEL_STORAGE_KEY = "t3code:right-panel-state:v2";
 // v9 removed the "plan" surface kind (plans render inline in the transcript).
 // v10 keys pull-request surfaces by reference instead of a singleton tab.
 // v11 stops persisting the pull-request list's shared panel, so a restart opens the page fresh.
-const RIGHT_PANEL_STORAGE_VERSION = 11;
+// v12 adds the "lead" surface kind and stops persisting the Leads list's shared panel too.
+const RIGHT_PANEL_STORAGE_VERSION = 12;
 
 /**
- * The pull-request list's shared panel (see PULL_REQUESTS_PANEL_ID in the route) is session
- * state: reopening the app should show the list, not last session's tabs and detail fetches.
+ * A list page's shared panel (see PULL_REQUESTS_PANEL_ID and LEADS_PANEL_ID in their routes) is
+ * session state: reopening the app should show the list, not last session's tabs and detail
+ * fetches.
  */
-const isPullRequestsPanelKey = (threadKey: string) => threadKey.endsWith(":pull-requests-panel");
+const isTransientListPanelKey = (threadKey: string) =>
+  threadKey.endsWith(":pull-requests-panel") || threadKey.endsWith(":leads-panel");
 
 export interface ThreadRightPanelState {
   isOpen: boolean;
@@ -86,11 +103,15 @@ interface RightPanelStoreState {
   byThreadKey: Record<string, ThreadRightPanelState>;
   open: (
     ref: ScopedThreadRef,
-    kind: Exclude<RightPanelKind, "file" | "terminal" | "pull-request">,
+    kind: Exclude<RightPanelKind, "file" | "terminal" | "pull-request" | "lead">,
   ) => void;
   openBrowser: (ref: ScopedThreadRef, tabId: string | null) => void;
   openFile: (ref: ScopedThreadRef, relativePath: string, line?: number) => void;
   openPullRequest: (
+    ref: ScopedThreadRef,
+    target: { environmentId?: string; projectId: string; repository: string; number: number },
+  ) => void;
+  openLead: (
     ref: ScopedThreadRef,
     target: { environmentId?: string; projectId: string; repository: string; number: number },
   ) => void;
@@ -115,7 +136,7 @@ interface RightPanelStoreState {
   toggleVisibility: (ref: ScopedThreadRef) => void;
   toggle: (
     ref: ScopedThreadRef,
-    kind: Exclude<RightPanelKind, "file" | "terminal" | "pull-request">,
+    kind: Exclude<RightPanelKind, "file" | "terminal" | "pull-request" | "lead">,
   ) => void;
   removeThread: (ref: ScopedThreadRef) => void;
 }
@@ -127,7 +148,7 @@ const EMPTY_THREAD_STATE: ThreadRightPanelState = {
 };
 
 const singletonSurface = (
-  kind: Exclude<RightPanelKind, "file" | "preview" | "terminal" | "pull-request">,
+  kind: Exclude<RightPanelKind, "file" | "preview" | "terminal" | "pull-request" | "lead">,
 ): RightPanelSurface => {
   switch (kind) {
     case "diff":
@@ -165,6 +186,36 @@ const terminalSurface = (terminalId: string): RightPanelSurface => ({
 });
 
 export type PullRequestSurface = Extract<RightPanelSurface, { kind: "pull-request" }>;
+export type LeadSurface = Extract<RightPanelSurface, { kind: "lead" }>;
+
+function leadSurfaceId(target: {
+  environmentId?: string;
+  projectId: string;
+  repository: string;
+  number: number;
+}): LeadSurface["id"] {
+  // The environment leads the id where there is one, for the reason the pull-request id gives:
+  // the same issue read from two servers is two tabs.
+  const scope =
+    target.environmentId === undefined ? "" : `${encodeURIComponent(target.environmentId)}:`;
+  return `lead:${scope}${encodeURIComponent(target.projectId)}:${encodeURIComponent(target.repository)}:${target.number}`;
+}
+
+function leadSurface(target: {
+  environmentId?: string;
+  projectId: string;
+  repository: string;
+  number: number;
+}): LeadSurface {
+  return {
+    id: leadSurfaceId(target),
+    kind: "lead",
+    ...(target.environmentId === undefined ? {} : { environmentId: target.environmentId }),
+    projectId: target.projectId,
+    repository: target.repository,
+    number: target.number,
+  };
+}
 
 export function pullRequestSurfaceId(target: {
   environmentId?: string;
@@ -257,7 +308,7 @@ export function migratePersistedRightPanelState(persistedState: unknown): {
     typeof persistedState.byThreadKey === "object"
       ? Object.fromEntries(
           Object.entries(persistedState.byThreadKey as Record<string, ThreadRightPanelState>)
-            .filter(([threadKey]) => !isPullRequestsPanelKey(threadKey))
+            .filter(([threadKey]) => !isTransientListPanelKey(threadKey))
             .map(([threadKey, threadState]) => {
               const validThreadState =
                 threadState && typeof threadState === "object" ? threadState : null;
@@ -280,7 +331,7 @@ export function migratePersistedRightPanelState(persistedState: unknown): {
                           : 0;
                       return [{ ...surface, revealLine, revealRequestId }];
                     }
-                    if (surface.kind === "pull-request") {
+                    if (surface.kind === "pull-request" || surface.kind === "lead") {
                       if (
                         typeof surface.projectId !== "string" ||
                         typeof surface.repository !== "string" ||
@@ -292,11 +343,14 @@ export function migratePersistedRightPanelState(persistedState: unknown): {
                       }
                       const { environmentId, ...rest } = surface;
                       // Anything else stored under that name is not an environment.
+                      const target = {
+                        ...rest,
+                        ...(typeof environmentId === "string" ? { environmentId } : {}),
+                      };
                       return [
-                        pullRequestSurface({
-                          ...rest,
-                          ...(typeof environmentId === "string" ? { environmentId } : {}),
-                        }),
+                        surface.kind === "pull-request"
+                          ? pullRequestSurface(target)
+                          : leadSurface(target),
                       ];
                     }
                     if (surface.kind !== "terminal") return [surface];
@@ -388,6 +442,12 @@ export const useRightPanelStore = create<RightPanelStoreState>()(
         set((state) => ({
           byThreadKey: updateThread(state.byThreadKey, scopedThreadKey(ref), (current) => {
             return upsertSurface(current, pullRequestSurface(target));
+          }),
+        })),
+      openLead: (ref, target) =>
+        set((state) => ({
+          byThreadKey: updateThread(state.byThreadKey, scopedThreadKey(ref), (current) => {
+            return upsertSurface(current, leadSurface(target));
           }),
         })),
       openFile: (ref, relativePath, line) =>
@@ -661,7 +721,7 @@ export const useRightPanelStore = create<RightPanelStoreState>()(
       partialize: (state) => ({
         byThreadKey: Object.fromEntries(
           Object.entries(state.byThreadKey).filter(
-            ([threadKey]) => !isPullRequestsPanelKey(threadKey),
+            ([threadKey]) => !isTransientListPanelKey(threadKey),
           ),
         ),
       }),
