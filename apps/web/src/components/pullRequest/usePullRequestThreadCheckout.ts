@@ -45,14 +45,15 @@ export function usePullRequestThreadCheckout() {
     }): Promise<boolean> => {
       if (inFlight.current) return false;
       inFlight.current = true;
+      // The menu closes on the press, so this toast is the only thing answering for the
+      // checkout. It carries no timeout: a loading toast never expires, and an explicit one
+      // would survive the update and pin the result on screen. Declared ahead of the try so an
+      // unexpected rejection can still resolve it rather than leaving it spinning forever.
+      const toastId = toastManager.add({
+        type: "loading",
+        title: "Preparing the pull request checkout...",
+      });
       try {
-        // The menu closes on the press, so this toast is the only thing answering for the
-        // checkout. It carries no timeout: a loading toast never expires, and an explicit one
-        // would survive the update and pin the result on screen.
-        const toastId = toastManager.add({
-          type: "loading",
-          title: "Preparing the pull request checkout...",
-        });
         const projectRef = scopeProjectRef(input.environmentId, input.projectId);
         const opened = await newThread(projectRef).then(
           (session) => session,
@@ -149,6 +150,13 @@ export function usePullRequestThreadCheckout() {
             : staleCheckoutToast,
         );
         return true;
+      } catch (error) {
+        toastManager.update(toastId, {
+          type: "error",
+          title: "Could not prepare the pull request checkout",
+          description: readableFailure(error, "The checkout could not be prepared."),
+        });
+        return false;
       } finally {
         inFlight.current = false;
       }
