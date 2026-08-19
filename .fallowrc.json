@@ -1,0 +1,12 @@
+{
+  "$schema": "https://docs.fallow.tools/schema/fallow-config.json",
+  "rules": {
+    "duplicate-exports": "off"
+  },
+  "audit": {
+    "gate": "new-only",
+    "deadCodeBaseline": ".fallow-baselines/dead-code-baseline.json",
+    "healthBaseline": ".fallow-baselines/health-baseline.json",
+    "dupesBaseline": ".fallow-baselines/dupes-baseline.json"
+  }
+}

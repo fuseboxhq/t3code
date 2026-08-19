@@ -1,0 +1,4150 @@
+{
+  "finding_counts": {
+    ".github/scripts/thread-transfer-report.cjs": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "apps/desktop/scripts/dev-electron.mjs": {
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/desktop/scripts/electron-launcher.mjs": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/desktop/scripts/ensure-electron-runtime.mjs": {
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/desktop/scripts/wait-for-resources.mjs": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/desktop/src/app/DesktopApp.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/desktop/src/app/DesktopEnvironment.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/desktop/src/backend/DesktopBackendConfiguration.test.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/desktop/src/backend/DesktopBackendConfiguration.ts": {
+      "complexity_high": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 2
+      }
+    },
+    "apps/desktop/src/backend/DesktopBackendManager.test.ts": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/desktop/src/backend/DesktopBackendManager.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/desktop/src/backend/tailscaleEndpointProvider.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/desktop/src/electron/ElectronMenu.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/desktop/src/electron/ElectronProtocol.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/desktop/src/electron/ElectronWindow.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/desktop/src/ipc/methods/window.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/desktop/src/preload.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/desktop/src/preview/FaviconCapture.ts": {
+      "complexity_critical": {
+        "count": 3
+      },
+      "complexity_high": {
+        "count": 2
+      },
+      "crap_critical": {
+        "count": 3
+      },
+      "crap_high": {
+        "count": 3
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/desktop/src/preview/Manager.test.ts": {
+      "crap_high": {
+        "count": 2
+      }
+    },
+    "apps/desktop/src/preview/Manager.ts": {
+      "complexity_critical": {
+        "count": 3
+      },
+      "complexity_moderate": {
+        "count": 3
+      },
+      "crap_critical": {
+        "count": 3
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 8
+      }
+    },
+    "apps/desktop/src/preview/PickLabelPosition.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/desktop/src/preview/PickPreload.ts": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 10
+      },
+      "crap_moderate": {
+        "count": 8
+      }
+    },
+    "apps/desktop/src/preview/PickedElementPayload.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/desktop/src/preview/PreviewKeyboard.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/desktop/src/settings/DesktopAppSettings.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/desktop/src/shell/DesktopShellEnvironment.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/desktop/src/telemetry/DesktopTelemetryPublisher.test.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/desktop/src/telemetry/DesktopTelemetryPublisher.ts": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/desktop/src/window/DesktopWindow.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/desktop/src/window/QuitHold.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/desktop/src/wsl/DesktopWslBackend.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/desktop/src/wsl/DesktopWslEnvironment.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/desktop/src/wsl/wslPathParsing.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/marketing/src/pages/index.astro": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/mobile/modules/t3-markdown-text/src/CopyTextButton.tsx": {
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/mobile/modules/t3-markdown-text/src/NativeMarkdownBlock.ios.tsx": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/mobile/modules/t3-markdown-text/src/NativeMarkdownSelectableText.ios.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/mobile/modules/t3-markdown-text/src/markdownLinks.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/modules/t3-markdown-text/src/nativeMarkdownText.ts": {
+      "complexity_critical": {
+        "count": 4
+      },
+      "crap_critical": {
+        "count": 8
+      },
+      "crap_high": {
+        "count": 3
+      },
+      "crap_moderate": {
+        "count": 5
+      }
+    },
+    "apps/mobile/modules/t3-markdown-text/src/util.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/mobile/plugins/lib/addWidgetAssetCatalog.cjs": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/plugins/withShareExtensionDisplayName.cjs": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/components/AndroidAnchoredMenu.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/components/ComposerToolbar.tsx": {
+      "complexity_high": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/components/ControlPill.tsx": {
+      "complexity_high": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/components/GlassSurface.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/agent-awareness/notificationPayload.ts": {
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/mobile/src/features/agent-awareness/remoteRegistration.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/archive/ArchivedThreadsScreen.tsx": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/archive/archivedThreadList.ts": {
+      "complexity_high": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/cloud/CloudAuthProvider.tsx": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/cloud/linkEnvironment.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/connection/CloudEnvironmentRows.tsx": {
+      "complexity_high": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 2
+      }
+    },
+    "apps/mobile/src/features/connection/ConnectionEnvironmentRow.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/connection/ConnectionSheetButton.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/connection/ConnectionsNewRouteScreen.tsx": {
+      "complexity_critical": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/connection/useConnectionController.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/diffs/nativeReviewDiffHighlighter.ts": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/files/FileTreeBrowser.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/files/ThreadFilesRouteScreen.tsx": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/mobile/src/features/files/fileTree.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/home/HomeHeader.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/home/HomeRouteScreen.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/home/HomeScreen.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "apps/mobile/src/features/home/homeListItems.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/home/homeThreadList.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/home/useThreadListActions.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 2
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/mobile/src/features/keyboard/HardwareKeyboardCommandProvider.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/layout/AdaptiveWorkspaceLayout.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/layout/workspace-inspector-pane.tsx": {
+      "complexity_high": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/projects/AddProjectScreen.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/review/ReviewCommentComposerSheet.tsx": {
+      "complexity_high": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/review/ReviewSheet.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/review/diffParser.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/review/nativeReviewDiffAdapter.ts": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "crap_critical": {
+        "count": 2
+      }
+    },
+    "apps/mobile/src/features/review/reviewDiffRendering.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/review/reviewModel.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/review/reviewPerf.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/review/reviewWordDiffs.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/review/shikiReviewHighlighter.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/review/useReviewSections.ts": {
+      "complexity_high": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/settings/SettingsClientStorageRouteScreen.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/settings/SettingsRouteScreen.tsx": {
+      "complexity_high": {
+        "count": 2
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/settings/appearance/AppearancePreferencesProvider.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/sharing/IncomingShareProvider.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/sharing/incoming-share-model.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/showcase/ShowcaseCaptureCoordinator.tsx": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/mobile/src/features/terminal/ThreadTerminalPanel.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/mobile/src/features/terminal/ThreadTerminalRouteScreen.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 5
+      }
+    },
+    "apps/mobile/src/features/threads/NewTaskContextPickerScreens.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/threads/NewTaskDraftScreen.tsx": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 3
+      }
+    },
+    "apps/mobile/src/features/threads/NewTaskRouteScreen.tsx": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/threads/PendingUserInputCard.tsx": {
+      "complexity_high": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/threads/ThreadComposer.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/threads/ThreadDetailScreen.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/threads/ThreadFeed.tsx": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 2
+      }
+    },
+    "apps/mobile/src/features/threads/ThreadGitControls.tsx": {
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "apps/mobile/src/features/threads/ThreadNavigationSidebar.tsx": {
+      "complexity_critical": {
+        "count": 3
+      },
+      "crap_critical": {
+        "count": 3
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/threads/ThreadRouteScreen.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/threads/ThreadSettingsSheet.tsx": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/threads/git/GitBranchesSheet.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/threads/git/GitCommitSheet.tsx": {
+      "complexity_high": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/threads/git/GitOverviewSheet.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/threads/new-task-flow-provider.tsx": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/threads/thread-list-items.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_high": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/threads/thread-list-v2-items.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/threads/thread-work-log.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/threads/threadListV2.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/threads/use-thread-settings-sheet-presentation.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/features/updates/app-updates.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/lib/composerImages.ts": {
+      "complexity_moderate": {
+        "count": 3
+      }
+    },
+    "apps/mobile/src/lib/threadActivity.ts": {
+      "complexity_critical": {
+        "count": 4
+      },
+      "complexity_moderate": {
+        "count": 3
+      },
+      "crap_critical": {
+        "count": 4
+      },
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 4
+      }
+    },
+    "apps/mobile/src/native/StackHeader.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/mobile/src/native/T3ComposerEditor.ios.tsx": {
+      "complexity_critical": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/native/T3ComposerEditor.native.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/persistence/mobile-preferences.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/state/queries.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/state/use-remote-environment-registry.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/state/use-selected-thread-git-actions.ts": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/mobile/src/state/use-selected-thread-requests.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/state/use-thread-composer-state.ts": {
+      "complexity_high": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/state/use-thread-outbox-drain.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/state/use-thread-selection.ts": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/mobile/src/widgets/AgentActivity.tsx": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/integration/TestProviderAdapter.integration.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/server/scripts/acp-mock-agent.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/scripts/cursor-acp-model-mismatch-probe.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/assets/AssetAccess.ts": {
+      "complexity_high": {
+        "count": 2
+      }
+    },
+    "apps/server/src/auth/EnvironmentAuth.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/server/src/auth/PairingGrantStore.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/auth/SessionStore.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/server/src/auth/utils.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/background/BackgroundPolicy.ts": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/checkpointing/CheckpointDiffQuery.ts": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/cli/config.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/cli/connect.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/server/src/cli/pair.ts": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/server/src/cli/triage.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/server/src/cloud/ManagedEndpointRuntime.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/server/src/cloud/bootService.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/cloud/publicConfig.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/cloud/serviceLauncherClient.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/cloud/serviceProtocol.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/server/src/diagnostics/TraceDiagnostics.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/server/src/git/GitManager.test.ts": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "crap_critical": {
+        "count": 2
+      }
+    },
+    "apps/server/src/git/GitManager.ts": {
+      "complexity_critical": {
+        "count": 3
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 3
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 4
+      }
+    },
+    "apps/server/src/http.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/imageMime.ts": {
+      "complexity_high": {
+        "count": 1
+      }
+    },
+    "apps/server/src/issue/IssueService.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/keybindings.ts": {
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/server/src/mcp/McpHttpServer.test.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/server/src/mcp/PreviewAutomationBroker.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/server/src/orchestration/ActivityPayloadProjection.ts": {
+      "complexity_moderate": {
+        "count": 3
+      },
+      "crap_moderate": {
+        "count": 6
+      }
+    },
+    "apps/server/src/orchestration/Layers/CheckpointReactor.test.ts": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/server/src/orchestration/Layers/CheckpointReactor.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/orchestration/Layers/ProjectionPipeline.ts": {
+      "complexity_critical": {
+        "count": 3
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 2
+      },
+      "crap_critical": {
+        "count": 3
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "apps/server/src/orchestration/Layers/ProjectionSnapshotQuery.test.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/orchestration/Layers/ProjectionSnapshotQuery.ts": {
+      "complexity_critical": {
+        "count": 3
+      },
+      "crap_critical": {
+        "count": 3
+      }
+    },
+    "apps/server/src/orchestration/Layers/ProviderCommandReactor.test.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/server/src/orchestration/Layers/ProviderCommandReactor.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_high": {
+        "count": 2
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 3
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/server/src/orchestration/Layers/ProviderRuntimeIngestion.test.ts": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/server/src/orchestration/Layers/ProviderRuntimeIngestion.ts": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/server/src/orchestration/ThreadBackgroundLiveness.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/server/src/orchestration/decider.pinned.test.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/orchestration/decider.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/orchestration/projector.ts": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/preview/PortScanner.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/processRunner.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/project/ProjectFaviconResolver.ts": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/provider/Drivers/ClaudeSkills.ts": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/provider/Layers/ClaudeAdapter.test.ts": {
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "apps/server/src/provider/Layers/ClaudeAdapter.ts": {
+      "complexity_critical": {
+        "count": 10
+      },
+      "complexity_high": {
+        "count": 4
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 10
+      },
+      "crap_high": {
+        "count": 5
+      },
+      "crap_moderate": {
+        "count": 10
+      }
+    },
+    "apps/server/src/provider/Layers/ClaudeProvider.ts": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/provider/Layers/CodexAdapter.ts": {
+      "complexity_critical": {
+        "count": 4
+      },
+      "crap_critical": {
+        "count": 4
+      },
+      "crap_high": {
+        "count": 4
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/server/src/provider/Layers/CodexProvider.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/server/src/provider/Layers/CodexSessionRuntime.ts": {
+      "complexity_critical": {
+        "count": 3
+      },
+      "crap_critical": {
+        "count": 3
+      },
+      "crap_high": {
+        "count": 3
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/server/src/provider/Layers/CursorAdapter.test.ts": {
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "apps/server/src/provider/Layers/CursorAdapter.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 3
+      }
+    },
+    "apps/server/src/provider/Layers/CursorProvider.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 3
+      }
+    },
+    "apps/server/src/provider/Layers/EventNdjsonLogger.test.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/provider/Layers/EventNdjsonLogger.ts": {
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/server/src/provider/Layers/GrokAdapter.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 5
+      }
+    },
+    "apps/server/src/provider/Layers/OpenCodeAdapter.ts": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "apps/server/src/provider/Layers/OpenCodeProvider.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/server/src/provider/Layers/ProviderInstanceRegistryLive.test.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/server/src/provider/Layers/ProviderInstanceRegistryLive.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/server/src/provider/Layers/ProviderRegistry.test.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/provider/Layers/ProviderRegistry.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/provider/Layers/ProviderService.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "apps/server/src/provider/Layers/ProviderSessionDirectory.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/server/src/provider/Layers/ProviderSessionReaper.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/provider/acp/AcpJsonRpcConnection.test.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/server/src/provider/acp/AcpRuntimeModel.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/server/src/provider/acp/AcpSessionRuntime.ts": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/server/src/provider/opencodeRuntime.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/provider/providerMaintenance.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/server/src/provider/providerSnapshot.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/provider/testFixtures/codexCollabMockPeer.mjs": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/server/src/pullRequest/AzureDevOpsPullRequestCli.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/pullRequest/GitHubPullRequestCli.ts": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 4
+      }
+    },
+    "apps/server/src/pullRequest/GitLabPullRequestCli.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/pullRequest/PullRequestService.ts": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/server/src/pullRequest/azureDevOpsPullRequestJson.ts": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/pullRequest/bitbucketPullRequestJson.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/pullRequest/gitHubPullRequestJson.ts": {
+      "complexity_high": {
+        "count": 2
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/pullRequest/gitLabMergeRequestJson.ts": {
+      "complexity_moderate": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/server/src/relay/AgentAwarenessRelay.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/resourceTelemetry/Model.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/server/src/resourceTelemetry/ResourceMonitorBinary.ts": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/resourceTelemetry/ResourceTelemetry.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/server.test.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/server/src/serverSettings.ts": {
+      "complexity_high": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/serviceLauncher.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/sourceControl/AzureDevOpsCli.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/sourceControl/BitbucketApi.ts": {
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/server/src/sourceControl/GitHubSourceControlProvider.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/sourceControl/SourceControlRateLimit.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/server/src/sourceControl/gitHubPullRequests.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/server/src/sourceControl/gitLabMergeRequests.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/sourceControl/githubGraphQlBudget.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/server/src/terminal/Manager.ts": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 6
+      }
+    },
+    "apps/server/src/textGeneration/CodexTextGeneration.test.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/textGeneration/OpenCodeTextGeneration.ts": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/usage/UsageService.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/usage/usageAggregation.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/server/src/usage/usageScanCache.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/server/src/usage/usageTranscripts.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/vcs/GitVcsDriver.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/vcs/GitVcsDriverCore.ts": {
+      "complexity_critical": {
+        "count": 4
+      },
+      "complexity_high": {
+        "count": 2
+      },
+      "complexity_moderate": {
+        "count": 2
+      },
+      "crap_critical": {
+        "count": 4
+      },
+      "crap_high": {
+        "count": 3
+      },
+      "crap_moderate": {
+        "count": 4
+      }
+    },
+    "apps/server/src/vcs/VcsProcess.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/workspace/WorkspaceEntries.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/server/src/workspace/WorkspaceSearchIndex.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/public/mockServiceWorker.js": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/web/src/appearanceFonts.ts": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/browser/BrowserDeviceToolbar.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/browser/HostedBrowserWebview.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/browser/browserRecording.ts": {
+      "complexity_moderate": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/browser/browserSurfaceStore.ts": {
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/web/src/browser/browserTargetResolver.ts": {
+      "complexity_moderate": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/web/src/browser/browserViewportLayout.ts": {
+      "complexity_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/browser/useBrowserViewportResize.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/web/src/browserFaviconLogic.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/browserFaviconStore.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/web/src/cloud/linkEnvironment.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/cloud/managedAuth.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/cloud/useCloudLinkController.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/AgentsPanel.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 5
+      }
+    },
+    "apps/web/src/components/BranchToolbar.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/BranchToolbarBranchSelector.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/web/src/components/ChatMarkdown.tsx": {
+      "complexity_high": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/web/src/components/ChatView.logic.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/ChatView.tsx": {
+      "complexity_critical": {
+        "count": 7
+      },
+      "complexity_high": {
+        "count": 2
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 7
+      },
+      "crap_high": {
+        "count": 4
+      },
+      "crap_moderate": {
+        "count": 9
+      }
+    },
+    "apps/web/src/components/CommandPalette.logic.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/CommandPalette.tsx": {
+      "complexity_critical": {
+        "count": 4
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 4
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/CommandPaletteResults.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/ComposerPromptEditor.tsx": {
+      "complexity_high": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 4
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 7
+      }
+    },
+    "apps/web/src/components/DiffPanel.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/GitActionsControl.logic.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/GitActionsControl.tsx": {
+      "complexity_critical": {
+        "count": 4
+      },
+      "crap_critical": {
+        "count": 4
+      },
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "apps/web/src/components/LegacySidebar.tsx": {
+      "complexity_critical": {
+        "count": 5
+      },
+      "crap_critical": {
+        "count": 4
+      },
+      "crap_moderate": {
+        "count": 5
+      }
+    },
+    "apps/web/src/components/ProviderUpdateEnvironmentRows.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/ProviderUpdateLaunchNotification.logic.test.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/ProviderUpdateLaunchNotification.logic.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/ProviderUpdateLaunchNotification.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/ProviderUpdatePrimaryNotification.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/PullRequestThreadDialog.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/RightPanelTabs.tsx": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/Sidebar.tsx": {
+      "complexity_critical": {
+        "count": 5
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 5
+      },
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 4
+      }
+    },
+    "apps/web/src/components/ThreadCommandSubtitle.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/ThreadStatusIndicators.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/ThreadTerminalDrawer.tsx": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/web/src/components/auth/PairingRouteSurface.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/chat/ChangedFilesTree.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/chat/ChatComposer.tsx": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "complexity_high": {
+        "count": 3
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 5
+      },
+      "crap_moderate": {
+        "count": 4
+      }
+    },
+    "apps/web/src/components/chat/ChatHeader.tsx": {
+      "complexity_critical": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/chat/ComposerCommandMenu.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/chat/ComposerPendingUserInputPanel.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "apps/web/src/components/chat/ComposerPreviewAnnotationCards.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/chat/ComposerPrimaryActions.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/chat/ComposerStashMenu.tsx": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/chat/DraftHeroHeadline.tsx": {
+      "complexity_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/chat/MessagesTimeline.logic.ts": {
+      "complexity_critical": {
+        "count": 3
+      },
+      "crap_critical": {
+        "count": 3
+      }
+    },
+    "apps/web/src/components/chat/MessagesTimeline.test.tsx": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/chat/MessagesTimeline.tsx": {
+      "complexity_critical": {
+        "count": 4
+      },
+      "complexity_high": {
+        "count": 3
+      },
+      "crap_critical": {
+        "count": 3
+      },
+      "crap_high": {
+        "count": 4
+      },
+      "crap_moderate": {
+        "count": 4
+      }
+    },
+    "apps/web/src/components/chat/ModelPickerContent.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/chat/ModelPickerSidebar.tsx": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/chat/OpenInPicker.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/chat/PanelLayoutControls.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/chat/ProposedPlanCard.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/chat/ProviderModelPicker.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/chat/TraitsPicker.tsx": {
+      "complexity_high": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/clerk/T3ConnectUserProfilePage.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/cloud/CloudEnvironmentConnectList.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/cloud/ConnectOnboardingDialog.tsx": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/composerInlineTokenPaste.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/desktop/SshPasswordPromptDialog.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/diffs/AnnotatableCodeView.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/diffs/DiffCommentAnnotation.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/files/FileBrowserPanel.tsx": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/files/FilePreviewPanel.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/preview/AgentBrowserCursor.tsx": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/preview/PreviewAutomationHosts.tsx": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 2
+      }
+    },
+    "apps/web/src/components/preview/PreviewChromeRow.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/preview/PreviewPanelShell.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/preview/PreviewView.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/preview/ThreadPreviewMiniPlayer.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/preview/previewAutomationErrors.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/projectScriptEditor.tsx": {
+      "complexity_high": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/pullRequest/PullRequestCodeTab.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "apps/web/src/components/pullRequest/PullRequestDetailPanel.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/pullRequest/PullRequestListEmptyState.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/pullRequest/PullRequestListFilters.tsx": {
+      "complexity_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/pullRequest/PullRequestMarkdownEditor.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/pullRequest/PullRequestReviewAnnotation.tsx": {
+      "complexity_critical": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/pullRequest/PullRequestReviewerPicker.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/pullRequest/PullRequestRow.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/pullRequest/PullRequestSummaryTab.tsx": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/pullRequest/PullRequestTimelineTab.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/pullRequest/pullRequestFileOrder.logic.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/pullRequest/pullRequestList.logic.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/pullRequest/pullRequestMarkdown.logic.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/pullRequest/pullRequestProjectAssignment.logic.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/search/ProjectContentSearchDialog.tsx": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/settings/AddProviderInstanceDialog.tsx": {
+      "complexity_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/settings/ConnectionsSettings.tsx": {
+      "complexity_critical": {
+        "count": 4
+      },
+      "complexity_high": {
+        "count": 4
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 4
+      },
+      "crap_high": {
+        "count": 4
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/web/src/components/settings/DiagnosticsSettings.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/settings/IntegrationsSettings.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/settings/KeybindingsSettings.logic.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/settings/KeybindingsSettings.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "apps/web/src/components/settings/ProjectSettingsPanel.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/web/src/components/settings/ProviderInstanceCard.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/settings/ProviderModelsSection.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/settings/ProviderSettingsForm.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/settings/ProviderSettingsPanel.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/settings/ResourceTelemetryDiagnostics.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/web/src/components/settings/SettingsPanels.tsx": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 2
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 4
+      }
+    },
+    "apps/web/src/components/settings/SettingsSidebarNav.tsx": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/settings/SourceControlSettings.tsx": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/settings/ThemeColorPicker.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/settings/ThemeEditorHost.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/settings/ThemeEditorPanel.tsx": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/settings/ThemeImportDialog.tsx": {
+      "complexity_high": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/web/src/components/settings/ThemeSearchSection.tsx": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/settings/ThemeSettings.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_high": {
+        "count": 2
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/web/src/components/settings/providerStatus.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/settings/themeInspector.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/sidebar/SidebarProviderUpdatePill.tsx": {
+      "complexity_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/sidebar/SidebarUpdatePill.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/ui/input.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/ui/sidebar.tsx": {
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/web/src/components/ui/toast.tsx": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 3
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/usage/UsagePage.tsx": {
+      "complexity_critical": {
+        "count": 1
+      }
+    },
+    "apps/web/src/components/usage/UsageProviderChart.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/web/src/composer-logic.ts": {
+      "complexity_high": {
+        "count": 2
+      }
+    },
+    "apps/web/src/composerDraftStore.ts": {
+      "complexity_critical": {
+        "count": 9
+      },
+      "complexity_high": {
+        "count": 3
+      },
+      "crap_critical": {
+        "count": 9
+      },
+      "crap_high": {
+        "count": 6
+      },
+      "crap_moderate": {
+        "count": 9
+      }
+    },
+    "apps/web/src/connection/platform.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/contextMenuFallback.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/historyBootstrap.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/hooks/useHandleNewThread.ts": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "crap_critical": {
+        "count": 3
+      }
+    },
+    "apps/web/src/hooks/useMediaQuery.ts": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/hooks/useTheme.ts": {
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/web/src/hooks/useThreadActionMenu.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/web/src/hooks/useThreadActions.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/keybindings.ts": {
+      "complexity_moderate": {
+        "count": 2
+      }
+    },
+    "apps/web/src/lib/contextWindow.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/lib/diffRendering.test.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/lib/openPullRequestLink.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/lib/previewAnnotation.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/lib/projectScriptKeybindings.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/lib/terminalUiStateCleanup.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/lib/turnDiffTree.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/markdown-clipboard.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/web/src/markdown-github-alerts.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/markdown-links.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/markdown-list-indentation.ts": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/openVsxThemes.test.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/openVsxThemes.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_high": {
+        "count": 2
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/web/src/orchestrationEventEffects.ts": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/web/src/orchestrationRecovery.ts": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "apps/web/src/portDiscoveryState.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/previewStateStore.ts": {
+      "complexity_high": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/reviewCommentContext.ts": {
+      "complexity_high": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/rightPanelStore.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/web/src/routes/__root.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/routes/_chat.$environmentId.$threadId.tsx": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/routes/_chat.pull-requests.tsx": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "complexity_high": {
+        "count": 2
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 3
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/web/src/routes/_chat.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/web/src/session-logic.test.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/session-logic.ts": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "complexity_high": {
+        "count": 2
+      },
+      "complexity_moderate": {
+        "count": 2
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 7
+      },
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "apps/web/src/state/queries.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/terminal/ghostty/core.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/web/src/terminal/ghostty/renderer.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/web/src/terminal/ghostty/surface.ts": {
+      "complexity_high": {
+        "count": 3
+      },
+      "complexity_moderate": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 7
+      }
+    },
+    "apps/web/src/terminalUiStateStore.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 4
+      }
+    },
+    "apps/web/src/themeBoot.test.ts": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/themePalette.ts": {
+      "complexity_high": {
+        "count": 2
+      },
+      "complexity_moderate": {
+        "count": 5
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/web/src/timestampFormat.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/uiStateStore.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/src/vscodeThemeImport.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "apps/web/vite.config.ts": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "infra/relay/src/agentActivity/ApnsClient.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "infra/relay/src/agentActivity/ApnsDeliveries.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 3
+      },
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "infra/relay/src/agentActivity/apnsDeliveryJobs.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "infra/relay/src/environments/EnvironmentConnector.ts": {
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "infra/relay/src/environments/EnvironmentLinker.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "infra/relay/src/environments/EnvironmentPublishSignatures.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "infra/relay/src/http/Api.test.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "infra/relay/src/http/Api.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "infra/relay/src/observability.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "oxlint-plugin-t3code/rules/namespace-node-imports.ts": {
+      "crap_high": {
+        "count": 3
+      }
+    },
+    "oxlint-plugin-t3code/rules/no-global-process-runtime.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "oxlint-plugin-t3code/rules/no-inline-schema-compile.ts": {
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "oxlint-plugin-t3code/rules/no-manual-effect-runtime-in-tests.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "oxlint-plugin-t3code/rules/no-native-title-tooltip.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "oxlint-plugin-t3code/utils.ts": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "packages/client-runtime/src/connection/errors.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "packages/client-runtime/src/connection/presentation.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "packages/client-runtime/src/connection/resolver.test.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "packages/client-runtime/src/connection/supervisor.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "packages/client-runtime/src/errors/errorTrace.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "packages/client-runtime/src/errors/safeLog.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "packages/client-runtime/src/relay/discovery.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "packages/client-runtime/src/state/gitActions.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "packages/client-runtime/src/state/projectGrouping.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "packages/client-runtime/src/state/shell-sync.test.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "packages/client-runtime/src/state/shell.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "packages/client-runtime/src/state/subagentRuntime.ts": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "packages/client-runtime/src/state/threadReducer.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "packages/client-runtime/src/state/threadSort.ts": {
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "packages/client-runtime/src/state/threads.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "packages/contracts/src/previewAutomation.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "packages/contracts/src/vcs.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "packages/effect-acp/scripts/generate.ts": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "packages/effect-acp/src/protocol.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "packages/effect-codex-app-server/scripts/generate.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "packages/effect-codex-app-server/src/errors.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "packages/effect-codex-app-server/test/fixtures/codex-app-server-mock-peer.ts": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "packages/shared/src/agentAwareness.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "packages/shared/src/cliArgs.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "packages/shared/src/composerInlineTokens.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "packages/shared/src/composerTrigger.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "packages/shared/src/dpop.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "packages/shared/src/keybindings.ts": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "packages/shared/src/model.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "packages/shared/src/observability.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "packages/shared/src/qrCode.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "packages/shared/src/relayTracing.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "packages/shared/src/schemaJson.ts": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "packages/shared/src/semver.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "packages/shared/src/serverSettings.ts": {
+      "complexity_high": {
+        "count": 1
+      }
+    },
+    "packages/shared/src/shell.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "packages/shared/src/toolActivity.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 3
+      }
+    },
+    "packages/shared/src/usageMerge.ts": {
+      "complexity_high": {
+        "count": 1
+      }
+    },
+    "packages/ssh/src/config.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "packages/ssh/src/tunnel.ts": {
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "scripts/announce-connect-ga.ts": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "scripts/build-desktop-artifact.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "scripts/dev-runner.ts": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "scripts/export-brand-icons.ts": {
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "scripts/lib/cli-external-packages.test.ts": {
+      "complexity_moderate": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "scripts/lib/update-manifest.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "scripts/mobile-showcase-environment.ts": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "scripts/mobile-showcase.ts": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "scripts/resolve-previous-release-tag.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    }
+  },
+  "runtime_coverage_findings": [],
+  "target_keys": [
+    "apps/desktop/src/preview/PickLabelPosition.ts:dead code",
+    "apps/mobile/modules/t3-markdown-text/src/NativeMarkdownSelectableText.ios.tsx:complexity",
+    "apps/server/src/cli/config.ts:dead code",
+    "apps/web/src/hooks/useHandleNewThread.ts:complexity",
+    "apps/mobile/src/persistence/imperative.ts:high impact",
+    "apps/mobile/src/native/T3ComposerEditor.native.tsx:complexity",
+    "apps/server/src/workspace/WorkspaceEntries.ts:dead code",
+    "apps/web/src/components/cloud/CloudEnvironmentConnectList.tsx:complexity",
+    "apps/web/src/modelSelection.ts:circular dependency",
+    "apps/web/src/providerModels.ts:high impact",
+    "apps/desktop/src/ipc/methods/preview.ts:dead code",
+    "apps/server/src/provider/Layers/codexLaunchArgs.ts:high impact",
+    "apps/web/src/browserHistoryStore.ts:high impact",
+    "apps/server/src/cli/triage.ts:dead code",
+    "apps/mobile/src/features/review/diffParser.ts:complexity",
+    "apps/mobile/src/features/cloud/managedRelayState.ts:dead code",
+    "apps/server/src/persistence/Migrations.ts:dead code",
+    "apps/server/src/sourceControl/BitbucketApi.ts:dead code",
+    "apps/web/src/composerDraftStore.ts:circular dependency",
+    "infra/relay/src/agentActivity/apnsDeliveryJobs.ts:dead code",
+    "apps/web/src/lib/contextWindow.ts:high impact",
+    "apps/desktop/src/preview/Manager.ts:dead code",
+    "apps/web/src/portDiscoveryState.ts:high impact",
+    "apps/desktop/src/ssh/DesktopSshPasswordPrompts.ts:dead code",
+    "apps/web/src/components/pullRequest/PullRequestCodeTab.tsx:complexity",
+    "apps/web/src/hooks/useThreadActions.ts:dead code",
+    "apps/server/src/terminal/Manager.ts:dead code",
+    "apps/mobile/src/features/settings/lib/legal-document-url.ts:dead code",
+    "apps/server/src/provider/Layers/ProviderAdapterRegistry.ts:dead code",
+    "packages/shared/src/relaySigning.ts:high impact",
+    "apps/server/src/auth/EnvironmentAuth.ts:circular dependency",
+    "apps/web/src/components/settings/SettingsSidebarNav.tsx:complexity",
+    "apps/server/scripts/t3-sqlite-state.ts:dead code",
+    "apps/web/src/components/ui/badge.tsx:circular dependency",
+    "apps/server/src/persistence/AuthSessions.ts:dead code",
+    "apps/server/src/persistence/ProviderSessionRuntime.ts:dead code",
+    "apps/mobile/modules/t3-markdown-text/src/nativeMarkdownText.ts:dead code",
+    "apps/web/src/observability/clientTracing.ts:dead code",
+    "apps/mobile/src/features/review/useNativeReviewDiffBridge.ts:dead code",
+    "apps/web/src/components/chat/changedFilesPresentation.ts:dead code",
+    "apps/server/src/persistence/AuthPairingLinks.ts:dead code",
+    "apps/server/src/sourceControl/GitLabCli.ts:dead code",
+    "apps/server/src/persistence/NodeSqliteClient.ts:dead code",
+    "apps/web/src/components/ui/field.tsx:dead code",
+    "apps/web/src/components/ui/alert-dialog.tsx:dead code",
+    "apps/web/src/components/ui/card.tsx:dead code",
+    "apps/desktop/src/backend/DesktopLocalEnvironmentAuth.ts:dead code",
+    "apps/mobile/src/state/use-selected-thread-git-state.ts:high impact",
+    "apps/web/src/components/ui/combobox.tsx:dead code",
+    "apps/mobile/src/features/threads/threadPresentation.ts:dead code",
+    "apps/web/src/rightPanelStore.ts:high impact",
+    "apps/mobile/src/features/review/reviewPerf.ts:dead code",
+    "apps/web/src/components/desktopUpdate.logic.ts:high impact",
+    "apps/server/src/diagnostics/ProcessDiagnostics.ts:dead code",
+    "apps/web/src/components/chat/providerIconUtils.ts:circular dependency",
+    "apps/web/src/components/ChatView.tsx:complexity",
+    "packages/client-runtime/src/connection/supervisor.ts:complexity",
+    "apps/server/src/sourceControl/AzureDevOpsCli.ts:dead code",
+    "apps/web/src/localApi.ts:circular dependency",
+    "apps/server/src/mcp/toolkits/preview/tools.ts:dead code",
+    "apps/mobile/src/features/connection/ConnectionSheetButton.tsx:dead code",
+    "apps/server/src/auth/SessionStore.ts:dead code",
+    "apps/web/src/components/DiffPanel.tsx:complexity",
+    "apps/web/src/components/settings/ProjectSettingsPanel.tsx:dead code",
+    "apps/mobile/src/features/threads/markdownCodeHighlightState.ts:dead code",
+    "apps/web/src/browserFaviconLogic.ts:high impact",
+    "packages/client-runtime/src/state/projects.ts:high impact",
+    "apps/server/src/project/T3ProjectFileLoader.ts:dead code",
+    "packages/client-runtime/src/state/threadSort.ts:high impact",
+    "apps/server/src/usage/UsageService.ts:complexity",
+    "apps/server/src/textGeneration/OpenCodeTextGeneration.ts:dead code",
+    "apps/web/src/browser/HostedBrowserWebview.tsx:complexity",
+    "apps/web/src/session-logic.ts:high impact",
+    "packages/shared/src/serverSettings.ts:complexity",
+    "apps/desktop/src/preview/PlaywrightInjectedRuntime.ts:dead code",
+    "apps/web/src/components/ui/sheet.tsx:dead code",
+    "apps/web/src/components/ui/group.tsx:dead code",
+    "apps/server/src/provider/Layers/ProviderInstanceRegistryLive.ts:dead code",
+    "packages/client-runtime/src/connection/presentation.ts:high impact",
+    "apps/server/src/cloud/serviceProtocol.ts:high impact",
+    "apps/web/src/previewMiniPlayerStore.ts:high impact",
+    "apps/mobile/src/features/threads/projectThreadCreationValidation.ts:dead code",
+    "apps/web/src/browser/browserTargetResolver.ts:high impact",
+    "apps/web/src/components/sidebar/SidebarUpdatePill.tsx:complexity",
+    "apps/mobile/src/state/use-atom-command.ts:high impact",
+    "apps/web/src/state/use-atom-command.ts:high impact",
+    "apps/web/src/hooks/useSettings.ts:circular dependency",
+    "apps/mobile/src/features/agent-awareness/notificationPermissions.ts:dead code",
+    "apps/web/src/components/ThreadTerminalDrawer.tsx:complexity",
+    "apps/mobile/src/features/showcase/ShowcaseCaptureCoordinator.tsx:complexity",
+    "packages/client-runtime/src/errors/safeLog.ts:high impact",
+    "apps/desktop/src/settings/DesktopAppSettings.ts:circular dependency",
+    "apps/server/src/orchestration/Layers/ProjectionPipeline.ts:complexity",
+    "apps/mobile/src/features/files/filePath.ts:high impact",
+    "apps/mobile/src/features/threads/git/GitOverviewSheet.tsx:complexity",
+    "apps/server/src/diagnostics/TraceDiagnostics.ts:complexity",
+    "apps/web/src/hooks/useThreadActionMenu.ts:complexity",
+    "apps/server/src/cli/project.ts:dead code",
+    "apps/server/src/pullRequest/GitLabPullRequestCli.ts:dead code",
+    "packages/shared/src/path.ts:high impact",
+    "apps/server/src/resourceTelemetry/DesktopTelemetryReceiver.ts:dead code",
+    "apps/web/src/components/ui/popover.tsx:dead code",
+    "apps/web/src/lib/utils.ts:circular dependency",
+    "apps/server/src/process/externalLauncher.ts:dead code",
+    "apps/web/src/components/settings/KeybindingsSettings.logic.ts:high impact",
+    "apps/mobile/src/features/diffs/nativeReviewDiffHighlighter.ts:dead code",
+    "apps/server/src/os-jank.ts:high impact",
+    "apps/web/src/components/ui/radio-group.tsx:dead code",
+    "apps/server/src/imageMime.ts:complexity",
+    "apps/server/src/provider/Layers/CodexSessionRuntime.ts:complexity",
+    "apps/server/src/auth/utils.ts:high impact",
+    "apps/web/src/lib/previewAnnotation.ts:high impact",
+    "scripts/lib/dev-share.ts:dead code",
+    "apps/web/src/components/LegacySidebar.tsx:complexity",
+    "apps/mobile/src/components/ControlPill.tsx:complexity",
+    "apps/server/src/orchestration/Layers/ProviderRuntimeIngestion.ts:complexity",
+    "apps/server/src/startupAccess.ts:high impact",
+    "apps/web/src/components/PullRequestThreadDialog.tsx:complexity",
+    "apps/web/src/routes/_chat.tsx:complexity",
+    "apps/web/src/components/ui/toggle-group.tsx:dead code",
+    "apps/mobile/src/features/home/homeThreadList.ts:complexity",
+    "apps/server/src/cli/pair.ts:dead code",
+    "apps/mobile/src/features/threads/NewTaskRouteScreen.tsx:complexity",
+    "apps/mobile/src/features/review/useReviewSections.ts:complexity",
+    "apps/web/src/components/chat/ChatHeader.tsx:complexity",
+    "apps/web/src/components/cloud/ConnectOnboardingDialog.tsx:complexity",
+    "apps/web/src/components/ui/menu.tsx:circular dependency",
+    "apps/server/src/pullRequest/BitbucketPullRequestApi.ts:dead code",
+    "oxlint-plugin-t3code/utils.ts:high impact",
+    "apps/mobile/src/features/layout/AdaptiveWorkspaceLayout.tsx:complexity",
+    "apps/server/src/cloud/bootService.ts:dead code",
+    "apps/server/src/vcs/GitVcsDriver.ts:circular dependency",
+    "packages/shared/src/semver.ts:complexity",
+    "apps/server/src/auth/PairingGrantStore.ts:dead code",
+    "apps/web/src/reviewCommentContext.ts:complexity",
+    "apps/web/src/modelOrdering.ts:high impact",
+    "apps/server/src/pullRequest/AzureDevOpsPullRequestCli.ts:dead code",
+    "apps/desktop/src/wsl/wslPathParsing.ts:high impact",
+    "apps/server/src/assets/AssetAccess.ts:complexity",
+    "apps/web/src/components/pullRequest/PullRequestReviewAnnotation.tsx:complexity",
+    "apps/web/src/components/search/ProjectContentSearchDialog.tsx:complexity",
+    "apps/mobile/src/features/review/ReviewCommentComposerSheet.tsx:complexity",
+    "apps/mobile/src/lib/threadActivity.ts:high impact",
+    "apps/mobile/src/features/threads/NewTaskContextPickerScreens.tsx:complexity",
+    "apps/mobile/src/features/threads/new-task-flow-provider.tsx:complexity",
+    "apps/server/src/orchestration/Layers/ProjectionSnapshotQuery.ts:complexity",
+    "apps/server/src/provider/Layers/CodexAdapter.ts:complexity",
+    "apps/desktop/src/app/DesktopEnvironment.ts:circular dependency",
+    "apps/mobile/src/features/threads/thread-list-v2-items.tsx:complexity",
+    "apps/mobile/src/features/agent-awareness/notificationPayload.ts:untested risk",
+    "apps/server/src/git/GitManager.ts:complexity",
+    "apps/web/src/components/chat/MessagesTimeline.logic.ts:complexity",
+    "apps/web/src/components/ui/select.tsx:circular dependency",
+    "apps/mobile/src/features/home/thread-swipe-actions.tsx:dead code",
+    "apps/web/src/components/chat/ChatComposer.tsx:complexity",
+    ".github/scripts/thread-transfer-report.cjs:complexity",
+    "apps/web/src/cloud/useCloudLinkController.ts:complexity",
+    "apps/server/src/orchestration/Layers/ProviderCommandReactor.ts:complexity",
+    "apps/web/src/components/Sidebar.tsx:complexity",
+    "apps/web/src/components/preview/PreviewView.tsx:complexity",
+    "packages/shared/src/toolActivity.ts:untested risk",
+    "apps/mobile/src/features/threads/thread-list-items.tsx:complexity",
+    "apps/web/src/components/ChatView.logic.ts:high impact",
+    "apps/web/src/components/chat/MessagesTimeline.tsx:complexity",
+    "apps/mobile/src/components/ComposerToolbar.tsx:complexity",
+    "apps/server/src/usage/usageScanCache.ts:complexity",
+    "apps/web/src/components/settings/SettingsPanels.tsx:complexity",
+    "oxlint-plugin-t3code/rules/no-global-process-runtime.ts:untested risk",
+    "apps/server/src/provider/Layers/ClaudeAdapter.ts:complexity",
+    "apps/web/src/components/chat/ComposerPrimaryActions.tsx:complexity",
+    "apps/mobile/src/features/threads/ThreadRouteScreen.tsx:complexity",
+    "apps/web/src/components/CommandPalette.tsx:complexity",
+    "apps/web/src/routes/_chat.pull-requests.tsx:complexity",
+    "apps/mobile/src/features/threads/threadListV2.ts:complexity",
+    "apps/web/src/components/BranchToolbarBranchSelector.tsx:complexity",
+    "apps/mobile/src/features/connection/ConnectionsNewRouteScreen.tsx:complexity",
+    "oxlint-plugin-t3code/rules/namespace-node-imports.ts:untested risk",
+    "apps/mobile/src/features/threads/NewTaskDraftScreen.tsx:complexity",
+    "apps/web/src/components/GitActionsControl.tsx:complexity",
+    "apps/web/src/components/preview/PreviewAutomationHosts.tsx:complexity",
+    "apps/web/src/components/chat/TraitsPicker.tsx:circular dependency",
+    "apps/web/src/components/settings/ConnectionsSettings.tsx:complexity",
+    "apps/mobile/src/components/AndroidAnchoredMenu.tsx:complexity",
+    "apps/server/src/pullRequest/PullRequestService.ts:complexity",
+    "apps/web/src/components/chat/ModelPickerContent.tsx:complexity",
+    "apps/server/src/provider/Layers/GrokAdapter.ts:complexity",
+    "apps/web/src/components/BranchToolbar.tsx:complexity",
+    "apps/web/src/components/pullRequest/PullRequestDetailPanel.tsx:complexity",
+    "apps/mobile/src/features/threads/ThreadComposer.tsx:complexity",
+    "apps/mobile/src/features/home/HomeScreen.tsx:complexity",
+    "apps/web/src/components/chat/composerProviderState.tsx:circular dependency",
+    "apps/mobile/src/features/files/ThreadFilesRouteScreen.tsx:complexity",
+    "apps/mobile/src/features/terminal/ThreadTerminalRouteScreen.tsx:complexity",
+    "apps/server/src/provider/acp/AcpRuntimeModel.ts:high impact",
+    "apps/web/src/components/GitActionsControl.logic.ts:complexity",
+    "apps/web/src/components/settings/ThemeSearchSection.tsx:complexity",
+    "apps/desktop/src/preview/FaviconCapture.ts:complexity",
+    "apps/mobile/src/features/threads/ThreadNavigationSidebar.tsx:complexity",
+    "apps/web/src/components/settings/ProviderSettingsPanel.tsx:complexity",
+    "apps/desktop/src/shell/DesktopShellEnvironment.ts:complexity",
+    "apps/server/src/resourceTelemetry/Model.ts:complexity",
+    "apps/web/src/components/preview/PreviewChromeRow.tsx:complexity",
+    "apps/web/src/terminal/ghostty/renderer.ts:complexity",
+    "apps/server/src/orchestration/decider.ts:complexity",
+    "apps/web/src/components/files/FilePreviewPanel.tsx:complexity",
+    "apps/web/src/components/settings/ProviderInstanceCard.tsx:complexity",
+    "apps/mobile/src/features/review/ReviewSheet.tsx:complexity",
+    "apps/web/src/contextMenuFallback.ts:complexity",
+    "apps/web/src/components/pullRequest/PullRequestSummaryTab.tsx:complexity",
+    "apps/mobile/src/features/threads/PendingUserInputCard.tsx:complexity",
+    "apps/server/src/vcs/GitVcsDriverCore.ts:complexity",
+    "apps/mobile/src/features/threads/ThreadDetailScreen.tsx:complexity",
+    "apps/web/src/components/ui/button.tsx:circular dependency",
+    "apps/mobile/src/native/T3ComposerEditor.ios.tsx:complexity",
+    "apps/web/src/components/settings/DiagnosticsSettings.tsx:complexity",
+    "apps/web/src/components/settings/ResourceTelemetryDiagnostics.tsx:complexity",
+    "packages/shared/src/cliArgs.ts:complexity",
+    "apps/mobile/src/features/threads/ThreadFeed.tsx:complexity",
+    "apps/server/src/provider/Layers/OpenCodeAdapter.ts:complexity",
+    "apps/web/src/components/settings/ThemeSettings.tsx:complexity",
+    "apps/web/src/components/usage/UsagePage.tsx:complexity",
+    "apps/web/src/terminal/ghostty/surface.ts:complexity",
+    "packages/client-runtime/src/state/subagentRuntime.ts:complexity",
+    "apps/web/src/components/pullRequest/pullRequestList.logic.ts:complexity",
+    "apps/server/src/auth/dpop.ts:circular dependency",
+    "apps/server/src/pullRequest/gitHubPullRequestJson.ts:complexity",
+    "apps/web/src/components/settings/ThemeEditorPanel.tsx:complexity",
+    "packages/client-runtime/src/state/gitActions.ts:complexity",
+    "scripts/build-desktop-artifact.ts:complexity",
+    "apps/mobile/src/widgets/AgentActivity.tsx:complexity",
+    "apps/web/src/components/Icons.tsx:circular dependency",
+    "apps/server/src/git/GitManager.test.ts:complexity",
+    "apps/web/src/openVsxThemes.ts:complexity",
+    "apps/web/src/components/chat/ComposerControl.tsx:circular dependency",
+    "scripts/lib/update-manifest.ts:complexity",
+    "packages/client-runtime/src/state/threadReducer.ts:complexity",
+    "scripts/mobile-showcase.ts:complexity",
+    "packages/shared/src/qrCode.ts:complexity",
+    "apps/server/scripts/acp-mock-agent.ts:complexity"
+  ]
+}
