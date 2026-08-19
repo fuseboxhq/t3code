@@ -185,9 +185,13 @@ export function buildLeadHandoffPrompt(lead: {
   readonly repository: string;
   readonly body: string;
 }): string {
-  const body = lead.body.trim();
+  // A body carrying the closing tag would end the quoted block early, and everything after it
+  // would read as instructions; a zero-width space breaks the tag without changing the words.
+  const inert = lead.body.trim().replaceAll(/<(\/?)issue-body>/gi, "<\u200b$1issue-body>");
   const bounded =
-    body.length > HANDOFF_BODY_LIMIT ? `${body.slice(0, HANDOFF_BODY_LIMIT)}\n[truncated]` : body;
+    inert.length > HANDOFF_BODY_LIMIT
+      ? `${inert.slice(0, HANDOFF_BODY_LIMIT)}\n[truncated]`
+      : inert;
   return [
     `Work on Lead #${lead.number} in ${lead.repository}: ${lead.title}`,
     lead.url,

@@ -13,6 +13,7 @@ function LeadStateGlyph({ state }: { state: EnvironmentIssueEntry["state"] }) {
   return (
     <Icon
       aria-label={state === "open" ? "Open" : "Closed"}
+      role="img"
       className={cn(
         "size-4 shrink-0",
         state === "open"

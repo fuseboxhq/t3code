@@ -185,7 +185,7 @@ export function LeadDetailPanel({
     const body = commentDraft.trim();
     if (body.length === 0 || commentSending) return;
     setCommentSending(true);
-    const result = await comment({ environmentId, input: { ...reference, body: commentDraft } });
+    const result = await comment({ environmentId, input: { ...reference, body } });
     setCommentSending(false);
     if (result._tag === "Failure") {
       // The draft stays with the words still in it: retyping is the one thing a failed send
@@ -276,7 +276,7 @@ export function LeadDetailPanel({
       <Tooltip>
         <TooltipTrigger
           render={
-            <span>
+            <span tabIndex={0}>
               <Button disabled size="sm" variant="default">
                 <HammerIcon aria-hidden className="size-3.5" />
                 {startWorkLabel}
@@ -354,7 +354,7 @@ export function LeadDetailPanel({
       <Tooltip>
         <TooltipTrigger
           render={
-            <span>
+            <span tabIndex={0}>
               <Button
                 disabled={!canClose || stateChanging}
                 size="sm"
@@ -377,7 +377,7 @@ export function LeadDetailPanel({
       <Tooltip>
         <TooltipTrigger
           render={
-            <span>
+            <span tabIndex={0}>
               <Button
                 disabled={!canReopen || stateChanging}
                 size="sm"
