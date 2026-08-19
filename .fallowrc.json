@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "ignoreExports": [
+    {
+      "file": "apps/server/src/**",
+      "exports": ["layer", "make", "fromProviders"]
+    }
+  ],
+  "audit": {
+    "gate": "new-only",
+    "deadCodeBaseline": ".fallow-baselines/dead-code-baseline.json",
+    "healthBaseline": ".fallow-baselines/health-baseline.json",
+    "dupesBaseline": ".fallow-baselines/dupes-baseline.json"
+  }
+}

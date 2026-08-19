@@ -6,7 +6,6 @@ import type { SourceControlProviderKind } from "@t3tools/contracts";
 import * as AzureDevOpsCli from "../sourceControl/AzureDevOpsCli.ts";
 import * as BitbucketApi from "../sourceControl/BitbucketApi.ts";
 import * as GitHubCli from "../sourceControl/GitHubCli.ts";
-import * as GitHubGraphQlBudget from "../sourceControl/githubGraphQlBudget.ts";
 import * as GitLabCli from "../sourceControl/GitLabCli.ts";
 import * as AzureDevOpsPullRequestCli from "./AzureDevOpsPullRequestCli.ts";
 import * as AzureDevOpsPullRequestProvider from "./AzureDevOpsPullRequestProvider.ts";
@@ -52,13 +51,13 @@ export const make = Effect.map(
   fromProviders,
 );
 
+/**
+ * `GitHubGraphQlBudget` is deliberately NOT provided here: it is the workspace-wide GitHub
+ * quota, shared with the issue feed, and a private layer inside this registry would race the
+ * other feature with independent accounting. The server provides the single shared instance.
+ */
 export const layer = Layer.effect(PullRequestProviderRegistry, make).pipe(
-  Layer.provide(
-    GitHubPullRequestCli.layer.pipe(
-      Layer.provide(GitHubCli.layer),
-      Layer.provide(GitHubGraphQlBudget.layer),
-    ),
-  ),
+  Layer.provide(GitHubPullRequestCli.layer.pipe(Layer.provide(GitHubCli.layer))),
   Layer.provide(GitLabPullRequestCli.layer.pipe(Layer.provide(GitLabCli.layer))),
   Layer.provide(BitbucketPullRequestApi.layer.pipe(Layer.provide(BitbucketApi.layer))),
   Layer.provide(AzureDevOpsPullRequestCli.layer.pipe(Layer.provide(AzureDevOpsCli.layer))),
