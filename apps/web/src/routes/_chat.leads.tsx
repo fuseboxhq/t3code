@@ -1,4 +1,4 @@
-import { scopeThreadRef } from "@t3tools/client-runtime/environment";
+import { scopeProjectRef, scopeThreadRef } from "@t3tools/client-runtime/environment";
 import { ThreadId } from "@t3tools/contracts";
 import type {
   EnvironmentId,
@@ -20,8 +20,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { LeadDetailPanel } from "../components/leads/LeadDetailPanel";
 import { LeadRow } from "../components/leads/LeadRow";
+import { showLeadRowContextMenu } from "../components/leads/leadRowContextMenu";
 import {
   LEAD_LABEL,
+  buildLeadHandoffPrompt,
   buildLeadListFilters,
   groupLeadsByProject,
   issueEntryKey,
@@ -46,6 +48,8 @@ import {
   EmptyTitle,
 } from "../components/ui/empty";
 import { SidebarInset } from "../components/ui/sidebar";
+import { toastManager } from "../components/ui/toast";
+import { useComposerHandoff } from "../hooks/useComposerHandoff";
 import { useLiveRefresh } from "../hooks/useLiveRefresh";
 import {
   selectActiveRightPanelSurface,
@@ -424,6 +428,55 @@ function LeadsRouteView() {
     useRightPanelStore.getState().openLead(rightPanelRef, linkedSelection);
   }, [leadsSupported, linkedSelection, rightPanelRef]);
 
+  const { openThreadWithTask } = useComposerHandoff();
+  // The row's shortcut to a thread: the same hand-off as the panel button, with the checkout
+  // decision made by which menu entry was pressed. No issue body here — the row does not carry
+  // one — so the prompt tells the agent to read the issue first.
+  const startLeadWork = useCallback(
+    async (entry: EnvironmentIssueEntry, mode: "worktree" | "local") => {
+      const opened = await openThreadWithTask(
+        scopeProjectRef(entry.environmentId, entry.projectId),
+        {
+          prompt: buildLeadHandoffPrompt({
+            title: entry.title,
+            url: entry.url,
+            number: entry.number,
+            repository: entry.repository,
+            body: "",
+          }),
+        },
+        { envMode: mode },
+      );
+      if (opened === null) {
+        toastManager.add({
+          type: "error",
+          title: "Could not open a thread",
+          description: "Try again from the project, or open a thread first.",
+        });
+        return;
+      }
+      toastManager.add({
+        type: "success",
+        title: "Lead handed to a thread",
+        description:
+          mode === "worktree"
+            ? "The task is in the composer, set to run in a fresh worktree — read it over, then send."
+            : "The task is in the composer, set to run in the current checkout — read it over, then send.",
+      });
+    },
+    [openThreadWithTask],
+  );
+  const handleRowContextMenu = useCallback(
+    (entry: EnvironmentIssueEntry, position: { x: number; y: number }) => {
+      void showLeadRowContextMenu({
+        url: entry.url,
+        position,
+        onStart: (mode) => void startLeadWork(entry, mode),
+      });
+    },
+    [startLeadWork],
+  );
+
   const selectEntry = useCallback(
     (entry: EnvironmentIssueEntry) => {
       if (rightPanelRef === null) return;
@@ -548,6 +601,7 @@ function LeadsRouteView() {
                     ? { environmentLabel: environmentLabels.get(entry.environmentId)! }
                     : {})}
                   onSelect={selectEntry}
+                  onContextMenu={handleRowContextMenu}
                 />
               ))}
             </div>

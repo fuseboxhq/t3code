@@ -48,14 +48,13 @@ import {
 } from "react";
 
 import type { DraftId } from "~/composerDraftStore";
-import { useNewThreadHandler } from "~/hooks/useHandleNewThread";
 import {
   useComposerHandoff,
   writeTaskToComposer,
   type ComposerHandoffTask,
 } from "~/hooks/useComposerHandoff";
+import { usePullRequestThreadCheckout } from "./usePullRequestThreadCheckout";
 import { useCopyToClipboard, writeTextToClipboard } from "~/hooks/useCopyToClipboard";
-import { usePreparePullRequestThreadAction } from "~/lib/sourceControlActions";
 import { cn } from "~/lib/utils";
 import { readLocalApi } from "~/localApi";
 import type { ReviewCommentContext } from "~/reviewCommentContext";
@@ -576,8 +575,8 @@ export function PullRequestDetailPanel({
   } | null>(null);
   const titleDraft = titleScope?.pullRequestKey === pullRequestKey ? titleScope.text : null;
   const [titleSaving, setTitleSaving] = useState(false);
-  const newThread = useNewThreadHandler();
   const { openThreadWithTask } = useComposerHandoff();
+  const checkoutPullRequestThread = usePullRequestThreadCheckout();
   const { environments } = useEnvironments();
   const projects = useProjects();
   // Beside a thread there is nothing to pick: the hand-offs land in that thread's composer, and
@@ -606,10 +605,6 @@ export function PullRequestDetailPanel({
   const acting =
     pickableEnvironments.find((entry) => entry.environmentId === chosenEnvironmentId) ?? null;
   const actingEnvironmentId = acting?.environmentId ?? environmentId;
-  const prepareThread = usePreparePullRequestThreadAction({
-    environmentId: actingEnvironmentId,
-    cwd: acting?.workspaceRoot ?? detail?.workspaceRoot ?? null,
-  });
 
   const perform = async (
     action: PullRequestAction,
@@ -757,114 +752,17 @@ export function PullRequestDetailPanel({
       return;
     }
     setHandoff(kind);
-    // The menu closes on the press and takes its "Preparing..." label with it, so this is the
-    // only thing answering for the checkout. It carries no timeout of its own: a loading toast
-    // never expires, and an explicit one would survive the update and pin the result on screen.
-    const toastId = toastManager.add({
-      type: "loading",
-      title: "Preparing the pull request checkout...",
-    });
-    // Wherever the reader chose to act: the thread, the checkout it is pointed at and the composer
-    // the task lands in are all one server's, and picking another one moves all three.
-    const projectRef = scopeProjectRef(actingEnvironmentId, acting?.projectId ?? detail.projectId);
-    // The thread is opened before the checkout rather than after it, because the project's setup
-    // script only runs for a checkout that knows which thread it is for — and a worktree with no
-    // dependencies installed is not something anyone can test.
-    const opened = await newThread(projectRef).then(
-      (session) => session,
-      () => null,
-    );
-    if (opened === null) {
-      setHandoff(null);
-      // Without a thread there is nowhere for the checkout to belong: its setup script would not
-      // run and its task would have no composer to land in. Better to stop before touching the
-      // working tree than to prepare a worktree nobody asked for.
-      toastManager.update(toastId, {
-        type: "error",
-        title: "Could not open a thread for the checkout",
-        description: "Try again from the project, or open a thread first.",
-      });
-      return;
-    }
-    const prepared = await prepareThread.run({
+    // Wherever the reader chose to act: the thread, the checkout it is pointed at and the
+    // composer the task lands in are all one server's, and picking another one moves all three.
+    await checkoutPullRequestThread({
+      environmentId: actingEnvironmentId,
+      projectId: acting?.projectId ?? detail.projectId,
+      cwd: acting?.workspaceRoot ?? detail.workspaceRoot,
       reference: detail.url,
       mode,
-      threadId: opened.threadId,
+      task,
     });
-    if (prepared._tag === "Failure") {
-      setHandoff(null);
-      // The server says what to do about it — that the branch is already checked out in the main
-      // repository, say — and that sentence is the only way out of the failure.
-      const detailMessage =
-        prepareThread.error instanceof Error ? prepareThread.error.message : null;
-      toastManager.update(toastId, {
-        type: "error",
-        title: "Could not prepare the pull request checkout",
-        ...(detailMessage ? { description: detailMessage } : {}),
-      });
-      return;
-    }
-    // The same thread again, now that there is somewhere to point it at. A local checkout has
-    // no worktree of its own, so the thread runs where the repository already is.
-    const pointed = await newThread(projectRef, {
-      branch: prepared.value.branch,
-      worktreePath: prepared.value.worktreePath,
-      envMode: prepared.value.worktreePath === null ? "local" : "worktree",
-    }).then(
-      (session) => session !== null,
-      () => false,
-    );
-    if (!pointed) {
-      setHandoff(null);
-      // The checkout is on disk; only the thread failed to move onto it. Writing the task now
-      // would send the agent at whatever the thread was already open on — which is the one
-      // outcome worth stopping for, since it reads as success and is not.
-      toastManager.update(toastId, {
-        type: "error",
-        title: "Checked out, but the thread stayed where it was",
-        description: `The checkout is ready on \`${prepared.value.branch}\`. Point a thread at it from the branch picker, then ask again.`,
-      });
-      return;
-    }
-    // Released here whatever happened next: a loading toast never expires on its own, so leaving
-    // this set would spin forever and lock every handoff behind it until a reload.
     setHandoff(null);
-    // A worktree that was already there and had been worked in keeps whatever it holds, so the
-    // thread opens on older code than the pull request carries. Said once, in place of the
-    // success, because everything else about the handoff did happen.
-    const staleCheckoutToast = {
-      type: "warning",
-      title: "Checked out, but not on the latest commits",
-      description:
-        "The checkout could not be moved onto the pull request's latest commits, so the code there is older than the pull request. Uncommitted work or local commits keep it where it is.",
-    } as const;
-    if (task === null) {
-      toastManager.update(
-        toastId,
-        prepared.value.isOnPullRequestHead
-          ? {
-              type: "success",
-              title: mode === "local" ? "Checked out here" : "Checked out",
-              description:
-                mode === "local"
-                  ? "This repository is on the pull request's branch, with a thread open on it."
-                  : "The pull request is in its own worktree, with a thread open on it.",
-            }
-          : staleCheckoutToast,
-      );
-      return;
-    }
-    await openThreadWithTask(projectRef, task, opened);
-    toastManager.update(
-      toastId,
-      prepared.value.isOnPullRequestHead
-        ? {
-            type: "success",
-            title: "Checkout ready",
-            description: "The task is in the composer — read it over, then send.",
-          }
-        : staleCheckoutToast,
-    );
   };
 
   const askAboutPullRequest = () => {

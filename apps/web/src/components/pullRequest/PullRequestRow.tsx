@@ -23,6 +23,7 @@ function PullRequestRowImpl({
   environmentLabel,
   matchedElsewhere,
   onSelect,
+  onContextMenu,
 }: {
   entry: EnvironmentPullRequestEntry;
   selected: boolean;
@@ -37,6 +38,8 @@ function PullRequestRowImpl({
    */
   matchedElsewhere?: boolean;
   onSelect: (entry: EnvironmentPullRequestEntry) => void;
+  /** The row's right-click: hand-off shortcuts and link actions, owned by the page. */
+  onContextMenu?: (entry: EnvironmentPullRequestEntry, position: { x: number; y: number }) => void;
 }) {
   const { Icon, providerName } = getSourceControlPresentationForKind(entry.provider);
   return (
@@ -44,6 +47,14 @@ function PullRequestRowImpl({
       type="button"
       aria-current={selected ? "true" : undefined}
       onClick={() => onSelect(entry)}
+      onContextMenu={
+        onContextMenu === undefined
+          ? undefined
+          : (event) => {
+              event.preventDefault();
+              onContextMenu(entry, { x: event.clientX, y: event.clientY });
+            }
+      }
       className={cn(
         "grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
         // Offscreen rows are skipped for style, layout and paint: a long list costs what the
