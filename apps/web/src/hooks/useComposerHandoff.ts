@@ -6,7 +6,11 @@ import {
   handoffPrompt,
   handoffReviewComments,
 } from "../components/pullRequest/pullRequestDetail.logic";
-import { type DraftId, useComposerDraftStore } from "../composerDraftStore";
+import {
+  type DraftId,
+  type DraftThreadEnvMode,
+  useComposerDraftStore,
+} from "../composerDraftStore";
 import type { ReviewCommentContext } from "../reviewCommentContext";
 import { useNewThreadHandler } from "./useHandleNewThread";
 
@@ -66,11 +70,22 @@ export function useComposerHandoff() {
     async (
       projectRef: ScopedProjectRef,
       task: ComposerHandoffTask | null,
-      opened?: { draftId: DraftId; threadId?: ThreadId },
+      options?: {
+        /** A thread the caller already opened — for hand-offs that prepared a checkout first. */
+        readonly opened?: { draftId: DraftId; threadId?: ThreadId };
+        /**
+         * Where the new thread will run, overriding the project's default. "worktree" is the
+         * hand-off that leaves whatever is open alone; "local" runs on the current checkout.
+         */
+        readonly envMode?: DraftThreadEnvMode;
+      },
     ): Promise<{ draftId: DraftId } | null> => {
       const session =
-        opened ??
-        (await newThread(projectRef).then(
+        options?.opened ??
+        (await newThread(
+          projectRef,
+          options?.envMode === undefined ? undefined : { envMode: options.envMode },
+        ).then(
           (result) => result,
           () => null,
         ));

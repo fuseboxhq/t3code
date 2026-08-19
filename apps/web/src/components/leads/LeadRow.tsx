@@ -29,12 +29,15 @@ function LeadRowImpl({
   selected,
   environmentLabel,
   onSelect,
+  onContextMenu,
 }: {
   entry: EnvironmentIssueEntry;
   selected: boolean;
   /** Names the server this row was read from, where the list spans more than one. */
   environmentLabel?: string;
   onSelect: (entry: EnvironmentIssueEntry) => void;
+  /** The row's right-click: hand-off shortcuts and link actions, owned by the page. */
+  onContextMenu?: (entry: EnvironmentIssueEntry, position: { x: number; y: number }) => void;
 }) {
   // The pinned label is what every row here wears; repeating it per row would say nothing.
   const labels = entry.labels.filter((label) => label.name.toLowerCase() !== LEAD_LABEL);
@@ -43,6 +46,14 @@ function LeadRowImpl({
       type="button"
       aria-current={selected ? "true" : undefined}
       onClick={() => onSelect(entry)}
+      onContextMenu={
+        onContextMenu === undefined
+          ? undefined
+          : (event) => {
+              event.preventDefault();
+              onContextMenu(entry, { x: event.clientX, y: event.clientY });
+            }
+      }
       className={cn(
         "grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
         "[contain-intrinsic-block-size:54px] [content-visibility:auto]",

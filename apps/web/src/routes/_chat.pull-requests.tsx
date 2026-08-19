@@ -64,6 +64,9 @@ import {
   type PullRequestExpectedHost,
   type PullRequestFilterOption,
 } from "../components/pullRequest/PullRequestListFilters";
+import { openOnHostLabel } from "../components/pullRequest/pullRequestLinkContextMenu";
+import { showPullRequestRowContextMenu } from "../components/pullRequest/pullRequestRowContextMenu";
+import { usePullRequestThreadCheckout } from "../components/pullRequest/usePullRequestThreadCheckout";
 import { PullRequestListEmptyState } from "../components/pullRequest/PullRequestListEmptyState";
 import { PullRequestListGhost } from "../components/pullRequest/PullRequestGhosts";
 import { PullRequestRow } from "../components/pullRequest/PullRequestRow";
@@ -76,6 +79,7 @@ import {
 } from "../components/WorkspaceBreadcrumb";
 import { PanelLayoutControls } from "../components/chat/PanelLayoutControls";
 import { Button } from "../components/ui/button";
+import { toastManager } from "../components/ui/toast";
 import { Menu, MenuPopup, MenuRadioGroup, MenuRadioItem, MenuTrigger } from "../components/ui/menu";
 import { SidebarInset } from "../components/ui/sidebar";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../components/ui/tooltip";
@@ -1265,6 +1269,46 @@ function PullRequestsRouteView() {
     [listErrors],
   );
 
+  const checkoutPullRequestThread = usePullRequestThreadCheckout();
+  // The row's shortcut to a thread: the panel's own checkout hand-off, with the worktree/local
+  // decision made by which menu entry was pressed and no task beyond the checkout itself.
+  const startRowWork = useCallback(
+    async (entry: EnvironmentPullRequestEntry, mode: "worktree" | "local") => {
+      const cwd = projects.find(
+        (project) =>
+          project.environmentId === entry.environmentId && project.id === entry.projectId,
+      )?.workspaceRoot;
+      if (cwd === undefined) {
+        toastManager.add({
+          type: "error",
+          title: "Could not find the project's checkout",
+          description: "The project this row belongs to is no longer connected.",
+        });
+        return;
+      }
+      await checkoutPullRequestThread({
+        environmentId: entry.environmentId,
+        projectId: entry.projectId,
+        cwd,
+        reference: entry.url,
+        mode,
+        task: null,
+      });
+    },
+    [checkoutPullRequestThread, projects],
+  );
+  const handleRowContextMenu = useCallback(
+    (entry: EnvironmentPullRequestEntry, position: { x: number; y: number }) => {
+      void showPullRequestRowContextMenu({
+        url: entry.url,
+        openLabel: openOnHostLabel(entry.provider),
+        position,
+        onWork: (mode) => void startRowWork(entry, mode),
+      });
+    },
+    [startRowWork],
+  );
+
   // Stable so the memoized rows can skip re-rendering when the list around them changes.
   const selectEntry = useCallback(
     (entry: EnvironmentPullRequestEntry) => {
@@ -1388,6 +1432,7 @@ function PullRequestsRouteView() {
                     selected.number === entry.number
                   }
                   onSelect={selectEntry}
+                  onContextMenu={handleRowContextMenu}
                 />
               ))}
             </div>
