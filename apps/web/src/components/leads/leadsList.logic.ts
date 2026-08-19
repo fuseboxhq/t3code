@@ -7,6 +7,8 @@ import type {
   IssueListResult,
 } from "@t3tools/contracts";
 
+import { parsePullRequestQuery } from "../pullRequest/pullRequestList.logic";
+
 /** A row as the page holds it: the host's entry plus the server it was read from. */
 export interface EnvironmentIssueEntry extends IssueListEntry {
   readonly environmentId: EnvironmentId;
@@ -127,12 +129,6 @@ export function matchesLeadQuery(entry: IssueListEntry, query: string): boolean 
  */
 export const LEAD_LABEL = "lead";
 
-// The wire's own bounds on qualifier values and label groups, minus the pinned `lead` group,
-// applied here so an over-typed search is clipped rather than refused whole by the schema.
-const QUERY_VALUE_LIMIT = 200;
-const QUERY_LABEL_GROUPS_LIMIT = 9;
-const QUERY_LABEL_GROUP_SIZE_LIMIT = 10;
-
 export interface ParsedLeadQuery {
   /** The words left once the qualifiers are taken out, for the hosts' own text search. */
   readonly text: string;
@@ -147,33 +143,20 @@ export interface ParsedLeadQuery {
  * Free text only searches what GitHub's text index covers — titles, bodies, comments — so a
  * typed `label:` or `author:` has to become a host-side filter, or it would only ever match the
  * rows already loaded.
+ *
+ * The pull-request page's parser does the actual reading, because searching is one vocabulary
+ * across both pages and that parser already handles what a naive split cannot: quoted values
+ * (`label:"needs design"`), negated comma lists (`-label:a,b` excludes each), namespaced-label
+ * keys (`size:XXL`), and the wire's own bounds. The fields issues do not have are simply not
+ * read back out of it.
  */
 export function parseLeadQuery(raw: string): ParsedLeadQuery {
-  const labels: string[][] = [];
-  const excludedLabels: string[] = [];
-  let author: string | undefined;
-  const words: string[] = [];
-  for (const token of raw.trim().split(/\s+/).filter(Boolean)) {
-    const match = /^(-?)(label|author):(.+)$/i.exec(token);
-    const value = match?.[3]?.slice(0, QUERY_VALUE_LIMIT);
-    if (match === null || value === undefined || value.length === 0) {
-      words.push(token);
-      continue;
-    }
-    if (match[2]!.toLowerCase() === "author") {
-      // A negated author has no wire field; it stays text rather than being dropped silently.
-      if (match[1] === "-") words.push(token);
-      else author = value;
-      continue;
-    }
-    if (match[1] === "-") excludedLabels.push(value);
-    else labels.push(value.split(",").filter(Boolean).slice(0, QUERY_LABEL_GROUP_SIZE_LIMIT));
-  }
+  const { text, filters } = parsePullRequestQuery(raw);
   return {
-    text: words.join(" "),
-    labels: labels.slice(0, QUERY_LABEL_GROUPS_LIMIT),
-    excludedLabels: excludedLabels.slice(0, QUERY_LABEL_GROUP_SIZE_LIMIT),
-    author,
+    text,
+    labels: filters.labels ?? [],
+    excludedLabels: filters.excludedLabels ?? [],
+    author: filters.author,
   };
 }
 

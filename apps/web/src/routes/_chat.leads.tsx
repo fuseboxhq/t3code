@@ -341,6 +341,8 @@ function LeadsRouteView() {
   // A refresh means the whole visible list again, and a cursored query cannot answer that: it
   // re-reads only its own slice. Going back to a single page long enough to cover everything on
   // screen lets the replace-by-key merge above bring every loaded row up to date in place.
+  // Capped at the listing's own maximum, the same trade the pull-request page makes: past 500
+  // loaded rows a refresh keeps the newest 500 and the rest are re-reached by loading more.
   const refreshList = () => {
     if (sentCursors === null) {
       listQuery.refresh();

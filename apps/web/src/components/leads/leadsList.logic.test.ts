@@ -173,16 +173,27 @@ describe("parseLeadQuery", () => {
     expect(parsed.author).toBe("kev");
   });
 
-  it("keeps unsupported qualifiers as text rather than dropping them", () => {
-    const parsed = parseLeadQuery("-author:kev milestone:v2");
-    expect(parsed.text).toBe("-author:kev milestone:v2");
-    expect(parsed.labels).toEqual([]);
+  it("reads quoted labels whole, the way the pull-request search does", () => {
+    const parsed = parseLeadQuery('label:"needs design" crash');
+    expect(parsed.labels).toEqual([["needs design"]]);
+    expect(parsed.text).toBe("crash");
+  });
+
+  it("excludes each name of a negated comma list", () => {
+    const parsed = parseLeadQuery("-label:wontfix,duplicate");
+    expect(parsed.excludedLabels).toEqual(["wontfix", "duplicate"]);
+  });
+
+  it("keeps a negated author as text rather than dropping it silently", () => {
+    const parsed = parseLeadQuery("-author:kev");
+    expect(parsed.text).toBe("-author:kev");
     expect(parsed.author).toBeUndefined();
   });
 
-  it("clips over-typed values to the wire bounds", () => {
-    const parsed = parseLeadQuery(`label:${"x".repeat(500)}`);
-    expect(parsed.labels[0]?.[0]?.length).toBe(200);
+  it("reads an unknown key as the namespaced label it almost always is", () => {
+    const parsed = parseLeadQuery("size:XXL");
+    expect(parsed.labels).toEqual([["size:XXL"]]);
+    expect(parsed.text).toBe("");
   });
 });
 
