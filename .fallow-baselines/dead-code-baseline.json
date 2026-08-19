@@ -1223,6 +1223,7 @@
     "apps/web/src/logicalProject.ts:ProjectGroupingMode",
     "apps/web/src/logicalProject.ts:ProjectGroup",
     "apps/web/src/logicalProject.ts:ProjectGroupMember",
+    "apps/web/src/routes/_chat.leads.tsx:LeadsSearch",
     "apps/web/src/routes/_chat.pull-requests.tsx:PullRequestsSearch",
     "apps/web/src/sidebarProjectGrouping.ts:SidebarProjectPickerEntry",
     "apps/web/src/sourceControlPresentation.ts:ChangeRequestPresentation",

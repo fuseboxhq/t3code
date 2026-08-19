@@ -2,6 +2,7 @@ import type { ContextMenuItem, PreviewSessionSnapshot, PullRequestState } from "
 import { getTerminalLabel } from "@t3tools/shared/terminalLabels";
 import {
   Bot,
+  CircleDot,
   FileDiff,
   Files,
   GitPullRequest,
@@ -494,6 +495,7 @@ function surfaceTitle(
         getTerminalLabel(surface.activeTerminalId)
       );
     case "pull-request":
+    case "lead":
       return `#${surface.number}`;
     case "agents":
       return "Agents";
@@ -580,6 +582,8 @@ function SurfaceIcon({
                 : "text-muted-foreground";
       return <GitPullRequest className={cn("size-3 shrink-0", toneClassName)} />;
     }
+    case "lead":
+      return <CircleDot className="size-3 shrink-0 text-muted-foreground" />;
     case "agents":
       return <Bot className="size-3 shrink-0" />;
   }
