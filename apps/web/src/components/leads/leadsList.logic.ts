@@ -2,6 +2,7 @@ import type {
   EnvironmentId,
   IssueListCursors,
   IssueListEntry,
+  IssueListFilters,
   IssueListProjectError,
   IssueListResult,
 } from "@t3tools/contracts";
@@ -125,6 +126,65 @@ export function matchesLeadQuery(entry: IssueListEntry, query: string): boolean 
  * is the single word of product built on an otherwise issue-shaped feed.
  */
 export const LEAD_LABEL = "lead";
+
+// The wire's own bounds on qualifier values and label groups, minus the pinned `lead` group,
+// applied here so an over-typed search is clipped rather than refused whole by the schema.
+const QUERY_VALUE_LIMIT = 200;
+const QUERY_LABEL_GROUPS_LIMIT = 9;
+const QUERY_LABEL_GROUP_SIZE_LIMIT = 10;
+
+export interface ParsedLeadQuery {
+  /** The words left once the qualifiers are taken out, for the hosts' own text search. */
+  readonly text: string;
+  /** One group per `label:` token; commas inside a token are GitHub's own OR. */
+  readonly labels: ReadonlyArray<ReadonlyArray<string>>;
+  readonly excludedLabels: ReadonlyArray<string>;
+  readonly author: string | undefined;
+}
+
+/**
+ * What was typed, split into the qualifiers the hosts can act on and the words that are left.
+ * Free text only searches what GitHub's text index covers — titles, bodies, comments — so a
+ * typed `label:` or `author:` has to become a host-side filter, or it would only ever match the
+ * rows already loaded.
+ */
+export function parseLeadQuery(raw: string): ParsedLeadQuery {
+  const labels: string[][] = [];
+  const excludedLabels: string[] = [];
+  let author: string | undefined;
+  const words: string[] = [];
+  for (const token of raw.trim().split(/\s+/).filter(Boolean)) {
+    const match = /^(-?)(label|author):(.+)$/i.exec(token);
+    const value = match?.[3]?.slice(0, QUERY_VALUE_LIMIT);
+    if (match === null || value === undefined || value.length === 0) {
+      words.push(token);
+      continue;
+    }
+    if (match[2]!.toLowerCase() === "author") {
+      // A negated author has no wire field; it stays text rather than being dropped silently.
+      if (match[1] === "-") words.push(token);
+      else author = value;
+      continue;
+    }
+    if (match[1] === "-") excludedLabels.push(value);
+    else labels.push(value.split(",").filter(Boolean).slice(0, QUERY_LABEL_GROUP_SIZE_LIMIT));
+  }
+  return {
+    text: words.join(" "),
+    labels: labels.slice(0, QUERY_LABEL_GROUPS_LIMIT),
+    excludedLabels: excludedLabels.slice(0, QUERY_LABEL_GROUP_SIZE_LIMIT),
+    author,
+  };
+}
+
+/** The listing filters for a parsed query, always pinning the `lead` label first. */
+export function buildLeadListFilters(parsed: ParsedLeadQuery): IssueListFilters {
+  return {
+    labels: [[LEAD_LABEL], ...parsed.labels],
+    ...(parsed.excludedLabels.length === 0 ? {} : { excludedLabels: parsed.excludedLabels }),
+    ...(parsed.author === undefined ? {} : { author: parsed.author }),
+  };
+}
 
 /** How long a lead's body may travel into a composer prompt before it is cut. */
 const HANDOFF_BODY_LIMIT = 4_000;

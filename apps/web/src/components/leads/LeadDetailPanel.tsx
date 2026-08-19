@@ -1,6 +1,6 @@
 import { scopeProjectRef } from "@t3tools/client-runtime/environment";
 import { squashAtomCommandFailure } from "@t3tools/client-runtime/state/runtime";
-import type { EnvironmentId, IssueRef, ProjectId } from "@t3tools/contracts";
+import type { EnvironmentId, IssueActivity, IssueRef, ProjectId } from "@t3tools/contracts";
 import {
   ArrowUpRightIcon,
   CheckCircle2Icon,
@@ -33,27 +33,71 @@ import { readableFailure } from "../pullRequest/pullRequestDetail.logic";
 import { IssueMarkdown } from "./IssueMarkdown";
 import { buildLeadHandoffPrompt } from "./leadsList.logic";
 
+function LeadCommentList({ comments }: { comments: IssueActivity["comments"] }) {
+  return (
+    <>
+      {comments.map((comment) => (
+        <div key={comment.id} className="rounded-lg border border-border/60 bg-card/40 p-3">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <PullRequestActorLabel actor={comment.author} className="max-w-48" />
+            <span>{formatRelativeTimeLabel(comment.createdAt)}</span>
+          </div>
+          <IssueMarkdown className="mt-2" text={comment.body} />
+        </div>
+      ))}
+    </>
+  );
+}
+
+/** The rest of a page: nothing, or a Load more that mounts the page its cursor names. */
+function LeadActivityContinuation({
+  environmentId,
+  reference,
+  page,
+}: {
+  environmentId: EnvironmentId;
+  reference: IssueRef;
+  page: IssueActivity;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  if (page.nextCursor === null) return null;
+  if (expanded) {
+    return (
+      <LeadActivityTail
+        environmentId={environmentId}
+        reference={reference}
+        cursor={page.nextCursor}
+      />
+    );
+  }
+  return (
+    <Button className="self-start" size="xs" variant="outline" onClick={() => setExpanded(true)}>
+      <ChevronDownIcon aria-hidden className="size-3.5" />
+      {page.commentCount > page.comments.length
+        ? `Load more (${page.commentCount} total)`
+        : "Load more"}
+    </Button>
+  );
+}
+
 /**
- * One page of the conversation, and behind it the next. Recursion is the pagination: each page
- * renders its own comments and, once the reader asks, mounts the page its cursor names — so an
- * arbitrarily long conversation loads a bounded page at a time and nothing is re-fetched.
+ * A follow-on page of the conversation. Recursion is the pagination: each page renders its own
+ * comments and, once the reader asks, mounts the page its cursor names — so an arbitrarily long
+ * conversation loads a bounded page at a time. Only follow-on pages live here: the first page
+ * belongs to the panel, whose refresh must be able to re-read it explicitly.
  */
-function LeadActivityPages({
+function LeadActivityTail({
   environmentId,
   reference,
   cursor,
 }: {
   environmentId: EnvironmentId;
   reference: IssueRef;
-  cursor?: string;
+  cursor: string;
 }) {
   const query = useEnvironmentQuery(
-    issueEnvironment.activity({
-      environmentId,
-      input: { ...reference, ...(cursor === undefined ? {} : { cursor }) },
-    }),
+    issueEnvironment.activity({ environmentId, input: { ...reference, cursor } }),
   );
-  const [expanded, setExpanded] = useState(false);
   const page = query.data;
   if (page === null) {
     return query.error === null ? (
@@ -72,36 +116,8 @@ function LeadActivityPages({
   }
   return (
     <>
-      {page.comments.map((comment) => (
-        <div key={comment.id} className="rounded-lg border border-border/60 bg-card/40 p-3">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <PullRequestActorLabel actor={comment.author} className="max-w-48" />
-            <span>{formatRelativeTimeLabel(comment.createdAt)}</span>
-          </div>
-          <IssueMarkdown className="mt-2" text={comment.body} />
-        </div>
-      ))}
-      {page.nextCursor !== null ? (
-        expanded ? (
-          <LeadActivityPages
-            environmentId={environmentId}
-            reference={reference}
-            cursor={page.nextCursor}
-          />
-        ) : (
-          <Button
-            className="self-start"
-            size="xs"
-            variant="outline"
-            onClick={() => setExpanded(true)}
-          >
-            <ChevronDownIcon aria-hidden className="size-3.5" />
-            {page.commentCount > page.comments.length
-              ? `Load more (${page.commentCount} total)`
-              : "Load more"}
-          </Button>
-        )
-      ) : null}
+      <LeadCommentList comments={page.comments} />
+      <LeadActivityContinuation environmentId={environmentId} reference={reference} page={page} />
     </>
   );
 }
@@ -123,18 +139,23 @@ export function LeadDetailPanel({
     issueEnvironment.detail({ environmentId, input: reference }),
   );
   const detail = detailQuery.data;
+  // The first comment page is the panel's own query rather than a child's: a posted comment or
+  // a refresh must re-read it explicitly, and a remount alone would answer from the SWR cache.
+  const activityQuery = useEnvironmentQuery(
+    issueEnvironment.activity({ environmentId, input: reference }),
+  );
   const { environments } = useEnvironments();
   const projects = useProjects();
   const { openThreadWithTask } = useComposerHandoff();
 
-  // The comment pages live under a key so a mutation can start the conversation over from the
-  // first page: the recursion above caches per cursor, and yesterday's cursors name yesterday's
-  // pages.
+  // Follow-on pages live under a key so a mutation starts the conversation over from the first
+  // page: the recursion caches per cursor, and yesterday's cursors name yesterday's pages.
   const [activityEpoch, setActivityEpoch] = useState(0);
   const refreshDetail = useCallback(() => {
     detailQuery.refresh();
+    activityQuery.refresh();
     setActivityEpoch((epoch) => epoch + 1);
-  }, [detailQuery.refresh]);
+  }, [activityQuery.refresh, detailQuery.refresh]);
 
   const invalidate = useAtomCommand(issueEnvironment.invalidate, { reportFailure: false });
   const refreshFromHost = useCallback(async () => {
@@ -441,7 +462,30 @@ export function LeadDetailPanel({
           {detail.commentCount === 1 ? "1 comment" : `${detail.commentCount} comments`}
         </h3>
         <div key={activityEpoch} className="flex flex-col gap-2">
-          <LeadActivityPages environmentId={environmentId} reference={reference} />
+          {activityQuery.data === null ? (
+            activityQuery.error === null ? (
+              <div className="flex items-center gap-2 px-1 py-2 text-xs text-muted-foreground">
+                <LoaderIcon aria-hidden className="size-3 animate-spin" />
+                Loading comments
+              </div>
+            ) : (
+              <div className="flex items-center justify-between gap-2 px-1 py-2 text-xs text-muted-foreground">
+                <span>The comments could not be loaded.</span>
+                <Button size="xs" variant="outline" onClick={activityQuery.refresh}>
+                  Retry
+                </Button>
+              </div>
+            )
+          ) : (
+            <>
+              <LeadCommentList comments={activityQuery.data.comments} />
+              <LeadActivityContinuation
+                environmentId={environmentId}
+                reference={reference}
+                page={activityQuery.data}
+              />
+            </>
+          )}
         </div>
 
         <div className="mt-2 flex flex-col gap-2">

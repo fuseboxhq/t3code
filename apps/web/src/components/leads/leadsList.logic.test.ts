@@ -3,10 +3,12 @@ import { describe, expect, it } from "vite-plus/test";
 
 import {
   buildLeadHandoffPrompt,
+  buildLeadListFilters,
   groupLeadsByProject,
   issueEntryKey,
   matchesLeadQuery,
   mergeIssueLists,
+  parseLeadQuery,
   type EnvironmentIssueEntry,
 } from "./leadsList.logic";
 
@@ -159,6 +161,43 @@ describe("issueEntryKey", () => {
     expect(issueEntryKey({ ...shape, environmentId: "e1" })).toBe(
       issueEntryKey({ ...shape, repository: "fusebox/t3code", environmentId: "e1" }),
     );
+  });
+});
+
+describe("parseLeadQuery", () => {
+  it("splits qualifiers from free text and keeps comma groups whole", () => {
+    const parsed = parseLeadQuery("flaky label:bug,regression author:kev -label:wontfix sidebar");
+    expect(parsed.text).toBe("flaky sidebar");
+    expect(parsed.labels).toEqual([["bug", "regression"]]);
+    expect(parsed.excludedLabels).toEqual(["wontfix"]);
+    expect(parsed.author).toBe("kev");
+  });
+
+  it("keeps unsupported qualifiers as text rather than dropping them", () => {
+    const parsed = parseLeadQuery("-author:kev milestone:v2");
+    expect(parsed.text).toBe("-author:kev milestone:v2");
+    expect(parsed.labels).toEqual([]);
+    expect(parsed.author).toBeUndefined();
+  });
+
+  it("clips over-typed values to the wire bounds", () => {
+    const parsed = parseLeadQuery(`label:${"x".repeat(500)}`);
+    expect(parsed.labels[0]?.[0]?.length).toBe(200);
+  });
+});
+
+describe("buildLeadListFilters", () => {
+  it("always pins the lead label ahead of typed groups", () => {
+    const filters = buildLeadListFilters(parseLeadQuery("label:bug author:kev"));
+    expect(filters.labels).toEqual([["lead"], ["bug"]]);
+    expect(filters.author).toBe("kev");
+    expect(filters.excludedLabels).toBeUndefined();
+  });
+
+  it("is the bare pinned filter for a plain text query", () => {
+    expect(buildLeadListFilters(parseLeadQuery("sidebar crash"))).toEqual({
+      labels: [["lead"]],
+    });
   });
 });
 

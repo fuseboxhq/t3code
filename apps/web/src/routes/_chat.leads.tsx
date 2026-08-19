@@ -22,9 +22,11 @@ import { LeadDetailPanel } from "../components/leads/LeadDetailPanel";
 import { LeadRow } from "../components/leads/LeadRow";
 import {
   LEAD_LABEL,
+  buildLeadListFilters,
   groupLeadsByProject,
   issueEntryKey,
   matchesLeadQuery,
+  parseLeadQuery,
   type EnvironmentIssueEntry,
   type MergedIssueList,
 } from "../components/leads/leadsList.logic";
@@ -81,6 +83,10 @@ const STATE_TABS = [
 }>;
 
 const SEARCH_DEBOUNCE_MS = 250;
+/** One whole host search page; the feed's own default. */
+const PAGE_SIZE = 100;
+/** The largest page the listing accepts; past it the request is refused outright. */
+const MAX_PAGE_SIZE = 500;
 /** The list owns one environment-scoped right panel rather than borrowing a real thread's. */
 const LEADS_PANEL_ID = ThreadId.make("leads-panel");
 /** A fixed sentinel, not a real server, for the reason the pull-request page gives. */
@@ -89,8 +95,6 @@ const EMPTY_PREVIEW_SESSIONS = {};
 const EMPTY_PREVIEW_DESKTOP_STATE = {};
 const EMPTY_TERMINAL_LABELS = new Map<string, string>();
 const EMPTY_PENDING_SURFACES = new Set<string>();
-/** Every listing this page sends pins the label; the wire stays issue-shaped, the page does not. */
-const LEAD_FILTERS = { labels: [[LEAD_LABEL]] } as const;
 
 export const Route = createFileRoute("/_chat/leads")({
   validateSearch: (raw: Record<string, unknown>): LeadsSearch => ({
@@ -194,6 +198,11 @@ function LeadsRouteView() {
   const typedQuery = (search.q ?? "").trim();
   const sentQuery = useDebouncedValue(typedQuery, SEARCH_DEBOUNCE_MS);
   const querySettled = typedQuery === sentQuery;
+  // Typed qualifiers become host-side filters; free text alone only searches what GitHub's
+  // text index covers, so `label:`/`author:` must travel as filters to match beyond the rows
+  // already loaded.
+  const sentParsed = useMemo(() => parseLeadQuery(sentQuery), [sentQuery]);
+  const sentFilters = useMemo(() => buildLeadListFilters(sentParsed), [sentParsed]);
 
   // Which projects each server is asked about: two servers holding the same repository would
   // both list the same leads, so each repository is listed by one of them.
@@ -222,16 +231,22 @@ function LeadsRouteView() {
         .join("|"),
     [environmentQueries],
   );
-  const filterKey = `${assignmentKey}:${search.state}:${sentQuery}`;
+  // The scope is the question; the query narrows it. Split so carried rows can tell "same
+  // question, new search" apart from "different question entirely".
+  const scopeKey = `${assignmentKey}:${search.state}`;
+  const filterKey = `${scopeKey}:${sentQuery}`;
 
-  // Where the next slice carries on from, per environment, exactly as it was handed back.
+  // Where the next slice carries on from, per environment, exactly as it was handed back -
+  // plus the page size a refresh re-reads at, grown to cover everything already on screen.
   const [page, setPage] = useState<{
     key: string;
+    size: number;
     cursors: Readonly<Record<string, IssueListCursors>> | null;
-  }>({ key: filterKey, cursors: null });
+  }>({ key: filterKey, size: PAGE_SIZE, cursors: null });
+  const pageSize = page.key === filterKey ? page.size : PAGE_SIZE;
   const sentCursors = page.key === filterKey ? page.cursors : null;
   useEffect(() => {
-    setPage({ key: filterKey, cursors: null });
+    setPage({ key: filterKey, size: PAGE_SIZE, cursors: null });
   }, [filterKey]);
 
   const listTargets = useMemo(
@@ -245,15 +260,16 @@ function LeadsRouteView() {
             environmentId,
             input: {
               state: search.state,
-              filters: LEAD_FILTERS,
+              filters: sentFilters,
+              limit: pageSize,
               ...(projectIds ? { projectIds } : {}),
-              ...(sentQuery ? { query: sentQuery } : {}),
+              ...(sentParsed.text ? { query: sentParsed.text } : {}),
               ...(cursors === undefined ? {} : { cursors }),
             } satisfies IssueListInput,
           },
         ];
       }),
-    [environmentQueries, search.state, sentCursors, sentQuery],
+    [environmentQueries, pageSize, search.state, sentCursors, sentFilters, sentParsed.text],
   );
   const listQuery = useIssueList(listTargets);
 
@@ -261,6 +277,7 @@ function LeadsRouteView() {
   // blanking for every round trip; a continuation appends below what is already on screen.
   const [loaded, setLoaded] = useState<{
     key: string;
+    scope: string;
     data: MergedIssueList;
     entries: ReadonlyArray<EnvironmentIssueEntry>;
   } | null>(null);
@@ -269,16 +286,41 @@ function LeadsRouteView() {
     const data = listQuery.data;
     setLoaded((previous) => {
       if (previous === null || previous.key !== filterKey || sentCursors === null) {
-        return { key: filterKey, data, entries: data.entries };
+        return { key: filterKey, scope: scopeKey, data, entries: data.entries };
       }
-      const held = new Set(previous.entries.map(issueEntryKey));
-      const arrived = data.entries.filter((entry) => !held.has(issueEntryKey(entry)));
-      return { key: filterKey, data, entries: [...previous.entries, ...arrived] };
+      // A continuation's rows land under the ones on screen - and a row the slice carries
+      // again replaces the one being shown, so a comment count or state that moved between
+      // pages is not frozen at its first reading.
+      const arrivedByKey = new Map(data.entries.map((entry) => [issueEntryKey(entry), entry]));
+      const kept = previous.entries.map((entry) => {
+        const key = issueEntryKey(entry);
+        const replacement = arrivedByKey.get(key);
+        if (replacement !== undefined) arrivedByKey.delete(key);
+        return replacement ?? entry;
+      });
+      return {
+        key: filterKey,
+        scope: scopeKey,
+        data,
+        entries: [...kept, ...arrivedByKey.values()],
+      };
     });
-  }, [filterKey, listQuery.data, listQuery.isPending, sentCursors]);
+  }, [filterKey, listQuery.data, listQuery.isPending, scopeKey, sentCursors]);
 
   const answered = loaded?.key === filterKey ? loaded : null;
-  const carried = loaded;
+  // Rows from the previous question are carried only as far as they can be narrowed honestly:
+  // the same scope's rows through a search swap, or the previous state's rows narrowed to the
+  // new state. A different environment split drops them outright - one of those servers may no
+  // longer be connected - and rows that narrow to nothing leave the skeletons to be right.
+  const carried = useMemo(() => {
+    if (loaded === null) return null;
+    if (loaded.scope === scopeKey) return loaded;
+    if (!loaded.scope.startsWith(`${assignmentKey}:`)) return null;
+    const entries = loaded.entries.filter(
+      (entry) => search.state === "all" || entry.state === search.state,
+    );
+    return entries.length === 0 ? null : { ...loaded, entries };
+  }, [assignmentKey, loaded, scopeKey, search.state]);
   const listData = (answered ?? carried)?.data ?? null;
   const knownEntries = (answered ?? carried)?.entries ?? [];
   const firstLoad = listQuery.isPending && answered === null && carried === null;
@@ -296,6 +338,24 @@ function LeadsRouteView() {
   const invalidate = useAtomCommand(issueEnvironment.invalidate, { reportFailure: false });
   const [detailRefreshToken, setDetailRefreshToken] = useState(0);
   const [invalidating, setInvalidating] = useState(false);
+  // A refresh means the whole visible list again, and a cursored query cannot answer that: it
+  // re-reads only its own slice. Going back to a single page long enough to cover everything on
+  // screen lets the replace-by-key merge above bring every loaded row up to date in place.
+  const refreshList = () => {
+    if (sentCursors === null) {
+      listQuery.refresh();
+      return;
+    }
+    const loadedCount = answered?.entries.length ?? pageSize;
+    setPage({
+      key: filterKey,
+      cursors: null,
+      size: Math.min(
+        Math.max(pageSize, Math.ceil(loadedCount / PAGE_SIZE) * PAGE_SIZE),
+        MAX_PAGE_SIZE,
+      ),
+    });
+  };
   const refreshFromHost = async () => {
     setInvalidating(true);
     try {
@@ -305,17 +365,17 @@ function LeadsRouteView() {
     } finally {
       setInvalidating(false);
     }
-    listQuery.refresh();
+    refreshList();
     setDetailRefreshToken((token) => token + 1);
   };
   const refreshing = invalidating || listQuery.isPending;
-  useLiveRefresh(listQuery.refresh, { enabled: leadsSupported });
+  useLiveRefresh(() => refreshList(), { enabled: leadsSupported });
 
   const nextCursors = answered?.data.nextCursors ?? {};
   const canLoadMore = Object.keys(nextCursors).length > 0;
   const loadMore = () => {
     if (!canLoadMore) return;
-    setPage({ key: filterKey, cursors: nextCursors });
+    setPage({ key: filterKey, size: pageSize, cursors: nextCursors });
   };
 
   // A link that names a lead opens it; a row press writes the link. The two stay in step so a
@@ -395,6 +455,14 @@ function LeadsRouteView() {
     useRightPanelStore.getState().closeAllSurfaces(rightPanelRef);
     selectSurfaceInUrl(null);
   };
+  // Changing what the list contains must not leave a selection from the previous view open.
+  const changeListState = (state: IssueListState) => {
+    if (rightPanelRef !== null) {
+      useRightPanelStore.getState().close(rightPanelRef);
+    }
+    updateSearch({ state, ...clearedSelection });
+  };
+
   const toggleRightPanel = () => {
     if (rightPanelRef === null) return;
     if (rightPanelState.isOpen) {
@@ -583,7 +651,7 @@ function LeadsRouteView() {
                       aria-pressed={search.state === tab.value}
                       size="xs"
                       variant={search.state === tab.value ? "secondary" : "ghost"}
-                      onClick={() => updateSearch({ state: tab.value, ...clearedSelection })}
+                      onClick={() => changeListState(tab.value)}
                     >
                       <tab.Icon aria-hidden className="size-3.5" />
                       {tab.label}
@@ -653,7 +721,7 @@ function LeadsRouteView() {
                 number: activeLeadSurface.number,
               }}
               refreshToken={detailRefreshToken}
-              onActed={() => listQuery.refresh()}
+              onActed={refreshList}
             />
           </RightPanelTabs>
         ) : null}

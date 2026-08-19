@@ -2553,6 +2553,9 @@
     "apps/web/src/components/leads/LeadDetailPanel.tsx": {
       "complexity_critical": {
         "count": 1
+      },
+      "crap_critical": {
+        "count": 1
       }
     },
     "apps/web/src/components/preview/AgentBrowserCursor.tsx": {
@@ -4057,7 +4060,6 @@
     "apps/server/src/assets/AssetAccess.ts:complexity",
     "apps/server/src/diagnostics/TraceDiagnostics.ts:complexity",
     "apps/server/src/orchestration/Layers/ProjectionSnapshotQuery.ts:complexity",
-    "apps/web/src/components/leads/LeadDetailPanel.tsx:complexity",
     "apps/web/src/components/pullRequest/PullRequestReviewAnnotation.tsx:complexity",
     "apps/web/src/components/search/ProjectContentSearchDialog.tsx:complexity",
     "apps/desktop/src/app/DesktopEnvironment.ts:circular dependency",
@@ -4088,8 +4090,8 @@
     "oxlint-plugin-t3code/rules/no-global-process-runtime.ts:untested risk",
     "apps/web/src/routes/_chat.leads.tsx:complexity",
     "apps/server/src/provider/Layers/ClaudeAdapter.ts:complexity",
-    "apps/mobile/src/features/threads/ThreadRouteScreen.tsx:complexity",
     "apps/web/src/components/CommandPalette.tsx:complexity",
+    "apps/mobile/src/features/threads/ThreadRouteScreen.tsx:complexity",
     "apps/web/src/components/chat/ComposerPrimaryActions.tsx:complexity",
     "apps/web/src/routes/_chat.pull-requests.tsx:complexity",
     "apps/web/src/components/BranchToolbarBranchSelector.tsx:complexity",
@@ -4116,9 +4118,9 @@
     "apps/web/src/components/BranchToolbar.tsx:complexity",
     "apps/web/src/components/settings/ProviderSettingsPanel.tsx:complexity",
     "apps/desktop/src/preview/FaviconCapture.ts:complexity",
+    "apps/desktop/src/shell/DesktopShellEnvironment.ts:complexity",
     "apps/server/src/resourceTelemetry/Model.ts:complexity",
     "apps/web/src/components/GitActionsControl.logic.ts:complexity",
-    "apps/desktop/src/shell/DesktopShellEnvironment.ts:complexity",
     "apps/web/src/components/files/FilePreviewPanel.tsx:complexity",
     "apps/web/src/components/settings/ThemeSearchSection.tsx:complexity",
     "apps/web/src/terminal/ghostty/renderer.ts:complexity",
@@ -4140,6 +4142,7 @@
     "apps/web/src/terminal/ghostty/surface.ts:complexity",
     "packages/client-runtime/src/state/subagentRuntime.ts:complexity",
     "apps/server/src/provider/Layers/OpenCodeAdapter.ts:complexity",
+    "apps/web/src/components/leads/LeadDetailPanel.tsx:complexity",
     "apps/web/src/components/settings/ThemeSettings.tsx:complexity",
     "apps/web/src/components/usage/UsagePage.tsx:complexity",
     "apps/web/src/components/pullRequest/pullRequestList.logic.ts:complexity",
