@@ -23,6 +23,8 @@ import { DESKTOP_DISTRIBUTION } from "./DesktopDistribution.ts";
 interface EarlyDesktopSettingsInput {
   readonly distribution?: DesktopDistributionId;
   readonly env: NodeJS.ProcessEnv;
+  /** The same predicate `DesktopEnvironment` keys the base dir on, so both resolve one path. */
+  readonly isPackaged: boolean;
   readonly homeDirectory: string;
   readonly joinPath: JoinPath;
   readonly readFileString: (path: string) => string;
@@ -53,6 +55,7 @@ const isDevelopmentEnvironment = (env: NodeJS.ProcessEnv): boolean =>
 function resolveEarlyDesktopSettingsPath(input: {
   readonly distribution?: DesktopDistributionId;
   readonly env: NodeJS.ProcessEnv;
+  readonly isPackaged: boolean;
   readonly homeDirectory: string;
   readonly joinPath: JoinPath;
 }): string {
@@ -64,9 +67,10 @@ function resolveEarlyDesktopSettingsPath(input: {
     homeDirectory: input.homeDirectory,
     joinPath: input.joinPath,
     t3Home,
-    defaultBaseDirName: isDevelopmentEnvironment(input.env)
-      ? ".t3"
-      : distributionProfile.defaultBaseDirName,
+    // Keyed on packaging exactly as `DesktopEnvironment` keys it: an unpackaged launch is a
+    // development one whether or not a dev server is attached, and the two resolvers reading
+    // different files for the same launch is the one wrong answer this can give.
+    defaultBaseDirName: input.isPackaged ? distributionProfile.defaultBaseDirName : ".t3",
   });
   const stateDir = resolveDesktopStateDir({
     baseDir,
