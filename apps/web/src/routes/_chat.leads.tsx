@@ -409,8 +409,10 @@ function LeadsRouteView() {
   const refreshFromHost = async () => {
     setInvalidating(true);
     try {
+      // Only the servers the scoped list actually asks; a scoped refresh should not purge the
+      // cache of a server whose answer is not on screen.
       await Promise.all(
-        environmentIds.map((environmentId) => invalidate({ environmentId, input: {} })),
+        queryEnvironmentIds.map((environmentId) => invalidate({ environmentId, input: {} })),
       );
     } finally {
       setInvalidating(false);
