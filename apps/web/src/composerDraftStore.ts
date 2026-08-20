@@ -575,6 +575,24 @@ function modelSelectionByProviderToOptions(
   return Object.keys(result).length > 0 ? result : null;
 }
 
+/**
+ * The option layers folded per provider instance, nearest first. Folding per instance rather
+ * than taking the first non-empty layer whole is the difference between "my sticky Claude
+ * effort" and "my sticky Claude effort hides the project's Codex default".
+ */
+function mergeProviderOptionSelectionLayers(
+  ...layers: ReadonlyArray<ProviderOptionSelectionsByProvider | null>
+): ProviderOptionSelectionsByProvider | null {
+  const result: ProviderOptionSelectionsByProvider = {};
+  for (const layer of layers) {
+    if (!layer) continue;
+    for (const [instance, options] of Object.entries(layer)) {
+      if (!(instance in result)) result[instance] = options;
+    }
+  }
+  return Object.keys(result).length > 0 ? result : null;
+}
+
 function cloneModelSelection(selection: ModelSelection): DeepMutable<ModelSelection> {
   return {
     ...selection,
@@ -1057,11 +1075,11 @@ export function deriveEffectiveComposerModelState(input: {
         activeSelection.model,
       ))
     : baseModel;
-  const modelOptions =
-    modelSelectionByProviderToOptions(input.draft?.modelSelectionByProvider) ??
-    providerSelectionsFromModelSelection(input.threadModelSelection) ??
-    providerSelectionsFromModelSelection(input.projectModelSelection) ??
-    null;
+  const modelOptions = mergeProviderOptionSelectionLayers(
+    modelSelectionByProviderToOptions(input.draft?.modelSelectionByProvider),
+    providerSelectionsFromModelSelection(input.threadModelSelection),
+    providerSelectionsFromModelSelection(input.projectModelSelection),
+  );
 
   return {
     selectedModel,

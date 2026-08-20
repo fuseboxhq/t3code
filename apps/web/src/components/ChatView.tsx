@@ -183,7 +183,11 @@ import {
 import { newDraftId, newMessageId, newThreadId } from "~/lib/utils";
 import { useBrowserHistoryStore } from "~/browserHistoryStore";
 import { registerFaviconProjectForThread } from "~/browserFaviconStore";
-import { getProviderModelCapabilities, resolveSelectableProvider } from "../providerModels";
+import {
+  getProviderModelCapabilities,
+  repickedModelSelection,
+  resolveSelectableProvider,
+} from "../providerModels";
 import { NO_PROVIDER_MODEL_SELECTION } from "../providerInstances";
 import {
   useClientSettings,
@@ -5960,10 +5964,15 @@ function ChatViewContent(props: ChatViewProps) {
         scheduleComposerFocus();
         return;
       }
-      const nextModelSelection: ModelSelection = {
+      // A re-pick changes the model, not the chosen traits: sticky options the new model still
+      // understands come along, rather than silently resetting effort to the catalog default.
+      const nextModelSelection: ModelSelection = repickedModelSelection({
         instanceId,
         model: resolvedModel,
-      };
+        sticky: useComposerDraftStore.getState().stickyModelSelectionByProvider,
+        entryModels: entry?.models,
+        driverKind: resolvedDriverKind,
+      });
       const modelChangeBlockReason = getStartedThreadModelChangeBlockReason({
         providers: providerStatuses,
         hasStartedSession: activeThread.session !== null,
