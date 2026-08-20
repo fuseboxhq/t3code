@@ -4,8 +4,7 @@ import type {
   ProjectId,
   PullRequestListInput,
 } from "@t3tools/contracts";
-import { useRouter } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import {
   LEAD_LIST_PAGE_SIZE,
@@ -21,7 +20,11 @@ import {
   assignEnvironmentProjectQueries,
   type AssignableProject,
 } from "../components/pullRequest/pullRequestProjectAssignment.logic";
-import { useLiveRefresh } from "../hooks/useLiveRefresh";
+import {
+  LIVE_REFRESH_INTERVAL_MS,
+  LIVE_REFRESH_MIN_INTERVAL_MS,
+  useLiveRefresh,
+} from "../hooks/useLiveRefresh";
 import { useAllEnvironmentShellsBootstrapped, useProjects } from "./entities";
 import { useEnvironments } from "./environments";
 import { useIssueList } from "./issues";
@@ -188,6 +191,15 @@ export function sumProjectActivity(
   return { pullRequests, pullRequestsAtLeast, leads, leadsAtLeast };
 }
 
+/** When this feed's shared answer last arrived, whichever surface asked for it. */
+function useArrivedAt(data: unknown) {
+  const arrivedAt = useRef(0);
+  useEffect(() => {
+    if (data !== null) arrivedAt.current = Date.now();
+  }, [data]);
+  return arrivedAt;
+}
+
 /**
  * Open pull requests and open leads per repository, for the sidebar's project headers.
  *
@@ -235,15 +247,19 @@ export function useProjectActivity(enabled: boolean): ProjectActivity {
   const pullRequestQuery = usePullRequestList(pullRequestTargets);
   const leadQuery = useIssueList(leadTargets);
 
-  // A feed page on screen runs its own live refresh over these same atoms; ticking here too
-  // would phase-shift two five-minute loops into reads twice as often. The open feed owns its
-  // refresh, and the router is read inside the tick so nothing re-renders on navigation.
-  const router = useRouter();
+  // A feed page on screen runs its own live refresh, and where its view is the default one it
+  // refreshes these very atoms — whose fresh answer then arrives here, because the atoms are
+  // shared. Each tick therefore skips a feed whose data landed within the cadence: two surfaces
+  // looking cost one five-minute loop, not two phase-shifted ones — while a page filtered away
+  // from the shared atoms leaves this tick to keep the badges honest itself.
+  const pullRequestsArrivedAt = useArrivedAt(pullRequestQuery.data);
+  const leadsArrivedAt = useArrivedAt(leadQuery.data);
   useLiveRefresh(
     () => {
-      const pathname = router.state.location.pathname;
-      if (!pathname.startsWith("/pull-requests")) pullRequestQuery.refresh();
-      if (!pathname.startsWith("/leads")) leadQuery.refresh();
+      // A hair under the interval, so a tick landing just after another surface's read skips it.
+      const staleBefore = Date.now() - (LIVE_REFRESH_INTERVAL_MS - LIVE_REFRESH_MIN_INTERVAL_MS);
+      if (pullRequestsArrivedAt.current < staleBefore) pullRequestQuery.refresh();
+      if (leadsArrivedAt.current < staleBefore) leadQuery.refresh();
     },
     {
       enabled: enabled && (pullRequestTargets.length > 0 || leadTargets.length > 0),
