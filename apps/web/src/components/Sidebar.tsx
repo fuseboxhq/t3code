@@ -2196,12 +2196,14 @@ export default function Sidebar() {
   ]);
 
   const groupedModeActive = groupActiveThreadsByProjectEnabled && scopedProjectGroup === null;
-  // Read only while the headers that show them are on screen; costs what the Pull
-  // Requests and Leads pages already cost, shared through the same atoms.
-  const projectActivity = useProjectActivity(groupedModeActive);
   const groupedActiveThreads = useMemo(
     () => groupActiveThreadsByProject({ projects: projectGroups, threads: activeThreads }),
     [activeThreads, projectGroups],
+  );
+  // Read only while a header that could show them is on screen; costs what the Pull
+  // Requests and Leads pages already cost, shared through the same atoms.
+  const projectActivity = useProjectActivity(
+    groupedModeActive && groupedActiveThreads.groups.length > 0,
   );
   const groupedActiveProjectThreads = groupedActiveThreads.groups;
   const ungroupedActiveThreads = groupedActiveThreads.ungrouped;

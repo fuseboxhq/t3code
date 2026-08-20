@@ -4,6 +4,7 @@ import type {
   ProjectId,
   PullRequestListInput,
 } from "@t3tools/contracts";
+import { useRouter } from "@tanstack/react-router";
 import { useMemo } from "react";
 
 import {
@@ -112,9 +113,10 @@ const projectRepoKey = (project: AssignableProject): string =>
 
 /**
  * The merged feeds counted per repository. A row from a truncated environment is a floor rather
- * than a total: pull-request cursors name the repository they continue, so only the repositories
- * actually cut short are marked; lead cursors name opaque batches, so a truncated environment
- * marks every repository it listed.
+ * than a total — for every repository that environment listed. Pull-request cursors do name the
+ * repository they continue, but a repository the host would not search is read by a fallback
+ * whose page cannot be continued, so a missing cursor does not prove a repository was listed
+ * whole; nothing in the answer can, so the whole environment floors.
  */
 export function deriveProjectActivity(
   projects: ReadonlyArray<AssignableProject>,
@@ -150,14 +152,9 @@ export function deriveProjectActivity(
     countsByRepo.set(repoKey, held);
   };
 
-  const pullRequestCursors = pullRequests?.nextCursors ?? {};
   const pullRequestTruncated = new Set(pullRequests?.truncatedEnvironments ?? []);
   for (const entry of pullRequests?.entries ?? []) {
-    const cursors = pullRequestCursors[entry.environmentId];
-    const atLeast =
-      pullRequestTruncated.has(entry.environmentId) &&
-      (cursors === undefined || `${entry.host} ${entry.repository}` in cursors);
-    bump(entry, "pullRequests", atLeast);
+    bump(entry, "pullRequests", pullRequestTruncated.has(entry.environmentId));
   }
   const leadTruncated = new Set(leads?.truncatedEnvironments ?? []);
   for (const entry of leads?.entries ?? []) {
@@ -238,10 +235,15 @@ export function useProjectActivity(enabled: boolean): ProjectActivity {
   const pullRequestQuery = usePullRequestList(pullRequestTargets);
   const leadQuery = useIssueList(leadTargets);
 
+  // A feed page on screen runs its own live refresh over these same atoms; ticking here too
+  // would phase-shift two five-minute loops into reads twice as often. The open feed owns its
+  // refresh, and the router is read inside the tick so nothing re-renders on navigation.
+  const router = useRouter();
   useLiveRefresh(
     () => {
-      pullRequestQuery.refresh();
-      leadQuery.refresh();
+      const pathname = router.state.location.pathname;
+      if (!pathname.startsWith("/pull-requests")) pullRequestQuery.refresh();
+      if (!pathname.startsWith("/leads")) leadQuery.refresh();
     },
     {
       enabled: enabled && (pullRequestTargets.length > 0 || leadTargets.length > 0),

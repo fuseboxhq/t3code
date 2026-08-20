@@ -121,10 +121,10 @@ describe("deriveProjectActivity", () => {
     expect(activity.countsByRepo.get("e1:loner")?.leads).toBe(1);
   });
 
-  it("marks a truncated listing's counts as floors, by repository where cursors name one", () => {
+  it("marks every count from a truncated environment as a floor, and none from a whole one", () => {
     const projects = [
       project("t3", "e1", "github.com/fusebox/t3code"),
-      project("kev", "e1", "github.com/fusebox/kevfiles"),
+      project("kev", "e2", "github.com/fusebox/kevfiles"),
     ];
     const activity = deriveProjectActivity(
       projects,
@@ -132,25 +132,25 @@ describe("deriveProjectActivity", () => {
         entries: [
           pullRequestRow({ environmentId: "e1", projectId: "t3" }),
           pullRequestRow({
-            environmentId: "e1",
+            environmentId: "e2",
             projectId: "kev",
             repository: "fusebox/kevfiles",
           }),
         ],
+        // Nothing in a truncated answer proves any one repository was listed whole — the
+        // no-search fallback truncates without a cursor — so e1 floors everything it listed.
         truncatedEnvironments: ["e1"],
-        // Only t3code was cut short; kevfiles was listed whole.
         nextCursors: { e1: { "github.com fusebox/t3code": "cursor" } },
       }),
       mergedLeads({
-        entries: [{ environmentId: "e1", projectId: "kev" }],
-        truncatedEnvironments: ["e1"],
+        entries: [{ environmentId: "e2", projectId: "kev" }],
+        truncatedEnvironments: ["e2"],
       }),
     );
     expect(activity.countsByRepo.get("github.com/fusebox/t3code")?.pullRequestsAtLeast).toBe(true);
     expect(activity.countsByRepo.get("github.com/fusebox/kevfiles")?.pullRequestsAtLeast).toBe(
       false,
     );
-    // Lead cursors name opaque batches, so a truncated environment floors every lead count.
     expect(activity.countsByRepo.get("github.com/fusebox/kevfiles")?.leadsAtLeast).toBe(true);
   });
 });
