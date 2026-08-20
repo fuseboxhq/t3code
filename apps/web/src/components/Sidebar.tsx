@@ -171,7 +171,7 @@ import {
 } from "./Sidebar.snooze";
 import { ProjectFavicon } from "./ProjectFavicon";
 import { ProjectActivityBadges } from "./sidebar/ProjectActivityBadges";
-import { useProjectActivityCounts } from "../state/projectActivityCounts";
+import { useProjectActivity } from "../state/projectActivityCounts";
 import { ProviderInstanceIcon } from "./chat/ProviderInstanceIcon";
 import { getTriggerDisplayModelLabel } from "./chat/providerIconUtils";
 import {
@@ -2198,7 +2198,7 @@ export default function Sidebar() {
   const groupedModeActive = groupActiveThreadsByProjectEnabled && scopedProjectGroup === null;
   // Read only while the headers that show them are on screen; costs what the Pull
   // Requests and Leads pages already cost, shared through the same atoms.
-  const projectActivityCounts = useProjectActivityCounts(groupedModeActive);
+  const projectActivity = useProjectActivity(groupedModeActive);
   const groupedActiveThreads = useMemo(
     () => groupActiveThreadsByProject({ projects: projectGroups, threads: activeThreads }),
     [activeThreads, projectGroups],
@@ -4056,7 +4056,7 @@ export default function Sidebar() {
                               </span>
                               <ProjectActivityBadges
                                 memberProjectRefs={project.memberProjectRefs}
-                                countsByKey={projectActivityCounts}
+                                activity={projectActivity}
                               />
                             </span>
                           </button>

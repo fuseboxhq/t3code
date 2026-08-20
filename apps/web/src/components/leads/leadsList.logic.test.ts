@@ -90,6 +90,7 @@ describe("mergeIssueLists", () => {
     expect(merged!.entries[1]?.environmentId).toBe("e1");
     expect(merged!.truncated).toBe(true);
     expect(merged!.nextCursors).toEqual({ e1: { "github.com #0": "v1|ab|cursor" } });
+    expect(merged!.truncatedEnvironments).toEqual(["e1"]);
     // One host reached from two environments is one switcher row.
     expect(merged!.providers).toHaveLength(1);
     expect(merged!.providers[0]?.projectCount).toBe(2);

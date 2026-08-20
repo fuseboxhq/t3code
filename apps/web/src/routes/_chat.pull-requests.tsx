@@ -29,6 +29,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import {
+  PULL_REQUEST_LIST_PAGE_SIZE,
   filterPullRequestsByInvolvement,
   findScopedProject,
   groupPullRequestsByInvolvement,
@@ -54,7 +55,7 @@ import {
   type PullRequestDiffStats,
   type PullRequestPartitionsSnapshot,
 } from "../components/pullRequest/pullRequestList.logic";
-import { assignProjectsToEnvironments } from "../components/pullRequest/pullRequestProjectAssignment.logic";
+import { assignEnvironmentProjectQueries } from "../components/pullRequest/pullRequestProjectAssignment.logic";
 import { PullRequestDetailPanel } from "../components/pullRequest/PullRequestDetailPanel";
 import {
   PullRequestFiltersMenu,
@@ -158,12 +159,8 @@ const STATE_TABS = [
 const SEARCH_DEBOUNCE_MS = 250;
 /** What `scorePullRequestMatch` gives a row none of whose own fields carry the search text. */
 const MATCHED_ELSEWHERE_SCORE = 10;
-/**
- * One whole page from the host and no more: every provider asks for one row beyond the page as
- * its "is there more" probe, and GitHub serves a hundred per request — so asking for ninety-nine
- * costs one round trip where a hundred costs two.
- */
-const PAGE_SIZE = 99;
+/** The feed's first-page size, shared with the sidebar's counts so both read one cached answer. */
+const PAGE_SIZE = PULL_REQUEST_LIST_PAGE_SIZE;
 /** The largest page the listing accepts; past it the request is refused outright. */
 const MAX_PAGE_SIZE = 500;
 /** Stable empty map so the memos below do not see a new object on every render. */
@@ -522,23 +519,7 @@ function PullRequestsRouteView() {
   }> => {
     const plain = queryEnvironmentIds.map((environmentId) => ({ environmentId }));
     if (!projectsKnown || scopedProjectId !== undefined) return plain;
-    const assignment = assignProjectsToEnvironments(
-      projects,
-      queryEnvironmentIds,
-      queryEnvironmentIds[0],
-    );
-    const totals = new Map<EnvironmentId, number>();
-    for (const project of projects) {
-      totals.set(project.environmentId, (totals.get(project.environmentId) ?? 0) + 1);
-    }
-    return queryEnvironmentIds.flatMap((environmentId) => {
-      const projectIds = assignment.get(environmentId);
-      if (projectIds === undefined) return [];
-      // It lists everything it holds anyway, so the filter is left off and a one-server workspace
-      // asks exactly the question it asked before.
-      if (projectIds.length === (totals.get(environmentId) ?? 0)) return [{ environmentId }];
-      return [{ environmentId, projectIds }];
-    });
+    return assignEnvironmentProjectQueries(projects, queryEnvironmentIds);
   }, [projects, projectsKnown, queryEnvironmentIds, scopedProjectId]);
   // Part of the scope, since a different split is a different question and its answers must not
   // be filed under the same page state.

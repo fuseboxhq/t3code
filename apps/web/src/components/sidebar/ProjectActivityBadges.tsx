@@ -3,48 +3,42 @@ import { memo, useMemo } from "react";
 
 import {
   PROJECT_ACTIVITY_COUNT_CAP,
-  projectActivityKey,
-  type ProjectActivityCounts,
+  sumProjectActivity,
+  type ProjectActivity,
 } from "../../state/projectActivityCounts";
 
-const countLabel = (count: number): string =>
-  count >= PROJECT_ACTIVITY_COUNT_CAP ? `${PROJECT_ACTIVITY_COUNT_CAP}+` : String(count);
+/** A floor gets the "+", and so does the cap: past either, the exact number is not known. */
+const countLabel = (count: number, atLeast: boolean): string =>
+  atLeast || count >= PROJECT_ACTIVITY_COUNT_CAP ? `${count}+` : String(count);
+
+const ariaLabel = (count: number, atLeast: boolean, noun: string): string =>
+  `${atLeast || count >= PROJECT_ACTIVITY_COUNT_CAP ? "at least " : ""}${count} open ${noun}${
+    count === 1 ? "" : "s"
+  }`;
 
 /**
  * The second line of a sidebar project header: how many open pull requests and open leads the
- * project's repository carries. Nothing renders until a count is known and non-zero, so a quiet
+ * project's repositories carry. Nothing renders until a count is known and non-zero, so a quiet
  * project keeps its one-line header and the sidebar its rhythm.
  */
 export const ProjectActivityBadges = memo(function ProjectActivityBadges({
   memberProjectRefs,
-  countsByKey,
+  activity,
 }: {
   memberProjectRefs: ReadonlyArray<{ environmentId: string; projectId: string }>;
-  countsByKey: ReadonlyMap<string, ProjectActivityCounts>;
+  activity: ProjectActivity;
 }) {
-  const { pullRequests, leads } = useMemo(() => {
-    let pullRequestsTotal = 0;
-    let leadsTotal = 0;
-    for (const ref of memberProjectRefs) {
-      const counts = countsByKey.get(projectActivityKey(ref.environmentId, ref.projectId));
-      if (counts === undefined) continue;
-      pullRequestsTotal = Math.min(
-        pullRequestsTotal + counts.pullRequests,
-        PROJECT_ACTIVITY_COUNT_CAP,
-      );
-      leadsTotal = Math.min(leadsTotal + counts.leads, PROJECT_ACTIVITY_COUNT_CAP);
-    }
-    return { pullRequests: pullRequestsTotal, leads: leadsTotal };
-  }, [countsByKey, memberProjectRefs]);
+  const { pullRequests, pullRequestsAtLeast, leads, leadsAtLeast } = useMemo(
+    () => sumProjectActivity(memberProjectRefs, activity),
+    [activity, memberProjectRefs],
+  );
 
   if (pullRequests === 0 && leads === 0) return null;
   return (
     <span
       aria-label={[
-        pullRequests > 0
-          ? `${countLabel(pullRequests)} open pull request${pullRequests === 1 ? "" : "s"}`
-          : null,
-        leads > 0 ? `${countLabel(leads)} open lead${leads === 1 ? "" : "s"}` : null,
+        pullRequests > 0 ? ariaLabel(pullRequests, pullRequestsAtLeast, "pull request") : null,
+        leads > 0 ? ariaLabel(leads, leadsAtLeast, "lead") : null,
       ]
         .filter(Boolean)
         .join(", ")}
@@ -53,13 +47,13 @@ export const ProjectActivityBadges = memo(function ProjectActivityBadges({
       {pullRequests > 0 ? (
         <span className="flex items-center gap-1">
           <GitPullRequestIcon aria-hidden className="size-3 shrink-0" />
-          <span className="tabular-nums">{countLabel(pullRequests)}</span>
+          <span className="tabular-nums">{countLabel(pullRequests, pullRequestsAtLeast)}</span>
         </span>
       ) : null}
       {leads > 0 ? (
         <span className="flex items-center gap-1">
           <TargetIcon aria-hidden className="size-3 shrink-0" />
-          <span className="tabular-nums">{countLabel(leads)}</span>
+          <span className="tabular-nums">{countLabel(leads, leadsAtLeast)}</span>
         </span>
       ) : null}
     </span>

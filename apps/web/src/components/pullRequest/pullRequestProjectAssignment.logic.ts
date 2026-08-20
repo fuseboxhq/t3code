@@ -63,6 +63,35 @@ export function assignProjectsToEnvironments(
   return assignment;
 }
 
+/** One server's share of a listing: asked plainly, or narrowed to what is its alone. */
+export interface EnvironmentProjectQuery {
+  readonly environmentId: EnvironmentId;
+  readonly projectIds?: ReadonlyArray<ProjectId>;
+}
+
+/**
+ * The feed pages' listing split, whole: each server asked once, narrowed to `projectIds` only
+ * where a shared repository was handed to another server. A server listing everything it holds
+ * is asked plainly, so a one-server workspace asks exactly the question it always asked — and
+ * every reader of a feed that splits this way asks the same question and shares one answer.
+ */
+export function assignEnvironmentProjectQueries(
+  projects: ReadonlyArray<AssignableProject>,
+  environmentIds: ReadonlyArray<EnvironmentId>,
+): ReadonlyArray<EnvironmentProjectQuery> {
+  const assignment = assignProjectsToEnvironments(projects, environmentIds, environmentIds[0]);
+  const totals = new Map<EnvironmentId, number>();
+  for (const project of projects) {
+    totals.set(project.environmentId, (totals.get(project.environmentId) ?? 0) + 1);
+  }
+  return environmentIds.flatMap((environmentId) => {
+    const projectIds = assignment.get(environmentId);
+    if (projectIds === undefined) return [];
+    if (projectIds.length === (totals.get(environmentId) ?? 0)) return [{ environmentId }];
+    return [{ environmentId, projectIds }];
+  });
+}
+
 /** A copy of the repository the reader could act on, named by the server holding it. */
 export interface PickableEnvironment {
   readonly environmentId: EnvironmentId;
