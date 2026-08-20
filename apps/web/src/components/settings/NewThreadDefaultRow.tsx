@@ -39,7 +39,7 @@ export function NewThreadDefaultRow({
   return (
     <SettingsRow
       title="New threads"
-      description="New threads anywhere in this workspace start with this model and effort. A project's own default model, set in its project settings, still wins for that project."
+      description="New threads anywhere in this workspace start with this model and its chosen traits. A project's own default model, set in its project settings, still wins for that project."
       resetAction={
         settings.newThreadModelSelection !== null ? (
           <SettingResetButton label="new thread model" onClick={() => setSelection(null)} />

@@ -406,7 +406,12 @@ function ProjectDetail({ group }: { group: SidebarProjectSnapshot }) {
 
   // ----- default model -----
   const storedSelection = representative.defaultModelSelection;
-  const resolvedSelection = resolveDefaultProviderModelSelection(serverProviders, storedSelection);
+  // The resting value is what a new thread here actually inherits: the stored override, else
+  // the workspace-wide default, else the catalog. Editing it still writes a project override.
+  const resolvedSelection = resolveDefaultProviderModelSelection(
+    serverProviders,
+    storedSelection ?? settings.newThreadModelSelection,
+  );
   const { instanceEntries, modelOptionsByInstance } = useModelPickerEntries(
     settings,
     serverProviders,

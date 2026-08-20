@@ -54,6 +54,10 @@ export const ExecutionEnvironmentCapabilities = Schema.Struct({
   /** Server exposes the issues list, detail, activity, and mutation APIs (the Leads surface).
       Absent on servers from before it shipped, so clients must not probe them. */
   issues: Schema.optionalKey(Schema.Boolean),
+  /** Server persists the workspace-wide `newThreadModelSelection` setting. Absent on older
+      servers, whose patch decoder would silently drop the key — clients hide the control
+      rather than offer a write that goes nowhere. */
+  newThreadModelSelection: Schema.optionalKey(Schema.Boolean),
   /** Server understands thread.settle / thread.unsettle commands. Absent on
       pre-settlement servers, so clients treat missing as unsupported and
       never send the commands under version skew. */
