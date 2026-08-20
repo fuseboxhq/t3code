@@ -85,14 +85,17 @@ describe("grouped active sidebar threads", () => {
     { id: "unknown", environmentId: "local", projectId: "unknown" },
   ] as const;
 
-  it("keeps project order, thread order, and skips empty or unknown projects", () => {
-    const groups = groupActiveThreadsByProject({ projects, threads });
+  it("keeps project order and thread order, and holds unknown-project threads aside", () => {
+    const { groups, ungrouped } = groupActiveThreadsByProject({ projects, threads });
 
     expect(groups.map((group) => group.project.projectKey)).toEqual(["alpha", "beta"]);
     expect(groups.map((group) => group.threads.map((thread) => thread.id))).toEqual([
       ["alpha"],
       ["beta-new", "beta-old"],
     ]);
+    // A thread whose project has already left the shell is not dropped: it stays reachable in
+    // the trailing ungrouped section until its own removal lands.
+    expect(ungrouped.map((thread) => thread.id)).toEqual(["unknown"]);
   });
 
   it("defaults grouped projects to expanded without reading the legacy default", () => {
@@ -106,15 +109,17 @@ describe("grouped active sidebar threads", () => {
   });
 
   it("keeps only the routed thread visible inside a collapsed project", () => {
-    const groups = groupActiveThreadsByProject({ projects, threads });
+    const { groups, ungrouped } = groupActiveThreadsByProject({ projects, threads });
     const visible = visibleGroupedActiveThreads({
       groups,
+      ungrouped,
       expandedById: { "default-grouped:beta": false },
       routeThreadKey: "beta-old",
       getThreadKey: (thread) => thread.id,
     });
 
-    expect(visible.map((thread) => thread.id)).toEqual(["alpha", "beta-old"]);
+    // The ungrouped tail has no header to collapse, so it is always visible.
+    expect(visible.map((thread) => thread.id)).toEqual(["alpha", "beta-old", "unknown"]);
   });
 
   it("resolves project attention with explicit priority", () => {

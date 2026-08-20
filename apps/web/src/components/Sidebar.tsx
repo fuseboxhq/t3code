@@ -211,6 +211,55 @@ const SETTLED_TAIL_PAGE_COUNT = 25;
 const SETTLED_SHELF_EXPANDED_KEY = "t3code:sidebar-v2:settled-expanded";
 const SNOOZED_SHELF_EXPANDED_KEY = "t3code:sidebar-v2:snoozed-expanded";
 
+const GroupedProjectStatusDot = memo(function GroupedProjectStatusDot({
+  threads,
+  snoozeNow,
+}: {
+  threads: readonly SidebarThreadSummary[];
+  snoozeNow: string;
+}) {
+  // Subscribed here rather than in the sidebar body: the selector folds the visited-at map to
+  // one primitive per project, so a thread visit repaints the dots whose answer moved and
+  // nothing else.
+  const status = useUiStateStore((state) =>
+    resolveGroupedSidebarProjectStatus(
+      threads.map((thread) => {
+        const threadKey = scopedThreadKey(scopeThreadRef(thread.environmentId, thread.id));
+        const lastVisitedAt = state.threadLastVisitedAtById[threadKey];
+        const wokeAt = threadWokeAt(thread, { now: snoozeNow });
+        const lastVisitedDate =
+          lastVisitedAt === undefined ? null : parseTimestampDate(lastVisitedAt);
+        const wokeAtDate = wokeAt === null ? null : parseTimestampDate(wokeAt);
+        return {
+          status: resolveSidebarThreadStatus(thread),
+          isUnread: hasUnseenCompletion({ ...thread, lastVisitedAt }),
+          isWoke: wokeAtDate !== null && (lastVisitedDate === null || lastVisitedDate < wokeAtDate),
+        };
+      }),
+    ),
+  );
+  const meta = status === null ? null : GROUPED_PROJECT_STATUS_META[status];
+  if (meta === null) return null;
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <span
+            role="img"
+            aria-label={meta.label}
+            className={cn(
+              "size-2 shrink-0 rounded-full",
+              meta.dotClass,
+              meta.pulse && "animate-status-pulse",
+            )}
+          />
+        }
+      />
+      <TooltipPopup side="top">{meta.label}</TooltipPopup>
+    </Tooltip>
+  );
+});
+
 const GROUPED_PROJECT_STATUS_META: Record<
   GroupedSidebarProjectStatus,
   { label: string; dotClass: string; pulse: boolean }
@@ -1842,7 +1891,6 @@ export default function Sidebar() {
   const rangeSelectTo = useThreadSelectionStore((s) => s.rangeSelectTo);
   const markThreadUnread = useUiStateStore((s) => s.markThreadUnread);
   const markThreadVisited = useUiStateStore((s) => s.markThreadVisited);
-  const threadLastVisitedAtById = useUiStateStore((s) => s.threadLastVisitedAtById);
   const acknowledgeWoke = useCallback(
     (threadRef: ScopedThreadRef, visitedAt: string) => {
       markThreadVisited(scopedThreadKey(threadRef), visitedAt);
@@ -2146,15 +2194,18 @@ export default function Sidebar() {
   ]);
 
   const groupedModeActive = groupActiveThreadsByProjectEnabled && scopedProjectGroup === null;
-  const groupedActiveProjectThreads = useMemo(
+  const groupedActiveThreads = useMemo(
     () => groupActiveThreadsByProject({ projects: projectGroups, threads: activeThreads }),
     [activeThreads, projectGroups],
   );
+  const groupedActiveProjectThreads = groupedActiveThreads.groups;
+  const ungroupedActiveThreads = groupedActiveThreads.ungrouped;
   const visibleActiveThreads = useMemo(
     () =>
       groupedModeActive
         ? visibleGroupedActiveThreads({
             groups: groupedActiveProjectThreads,
+            ungrouped: ungroupedActiveThreads,
             expandedById: projectExpandedById,
             routeThreadKey,
             getThreadKey: (thread) =>
@@ -2167,6 +2218,7 @@ export default function Sidebar() {
       groupedModeActive,
       projectExpandedById,
       routeThreadKey,
+      ungroupedActiveThreads,
     ],
   );
 
@@ -3954,27 +4006,6 @@ export default function Sidebar() {
                               scopedThreadKey(scopeThreadRef(thread.environmentId, thread.id)) ===
                               routeThreadKey,
                           );
-                      const projectStatus = resolveGroupedSidebarProjectStatus(
-                        group.threads.map((thread) => {
-                          const threadKey = scopedThreadKey(
-                            scopeThreadRef(thread.environmentId, thread.id),
-                          );
-                          const lastVisitedAt = threadLastVisitedAtById[threadKey];
-                          const wokeAt = threadWokeAt(thread, { now: snoozeNow });
-                          const lastVisitedDate =
-                            lastVisitedAt === undefined ? null : parseTimestampDate(lastVisitedAt);
-                          const wokeAtDate = wokeAt === null ? null : parseTimestampDate(wokeAt);
-                          return {
-                            status: resolveSidebarThreadStatus(thread),
-                            isUnread: hasUnseenCompletion({ ...thread, lastVisitedAt }),
-                            isWoke:
-                              wokeAtDate !== null &&
-                              (lastVisitedDate === null || lastVisitedDate < wokeAtDate),
-                          };
-                        }),
-                      );
-                      const projectStatusMeta =
-                        projectStatus === null ? null : GROUPED_PROJECT_STATUS_META[projectStatus];
                       items.push(
                         <li
                           key={`project:${project.projectKey}`}
@@ -4003,23 +4034,10 @@ export default function Sidebar() {
                             <span className="min-w-0 flex-1 truncate text-sm font-medium text-sidebar-foreground/90">
                               {project.displayName}
                             </span>
-                            {projectStatusMeta ? (
-                              <Tooltip>
-                                <TooltipTrigger
-                                  render={
-                                    <span
-                                      aria-label={projectStatusMeta.label}
-                                      className={cn(
-                                        "size-2 shrink-0 rounded-full",
-                                        projectStatusMeta.dotClass,
-                                        projectStatusMeta.pulse && "animate-status-pulse",
-                                      )}
-                                    />
-                                  }
-                                />
-                                <TooltipPopup side="top">{projectStatusMeta.label}</TooltipPopup>
-                              </Tooltip>
-                            ) : null}
+                            <GroupedProjectStatusDot
+                              threads={group.threads}
+                              snoozeNow={snoozeNow}
+                            />
                             {!projectExpanded && group.threads.length > 1 ? (
                               <span className="shrink-0 text-[10px] tabular-nums text-sidebar-muted-foreground/70">
                                 {group.threads.length}
@@ -4046,6 +4064,11 @@ export default function Sidebar() {
                       for (const thread of visibleProjectThreads) {
                         items.push(renderThreadRow(thread, "active"));
                       }
+                    }
+                    // Threads whose project has already left the shell render flat below the
+                    // groups, so a mid-removal thread stays reachable rather than vanishing.
+                    for (const thread of ungroupedActiveThreads) {
+                      items.push(renderThreadRow(thread, "active"));
                     }
                   } else {
                     for (const thread of activeThreads) {

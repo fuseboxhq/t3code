@@ -53,6 +53,16 @@ export interface GroupedSidebarProjectThreads<TProject, TThread> {
   threads: TThread[];
 }
 
+export interface GroupedActiveThreads<TProject, TThread> {
+  groups: GroupedSidebarProjectThreads<TProject, TThread>[];
+  /**
+   * Threads whose project the shell no longer lists — a removed project whose thread-removal
+   * events have not landed yet. Kept reachable in a trailing flat section rather than dropped:
+   * a thread the sidebar cannot show is a thread nobody can reach, select, or jump to.
+   */
+  ungrouped: TThread[];
+}
+
 export function groupActiveThreadsByProject<
   TProject extends {
     projectKey: string;
@@ -62,7 +72,7 @@ export function groupActiveThreadsByProject<
 >(input: {
   projects: readonly TProject[];
   threads: readonly TThread[];
-}): GroupedSidebarProjectThreads<TProject, TThread>[] {
+}): GroupedActiveThreads<TProject, TThread> {
   const projectKeyByMember = new Map<string, string>();
   for (const project of input.projects) {
     for (const member of project.memberProjectRefs) {
@@ -71,9 +81,13 @@ export function groupActiveThreadsByProject<
   }
 
   const threadsByProjectKey = new Map<string, TThread[]>();
+  const ungrouped: TThread[] = [];
   for (const thread of input.threads) {
     const projectKey = projectKeyByMember.get(`${thread.environmentId}:${thread.projectId}`);
-    if (projectKey === undefined) continue;
+    if (projectKey === undefined) {
+      ungrouped.push(thread);
+      continue;
+    }
     const projectThreads = threadsByProjectKey.get(projectKey);
     if (projectThreads) {
       projectThreads.push(thread);
@@ -82,10 +96,13 @@ export function groupActiveThreadsByProject<
     }
   }
 
-  return input.projects.flatMap((project) => {
-    const threads = threadsByProjectKey.get(project.projectKey);
-    return threads && threads.length > 0 ? [{ project, threads }] : [];
-  });
+  return {
+    groups: input.projects.flatMap((project) => {
+      const threads = threadsByProjectKey.get(project.projectKey);
+      return threads && threads.length > 0 ? [{ project, threads }] : [];
+    }),
+    ungrouped,
+  };
 }
 
 export function groupedSidebarProjectExpansionKey(projectKey: string): string {
@@ -127,11 +144,13 @@ export function resolveGroupedProjectNewThreadTarget<
 
 export function visibleGroupedActiveThreads<TThread>(input: {
   groups: readonly { project: { projectKey: string }; threads: readonly TThread[] }[];
+  /** Threads with no surviving project, rendered flat after the groups and always visible. */
+  ungrouped?: readonly TThread[];
   expandedById: Readonly<Record<string, boolean>>;
   routeThreadKey: string | null;
   getThreadKey: (thread: TThread) => string;
 }): TThread[] {
-  return input.groups.flatMap((group) => {
+  const grouped = input.groups.flatMap((group) => {
     if (resolveGroupedSidebarProjectExpanded(input.expandedById, group.project.projectKey)) {
       return [...group.threads];
     }
@@ -141,6 +160,7 @@ export function visibleGroupedActiveThreads<TThread>(input: {
     );
     return routeThread === undefined ? [] : [routeThread];
   });
+  return [...grouped, ...(input.ungrouped ?? [])];
 }
 
 export function shouldShowSidebarRowProjectIdentity(
