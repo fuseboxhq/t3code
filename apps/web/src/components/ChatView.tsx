@@ -5992,6 +5992,9 @@ function ChatViewContent(props: ChatViewProps) {
       setComposerDraftModelSelection(
         scopeThreadRef(activeThread.environmentId, activeThread.id),
         nextModelSelection,
+        // The carried set is the whole answer: options the re-pick dropped must leave the
+        // draft too, or the composer would still send them.
+        { replaceOptions: true },
       );
       setStickyComposerModelSelection(nextModelSelection);
       scheduleComposerFocus();

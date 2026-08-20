@@ -114,10 +114,10 @@ function carryModelOptions(
   return heldOptions.filter((option) => {
     const descriptor = descriptors.find((candidate) => candidate.id === option.id);
     if (descriptor === undefined) return false;
-    return (
-      descriptor.type !== "select" ||
-      descriptor.options.some((choice) => choice.id === option.value)
-    );
+    return descriptor.type === "select"
+      ? typeof option.value === "string" &&
+          descriptor.options.some((choice) => choice.id === option.value)
+      : typeof option.value === "boolean";
   });
 }
 

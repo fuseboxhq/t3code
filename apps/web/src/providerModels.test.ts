@@ -45,6 +45,28 @@ describe("repickedModelSelection", () => {
     expect(selection.options).toBeUndefined();
   });
 
+  it("drops a string value held for a boolean descriptor", () => {
+    const selection = repickedModelSelection({
+      instanceId: CODEX,
+      model: "gpt-5.6-sol",
+      sticky: { [CODEX]: { options: [{ id: "fastMode", value: "true" }] } },
+      entryModels: [
+        {
+          slug: "gpt-5.6-sol",
+          name: "gpt-5.6-sol",
+          isCustom: false,
+          capabilities: {
+            optionDescriptors: [
+              { id: "fastMode", type: "boolean" as const, label: "Fast", currentValue: false },
+            ],
+          },
+        },
+      ],
+      driverKind: codexDriver,
+    });
+    expect(selection.options).toBeUndefined();
+  });
+
   it("drops options the new model has no descriptor for", () => {
     const selection = repickedModelSelection({
       instanceId: CODEX,
