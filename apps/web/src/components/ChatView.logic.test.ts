@@ -722,7 +722,6 @@ describe("hasServerAcknowledgedLocalDispatch", () => {
 
 describe("resolveDraftFallbackModelSelection", () => {
   const codexId = ProviderInstanceId.make("codex");
-  const none: ModelSelection = { instanceId: codexId, model: "" };
   const codexHigh: ModelSelection = {
     instanceId: codexId,
     model: "gpt-5.6-sol",
@@ -735,12 +734,12 @@ describe("resolveDraftFallbackModelSelection", () => {
   };
 
   it("uses the global default when the project has none", () => {
-    expect(resolveDraftFallbackModelSelection(null, codexHigh, none)).toBe(codexHigh);
-    expect(resolveDraftFallbackModelSelection(null, null, none)).toBe(none);
+    expect(resolveDraftFallbackModelSelection(null, codexHigh)).toBe(codexHigh);
+    expect(resolveDraftFallbackModelSelection(null, null)).toBeNull();
   });
 
   it("fills an option-less project default with the global effort for the same instance", () => {
-    expect(resolveDraftFallbackModelSelection(codexPlain, codexHigh, none)).toEqual({
+    expect(resolveDraftFallbackModelSelection(codexPlain, codexHigh)).toEqual({
       ...codexPlain,
       options: codexHigh.options,
     });
@@ -751,9 +750,9 @@ describe("resolveDraftFallbackModelSelection", () => {
       ...codexPlain,
       options: [{ id: "reasoningEffort", value: "low" }],
     };
-    expect(resolveDraftFallbackModelSelection(projectWithOptions, codexHigh, none)).toBe(
+    expect(resolveDraftFallbackModelSelection(projectWithOptions, codexHigh)).toBe(
       projectWithOptions,
     );
-    expect(resolveDraftFallbackModelSelection(claudePlain, codexHigh, none)).toBe(claudePlain);
+    expect(resolveDraftFallbackModelSelection(claudePlain, codexHigh)).toBe(claudePlain);
   });
 });

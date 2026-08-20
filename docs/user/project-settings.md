@@ -22,4 +22,5 @@ Where a project sets a model but no effort, the workspace-wide default fills the
 
 The workspace-wide default lives in Settings under **Providers**, in the **New threads** row.
 It applies to every project that has not chosen its own default model.
-Clear either setting to fall back to the provider's own defaults.
+Resolution is most specific first: the project's default, then the workspace default, then the provider's own defaults.
+Clearing the project setting falls back to the workspace default; clearing both falls back to the provider.

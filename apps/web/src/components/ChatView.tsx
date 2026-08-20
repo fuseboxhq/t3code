@@ -1523,8 +1523,7 @@ function ChatViewContent(props: ChatViewProps) {
             resolveDraftFallbackModelSelection(
               fallbackDraftProject?.defaultModelSelection,
               settings.newThreadModelSelection,
-              NO_PROVIDER_MODEL_SELECTION,
-            ),
+            ) ?? NO_PROVIDER_MODEL_SELECTION,
           )
         : undefined,
     [

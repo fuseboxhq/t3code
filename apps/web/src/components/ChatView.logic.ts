@@ -87,9 +87,8 @@ export function resolveThreadMetadataUpdateForNextTurn(input: {
 export function resolveDraftFallbackModelSelection(
   projectDefault: ModelSelection | null | undefined,
   globalDefault: ModelSelection | null | undefined,
-  none: ModelSelection,
-): ModelSelection {
-  if (!projectDefault) return globalDefault ?? none;
+): ModelSelection | null {
+  if (!projectDefault) return globalDefault ?? null;
   if (!globalDefault || globalDefault.instanceId !== projectDefault.instanceId) {
     return projectDefault;
   }
