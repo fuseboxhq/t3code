@@ -46,17 +46,21 @@ export const ProjectActivityBadges = memo(function ProjectActivityBadges({
   const environmentId = front.environmentId as EnvironmentId;
   return (
     <span className="mt-px flex items-center gap-2.5 pb-1 pl-14 text-[11px] leading-4 text-sidebar-muted-foreground/70">
-      {pullRequests > 0 ? (
-        <Link
-          to="/pull-requests"
-          search={{ involvement: "all", state: "open", projectId, environmentId }}
-          aria-label={ariaLabel(pullRequests, pullRequestsAtLeast, "pull request")}
-          className={badgeClassName}
-        >
-          <GitPullRequestIcon aria-hidden className="size-3 shrink-0" />
-          <span className="tabular-nums">{countLabel(pullRequests, pullRequestsAtLeast)}</span>
-        </Link>
-      ) : null}
+      {/* The pull-request slot holds its width even when empty, so the lead counts line up in
+          one column down the sidebar rather than sliding left on a project with no open PRs. */}
+      <span className="min-w-9">
+        {pullRequests > 0 ? (
+          <Link
+            to="/pull-requests"
+            search={{ involvement: "all", state: "open", projectId, environmentId }}
+            aria-label={ariaLabel(pullRequests, pullRequestsAtLeast, "pull request")}
+            className={badgeClassName}
+          >
+            <GitPullRequestIcon aria-hidden className="size-3 shrink-0" />
+            <span className="tabular-nums">{countLabel(pullRequests, pullRequestsAtLeast)}</span>
+          </Link>
+        ) : null}
+      </span>
       {leads > 0 ? (
         <Link
           to="/leads"
