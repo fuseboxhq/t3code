@@ -2279,16 +2279,16 @@
         "count": 5
       },
       "complexity_high": {
-        "count": 1
+        "count": 2
       },
       "crap_critical": {
         "count": 5
       },
       "crap_high": {
-        "count": 2
+        "count": 3
       },
       "crap_moderate": {
-        "count": 4
+        "count": 3
       }
     },
     "apps/web/src/components/ThreadCommandSubtitle.tsx": {
@@ -2723,6 +2723,9 @@
       }
     },
     "apps/web/src/components/pullRequest/usePullRequestThreadCheckout.ts": {
+      "complexity_moderate": {
+        "count": 1
+      },
       "crap_moderate": {
         "count": 1
       }
@@ -3980,8 +3983,8 @@
     "apps/web/src/components/ChatView.tsx:complexity",
     "apps/web/src/rightPanelStore.ts:high impact",
     "apps/web/src/components/chat/providerIconUtils.ts:circular dependency",
-    "apps/web/src/components/DiffPanel.tsx:complexity",
     "apps/web/src/components/settings/ProjectSettingsPanel.tsx:dead code",
+    "apps/web/src/components/DiffPanel.tsx:complexity",
     "apps/web/src/localApi.ts:circular dependency",
     "apps/server/src/auth/SessionStore.ts:dead code",
     "packages/client-runtime/src/connection/supervisor.ts:complexity",
@@ -3992,9 +3995,9 @@
     "apps/server/src/persistence/AuthPairingLinks.ts:dead code",
     "packages/client-runtime/src/state/projects.ts:high impact",
     "packages/client-runtime/src/state/threadSort.ts:high impact",
+    "apps/web/src/session-logic.ts:high impact",
     "apps/desktop/src/preview/PlaywrightInjectedRuntime.ts:dead code",
     "apps/server/src/textGeneration/OpenCodeTextGeneration.ts:dead code",
-    "apps/web/src/session-logic.ts:high impact",
     "apps/web/src/components/ui/group.tsx:dead code",
     "apps/web/src/components/ui/sheet.tsx:dead code",
     "packages/shared/src/serverSettings.ts:complexity",
@@ -4044,13 +4047,13 @@
     "apps/web/src/components/cloud/ConnectOnboardingDialog.tsx:complexity",
     "apps/server/src/cli/pair.ts:dead code",
     "apps/server/src/process/externalLauncher.ts:dead code",
-    "apps/web/src/components/ui/menu.tsx:circular dependency",
     "apps/web/src/components/PullRequestThreadDialog.tsx:complexity",
     "oxlint-plugin-t3code/utils.ts:high impact",
     "apps/mobile/src/features/review/useReviewSections.ts:complexity",
     "packages/shared/src/semver.ts:complexity",
     "apps/server/src/cloud/bootService.ts:dead code",
     "apps/server/src/auth/PairingGrantStore.ts:dead code",
+    "apps/web/src/components/ui/menu.tsx:circular dependency",
     "apps/web/src/modelOrdering.ts:high impact",
     "apps/web/src/reviewCommentContext.ts:complexity",
     "apps/mobile/src/features/layout/AdaptiveWorkspaceLayout.tsx:complexity",
@@ -4074,8 +4077,8 @@
     "apps/web/src/components/ui/select.tsx:circular dependency",
     ".github/scripts/thread-transfer-report.cjs:complexity",
     "apps/server/src/orchestration/Layers/ProviderCommandReactor.ts:complexity",
-    "apps/mobile/src/features/home/thread-swipe-actions.tsx:dead code",
     "apps/web/src/components/Sidebar.tsx:complexity",
+    "apps/mobile/src/features/home/thread-swipe-actions.tsx:dead code",
     "apps/web/src/components/preview/PreviewView.tsx:complexity",
     "apps/server/src/pullRequest/BitbucketPullRequestApi.ts:dead code",
     "packages/shared/src/toolActivity.ts:untested risk",
@@ -4086,8 +4089,8 @@
     "apps/server/src/pullRequest/AzureDevOpsPullRequestCli.ts:dead code",
     "apps/server/src/vcs/GitVcsDriver.ts:circular dependency",
     "apps/web/src/components/ChatView.logic.ts:high impact",
-    "apps/server/src/usage/usageScanCache.ts:complexity",
     "apps/web/src/components/settings/SettingsPanels.tsx:complexity",
+    "apps/server/src/usage/usageScanCache.ts:complexity",
     "apps/mobile/src/components/ComposerToolbar.tsx:complexity",
     "oxlint-plugin-t3code/rules/no-global-process-runtime.ts:untested risk",
     "apps/server/src/provider/Layers/ClaudeAdapter.ts:complexity",
@@ -4120,9 +4123,9 @@
     "apps/web/src/components/BranchToolbar.tsx:complexity",
     "apps/web/src/components/settings/ProviderSettingsPanel.tsx:complexity",
     "apps/desktop/src/preview/FaviconCapture.ts:complexity",
+    "apps/desktop/src/shell/DesktopShellEnvironment.ts:complexity",
     "apps/server/src/resourceTelemetry/Model.ts:complexity",
     "apps/web/src/components/GitActionsControl.logic.ts:complexity",
-    "apps/desktop/src/shell/DesktopShellEnvironment.ts:complexity",
     "apps/web/src/components/files/FilePreviewPanel.tsx:complexity",
     "apps/web/src/components/settings/ThemeSearchSection.tsx:complexity",
     "apps/web/src/terminal/ghostty/renderer.ts:complexity",
