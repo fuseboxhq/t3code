@@ -5,6 +5,8 @@ import {
   ProviderDriverKind,
   type ModelCapabilities,
   type ProviderInstanceId,
+  type ProviderOptionDescriptor,
+  type ProviderOptionSelection,
   type ServerProvider,
   type ServerProviderModel,
 } from "@t3tools/contracts";
@@ -98,4 +100,52 @@ export function getDefaultServerModel(
     DEFAULT_MODEL_BY_PROVIDER[provider] ??
     DEFAULT_MODEL
   );
+}
+
+/**
+ * The options a re-picked model still understands, out of the ones the reader had chosen.
+ * A select value the new model's descriptor does not list is dropped with its option, so a
+ * carried effort can never name a level the model cannot run at.
+ */
+function carryModelOptions(
+  heldOptions: ReadonlyArray<ProviderOptionSelection>,
+  descriptors: ReadonlyArray<ProviderOptionDescriptor>,
+): ReadonlyArray<ProviderOptionSelection> {
+  return heldOptions.filter((option) => {
+    const descriptor = descriptors.find((candidate) => candidate.id === option.id);
+    if (descriptor === undefined) return false;
+    return descriptor.type === "select"
+      ? typeof option.value === "string" &&
+          descriptor.options.some((choice) => choice.id === option.value)
+      : typeof option.value === "boolean";
+  });
+}
+
+/**
+ * The selection a composer model re-pick lands on: the new model, keeping whichever of the
+ * reader's held options it still understands. Built here so the pick handler stays a guard
+ * sequence and the carrying rule stays testable on its own.
+ */
+export function repickedModelSelection(input: {
+  instanceId: ProviderInstanceId;
+  model: string;
+  sticky: Partial<Record<ProviderInstanceId, { options?: ReadonlyArray<ProviderOptionSelection> }>>;
+  entryModels: ReadonlyArray<ServerProviderModel> | undefined;
+  driverKind: ProviderDriverKind | null;
+}): {
+  instanceId: ProviderInstanceId;
+  model: string;
+  options?: ReadonlyArray<ProviderOptionSelection>;
+} {
+  const descriptors =
+    input.driverKind === null
+      ? []
+      : (getProviderModelCapabilities(input.entryModels ?? [], input.model, input.driverKind)
+          .optionDescriptors ?? []);
+  const carried = carryModelOptions(input.sticky[input.instanceId]?.options ?? [], descriptors);
+  return {
+    instanceId: input.instanceId,
+    model: input.model,
+    ...(carried.length > 0 ? { options: carried } : {}),
+  };
 }

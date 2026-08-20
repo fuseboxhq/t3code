@@ -15,6 +15,7 @@ import {
   type ModelSelection,
   type ProviderOptionSelection,
 } from "@t3tools/contracts";
+import { DEFAULT_UNIFIED_SETTINGS } from "@t3tools/contracts/settings";
 import { createModelSelection } from "@t3tools/shared/model";
 
 // The composer draft's `modelSelectionByProvider` and
@@ -60,6 +61,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test"
 import {
   COMPOSER_DRAFT_STORAGE_KEY,
   clearComposerDraftsEnvironment,
+  deriveEffectiveComposerModelState,
   finalizePromotedDraftThreadByRef,
   markPromotedDraftThread,
   markPromotedDraftThreadByRef,
@@ -1858,5 +1860,62 @@ describe("createDebouncedStorage", () => {
     vi.advanceTimersByTime(300);
     expect(base.setItem).toHaveBeenCalledTimes(1);
     expect(base.setItem).toHaveBeenCalledWith("key", "v2");
+  });
+});
+
+describe("deriveEffectiveComposerModelState options layering", () => {
+  const codexProvider = {
+    instanceId: CODEX_INSTANCE,
+    driver: ProviderDriverKind.make("codex"),
+    enabled: true,
+    installed: true,
+    version: null,
+    status: "ready",
+    auth: { status: "authenticated" },
+    checkedAt: "2026-01-01T00:00:00.000Z",
+    models: [{ slug: "gpt-5.6-sol", name: "gpt-5.6-sol", isCustom: false, capabilities: {} }],
+    slashCommands: [],
+    skills: [],
+  } as never;
+  const HIGH = [{ id: "reasoningEffort", value: "high" }] as const;
+  const LOW = [{ id: "reasoningEffort", value: "low" }] as const;
+
+  it("falls through to the project's options per instance, not per whole map", () => {
+    // Sticky options for Claude must not hide the project's Codex default.
+    const state = deriveEffectiveComposerModelState({
+      draft: {
+        activeProvider: CODEX_INSTANCE,
+        modelSelectionByProvider: {
+          [CLAUDE_AGENT_INSTANCE]: createModelSelection(CLAUDE_AGENT_INSTANCE, "claude-sonnet-5", [
+            { id: "reasoningEffort", value: "max" },
+          ]),
+        },
+      },
+      providers: [codexProvider],
+      selectedProvider: ProviderDriverKind.make("codex"),
+      selectedInstanceId: CODEX_INSTANCE,
+      threadModelSelection: null,
+      projectModelSelection: createModelSelection(CODEX_INSTANCE, "gpt-5.6-sol", [...HIGH]),
+      settings: DEFAULT_UNIFIED_SETTINGS,
+    });
+    expect(state.modelOptions?.[CODEX_INSTANCE]).toEqual(HIGH);
+  });
+
+  it("keeps the draft's own options ahead of the project default for the same instance", () => {
+    const state = deriveEffectiveComposerModelState({
+      draft: {
+        activeProvider: CODEX_INSTANCE,
+        modelSelectionByProvider: {
+          [CODEX_INSTANCE]: createModelSelection(CODEX_INSTANCE, "gpt-5.6-sol", [...LOW]),
+        },
+      },
+      providers: [codexProvider],
+      selectedProvider: ProviderDriverKind.make("codex"),
+      selectedInstanceId: CODEX_INSTANCE,
+      threadModelSelection: null,
+      projectModelSelection: createModelSelection(CODEX_INSTANCE, "gpt-5.6-sol", [...HIGH]),
+      settings: DEFAULT_UNIFIED_SETTINGS,
+    });
+    expect(state.modelOptions?.[CODEX_INSTANCE]).toEqual(LOW);
   });
 });
