@@ -40,6 +40,7 @@ import { usePrimarySessionState } from "../../environments/primary";
 import { useEnvironmentSettings, useUpdateEnvironmentSettings } from "../../hooks/useSettings";
 import { cn } from "../../lib/utils";
 import { resolveAppModelSelectionState } from "../../modelSelection";
+import { NewThreadDefaultRow } from "./NewThreadDefaultRow";
 import {
   useEnvironments,
   usePrimaryEnvironmentId,
@@ -729,6 +730,11 @@ export function EnvironmentProviderSettings({
           aria-disabled={readOnly || undefined}
           className={readOnly ? "space-y-1 opacity-50 select-none" : "space-y-1"}
         >
+          <NewThreadDefaultRow
+            settings={settings}
+            serverProviders={serverProviders}
+            updateSettings={updateSettings}
+          />
           <SettingsRow
             title={
               <span className="inline-flex items-center gap-1.5">

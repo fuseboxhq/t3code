@@ -78,6 +78,26 @@ export function resolveThreadMetadataUpdateForNextTurn(input: {
   };
 }
 
+/**
+ * What a draft thread's composer falls back to before anything is chosen: the project's own
+ * default, filled in from the workspace-wide new-thread default. The project's model always
+ * wins; the global effort only applies where the project names the same provider instance and
+ * has no effort of its own — a Codex effort must never ride along onto a Claude model.
+ */
+export function resolveDraftFallbackModelSelection(
+  projectDefault: ModelSelection | null | undefined,
+  globalDefault: ModelSelection | null | undefined,
+  none: ModelSelection,
+): ModelSelection {
+  if (!projectDefault) return globalDefault ?? none;
+  if (!globalDefault || globalDefault.instanceId !== projectDefault.instanceId) {
+    return projectDefault;
+  }
+  if (projectDefault.options && projectDefault.options.length > 0) return projectDefault;
+  if (!globalDefault.options || globalDefault.options.length === 0) return projectDefault;
+  return { ...projectDefault, options: globalDefault.options };
+}
+
 export function buildLocalDraftThread(
   threadId: ThreadId,
   draftThread: DraftThreadState,

@@ -8,6 +8,7 @@ import {
 } from "@t3tools/contracts";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
+import type { ModelSelection } from "@t3tools/contracts";
 import type { Thread, ThreadShell } from "../types";
 import {
   MAX_HIDDEN_MOUNTED_PREVIEW_THREADS,
@@ -32,6 +33,7 @@ import {
   startNewThreadForProject,
   shouldShowBranchMismatchBanner,
   shouldWriteThreadErrorToCurrentServerThread,
+  resolveDraftFallbackModelSelection,
 } from "./ChatView.logic";
 
 const environmentId = EnvironmentId.make("environment-local");
@@ -715,5 +717,43 @@ describe("hasServerAcknowledgedLocalDispatch", () => {
     expect(hasServerAcknowledgedLocalDispatch({ ...common, hasPendingApproval: true })).toBe(true);
     expect(hasServerAcknowledgedLocalDispatch({ ...common, hasPendingUserInput: true })).toBe(true);
     expect(hasServerAcknowledgedLocalDispatch({ ...common, threadError: "failed" })).toBe(true);
+  });
+});
+
+describe("resolveDraftFallbackModelSelection", () => {
+  const codexId = ProviderInstanceId.make("codex");
+  const none: ModelSelection = { instanceId: codexId, model: "" };
+  const codexHigh: ModelSelection = {
+    instanceId: codexId,
+    model: "gpt-5.6-sol",
+    options: [{ id: "reasoningEffort", value: "high" }],
+  };
+  const codexPlain: ModelSelection = { instanceId: codexId, model: "gpt-5.6-sol" };
+  const claudePlain: ModelSelection = {
+    instanceId: ProviderInstanceId.make("claudeAgent"),
+    model: "claude-sonnet-5",
+  };
+
+  it("uses the global default when the project has none", () => {
+    expect(resolveDraftFallbackModelSelection(null, codexHigh, none)).toBe(codexHigh);
+    expect(resolveDraftFallbackModelSelection(null, null, none)).toBe(none);
+  });
+
+  it("fills an option-less project default with the global effort for the same instance", () => {
+    expect(resolveDraftFallbackModelSelection(codexPlain, codexHigh, none)).toEqual({
+      ...codexPlain,
+      options: codexHigh.options,
+    });
+  });
+
+  it("leaves a project default alone when it has options or names another provider", () => {
+    const projectWithOptions: ModelSelection = {
+      ...codexPlain,
+      options: [{ id: "reasoningEffort", value: "low" }],
+    };
+    expect(resolveDraftFallbackModelSelection(projectWithOptions, codexHigh, none)).toBe(
+      projectWithOptions,
+    );
+    expect(resolveDraftFallbackModelSelection(claudePlain, codexHigh, none)).toBe(claudePlain);
   });
 });

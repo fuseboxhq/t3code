@@ -14,3 +14,12 @@ T3 Code supports SVG, PNG, ICO, JPEG, GIF, AVIF, and WebP files. The selected pa
 each checkout in the project group and appears on your connected clients.
 
 To use automatic detection again, select **Automatic**.
+
+## Default model for new threads
+
+New threads in a project start with the model and effort set under **New threads** in its project settings.
+Where a project sets a model but no effort, the workspace-wide default fills the effort in.
+
+The workspace-wide default lives in Settings under **Providers**, in the **New threads** row.
+It applies to every project that has not chosen its own default model.
+Clear either setting to fall back to the provider's own defaults.
