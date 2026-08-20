@@ -6,6 +6,8 @@ import {
   createThreadJumpHintVisibilityController,
   getSidebarThreadIdsToPrewarm,
   getVisibleSidebarThreadIds,
+  groupActiveThreadsByProject,
+  groupedSidebarProjectExpansionKey,
   resolveAdjacentThreadId,
   getFallbackThreadIdAfterDelete,
   getVisibleThreadsForProject,
@@ -15,6 +17,9 @@ import {
   isSidebarNestedLinkClick,
   isTrailingDoubleClick,
   orderItemsByPreferredIds,
+  resolveGroupedSidebarProjectExpanded,
+  resolveGroupedSidebarProjectStatus,
+  resolveGroupedProjectNewThreadTarget,
   resolveProjectStatusIndicator,
   resolveSidebarStageBadgeLabel,
   resolveThreadRowClassName,
@@ -34,7 +39,9 @@ import {
   sortProjectsForSidebar,
   sortScopedProjectsForSidebar,
   shouldCreateNewThreadInCurrentProject,
+  shouldShowSidebarRowProjectIdentity,
   THREAD_JUMP_HINT_SHOW_DELAY_MS,
+  visibleGroupedActiveThreads,
 } from "./Sidebar.logic";
 import {
   EnvironmentId,
@@ -52,6 +59,124 @@ import {
 } from "../types";
 
 const localEnvironmentId = EnvironmentId.make("environment-local");
+
+describe("grouped active sidebar threads", () => {
+  const projects = [
+    {
+      projectKey: "alpha",
+      memberProjectRefs: [{ environmentId: "local", projectId: "alpha-local" }],
+    },
+    {
+      projectKey: "beta",
+      memberProjectRefs: [
+        { environmentId: "local", projectId: "beta-local" },
+        { environmentId: "remote", projectId: "beta-remote" },
+      ],
+    },
+    {
+      projectKey: "empty",
+      memberProjectRefs: [{ environmentId: "local", projectId: "empty" }],
+    },
+  ] as const;
+  const threads = [
+    { id: "beta-new", environmentId: "remote", projectId: "beta-remote" },
+    { id: "alpha", environmentId: "local", projectId: "alpha-local" },
+    { id: "beta-old", environmentId: "local", projectId: "beta-local" },
+    { id: "unknown", environmentId: "local", projectId: "unknown" },
+  ] as const;
+
+  it("keeps project order and thread order, and holds unknown-project threads aside", () => {
+    const { groups, ungrouped } = groupActiveThreadsByProject({ projects, threads });
+
+    expect(groups.map((group) => group.project.projectKey)).toEqual(["alpha", "beta"]);
+    expect(groups.map((group) => group.threads.map((thread) => thread.id))).toEqual([
+      ["alpha"],
+      ["beta-new", "beta-old"],
+    ]);
+    // A thread whose project has already left the shell is not dropped: it stays reachable in
+    // the trailing ungrouped section until its own removal lands.
+    expect(ungrouped.map((thread) => thread.id)).toEqual(["unknown"]);
+  });
+
+  it("defaults grouped projects to expanded without reading the legacy default", () => {
+    expect(
+      resolveGroupedSidebarProjectExpanded({ "legacy-project-expansion-default": false }, "alpha"),
+    ).toBe(true);
+    expect(groupedSidebarProjectExpansionKey("alpha")).toBe("default-grouped:alpha");
+    expect(resolveGroupedSidebarProjectExpanded({ "default-grouped:alpha": false }, "alpha")).toBe(
+      false,
+    );
+  });
+
+  it("keeps only the routed thread visible inside a collapsed project", () => {
+    const { groups, ungrouped } = groupActiveThreadsByProject({ projects, threads });
+    const visible = visibleGroupedActiveThreads({
+      groups,
+      ungrouped,
+      expandedById: { "default-grouped:beta": false },
+      routeThreadKey: "beta-old",
+      getThreadKey: (thread) => thread.id,
+    });
+
+    // The ungrouped tail has no header to collapse, so it is always visible.
+    expect(visible.map((thread) => thread.id)).toEqual(["alpha", "beta-old", "unknown"]);
+  });
+
+  it("resolves project attention with explicit priority", () => {
+    expect(
+      resolveGroupedSidebarProjectStatus([
+        { status: "ready", isUnread: true, isWoke: false },
+        { status: "monitoring", isUnread: false, isWoke: false },
+        { status: "failed", isUnread: false, isWoke: false },
+        { status: "input", isUnread: false, isWoke: false },
+      ]),
+    ).toBe("input");
+    expect(
+      resolveGroupedSidebarProjectStatus([
+        { status: "ready", isUnread: true, isWoke: false },
+        { status: "ready", isUnread: false, isWoke: true },
+      ]),
+    ).toBe("woke");
+    expect(
+      resolveGroupedSidebarProjectStatus([{ status: "ready", isUnread: false, isWoke: false }]),
+    ).toBeNull();
+  });
+
+  it("targets the preferred physical project within a logical group", () => {
+    const memberProjects = [
+      { environmentId: "local", id: "fusebox-local" },
+      { environmentId: "remote", id: "fusebox-remote" },
+    ] as const;
+
+    expect(
+      resolveGroupedProjectNewThreadTarget({
+        memberProjects,
+        representativeProjectRef: { environmentId: "local", projectId: "fusebox-local" },
+        preferredProjectRef: { environmentId: "remote", projectId: "fusebox-remote" },
+      }),
+    ).toBe(memberProjects[1]);
+    expect(
+      resolveGroupedProjectNewThreadTarget({
+        memberProjects,
+        representativeProjectRef: { environmentId: "local", projectId: "fusebox-local" },
+        preferredProjectRef: { environmentId: "other", projectId: "missing" },
+      }),
+    ).toBe(memberProjects[0]);
+    expect(
+      resolveGroupedProjectNewThreadTarget({
+        memberProjects: [],
+        representativeProjectRef: { environmentId: "local", projectId: "missing" },
+        preferredProjectRef: null,
+      }),
+    ).toBeNull();
+  });
+
+  it("hides repeated project identity only on grouped active rows", () => {
+    expect(shouldShowSidebarRowProjectIdentity(true, "active")).toBe(false);
+    expect(shouldShowSidebarRowProjectIdentity(true, "pinned")).toBe(true);
+    expect(shouldShowSidebarRowProjectIdentity(false, "active")).toBe(true);
+  });
+});
 
 describe("shouldNavigateAfterProjectRemoval", () => {
   const projectThreads = [{ environmentId: "environment-local", id: "thread-1" }];
