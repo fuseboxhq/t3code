@@ -205,6 +205,39 @@ describe("serverSettings helpers", () => {
     ).toBeNull();
   });
 
+  it("replaces the new-thread selection without retaining stale options", () => {
+    const current = {
+      ...DEFAULT_SERVER_SETTINGS,
+      newThreadModelSelection: createModelSelection(
+        ProviderInstanceId.make("codex"),
+        "gpt-5.6-sol",
+        [{ id: "reasoningEffort", value: "high" }],
+      ),
+    };
+
+    expect(
+      applyServerSettingsPatch(current, {
+        newThreadModelSelection: {
+          instanceId: ProviderInstanceId.make("claudeAgent"),
+          model: "claude-sonnet-5",
+        },
+      }).newThreadModelSelection,
+    ).toEqual({
+      instanceId: "claudeAgent",
+      model: "claude-sonnet-5",
+    });
+  });
+
+  it("clears the new-thread selection with null and leaves it alone when absent", () => {
+    const selection = createModelSelection(ProviderInstanceId.make("codex"), "gpt-5.6-sol");
+    const current = { ...DEFAULT_SERVER_SETTINGS, newThreadModelSelection: selection };
+
+    expect(
+      applyServerSettingsPatch(current, { newThreadModelSelection: null }).newThreadModelSelection,
+    ).toBeNull();
+    expect(applyServerSettingsPatch(current, {}).newThreadModelSelection).toEqual(selection);
+  });
+
   it("falls back from a disabled source control writer provider without clearing its selection", () => {
     const instanceId = ProviderInstanceId.make("codex_writer");
     const sourceControlWriterModelSelection = createModelSelection(instanceId, "gpt-5.4-mini");

@@ -40,6 +40,7 @@ import { usePrimarySessionState } from "../../environments/primary";
 import { useEnvironmentSettings, useUpdateEnvironmentSettings } from "../../hooks/useSettings";
 import { cn } from "../../lib/utils";
 import { resolveAppModelSelectionState } from "../../modelSelection";
+import { NewThreadDefaultRow } from "./NewThreadDefaultRow";
 import {
   useEnvironments,
   usePrimaryEnvironmentId,
@@ -370,6 +371,7 @@ export function EnvironmentProviderSettings({
 }) {
   const settings = useEnvironmentSettings(environmentId);
   const updateSettings = useUpdateEnvironmentSettings(environmentId);
+  const { environments: capabilityEnvironments } = useEnvironments();
   const serverProviders =
     useAtomValue(serverEnvironment.providersValueAtom(environmentId)) ?? EMPTY_SERVER_PROVIDERS;
   const refreshServerProviders = useAtomCommand(serverEnvironment.refreshProviders, {
@@ -405,6 +407,11 @@ export function EnvironmentProviderSettings({
   );
   const textGenerationModelSelection = resolveAppModelSelectionState(settings, serverProviders);
   const textGenInstanceId = textGenerationModelSelection.instanceId;
+  // Older servers silently drop the unknown settings key; without the capability the row would
+  // look writable while its writes go nowhere.
+  const newThreadDefaultSupported =
+    capabilityEnvironments.find((environment) => environment.environmentId === environmentId)
+      ?.serverConfig?.environment.capabilities.newThreadModelSelection === true;
   const resolvedBackgroundActivity = resolveServerBackgroundActivitySettings(settings);
   const providerHealthPreset = getBackgroundActivityPresetSettings(
     resolvedBackgroundActivity.profile,
@@ -729,6 +736,13 @@ export function EnvironmentProviderSettings({
           aria-disabled={readOnly || undefined}
           className={readOnly ? "space-y-1 opacity-50 select-none" : "space-y-1"}
         >
+          {newThreadDefaultSupported ? (
+            <NewThreadDefaultRow
+              settings={settings}
+              serverProviders={serverProviders}
+              updateSettings={updateSettings}
+            />
+          ) : null}
           <SettingsRow
             title={
               <span className="inline-flex items-center gap-1.5">

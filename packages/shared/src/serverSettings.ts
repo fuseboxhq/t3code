@@ -191,6 +191,11 @@ export function applyServerSettingsPatch(
     ...(patch.sourceControlWriterModelSelection !== undefined
       ? { sourceControlWriterModelSelection: patch.sourceControlWriterModelSelection }
       : {}),
+    // Replaced whole for the same reason: a model switch must not deep-merge the old
+    // selection's options into the new one.
+    ...(patch.newThreadModelSelection !== undefined
+      ? { newThreadModelSelection: patch.newThreadModelSelection }
+      : {}),
     ...(automaticGitFetchInterval !== undefined ? { automaticGitFetchInterval } : {}),
     ...(providerHealthRefreshInterval !== undefined ? { providerHealthRefreshInterval } : {}),
   };

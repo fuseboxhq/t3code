@@ -53,13 +53,9 @@ import {
   nextProjectScriptId,
 } from "../../projectScripts";
 import { decodeProjectScriptKeybindingRule } from "../../lib/projectScriptKeybindings";
-import {
-  applyProviderInstanceSettings,
-  deriveProviderInstanceEntries,
-  resolveDefaultProviderModelSelection,
-  sortProviderInstanceEntries,
-} from "../../providerInstances";
-import { getCustomModelOptionsByInstance } from "../../modelSelection";
+import { resolveDefaultProviderModelSelection } from "../../providerInstances";
+import { resolveDraftFallbackModelSelection } from "../ChatView.logic";
+import { useModelPickerEntries } from "./useModelPickerEntries";
 import {
   buildSidebarProjectSnapshots,
   type SidebarProjectGroupMember,
@@ -411,17 +407,16 @@ function ProjectDetail({ group }: { group: SidebarProjectSnapshot }) {
 
   // ----- default model -----
   const storedSelection = representative.defaultModelSelection;
-  const resolvedSelection = resolveDefaultProviderModelSelection(serverProviders, storedSelection);
-  const instanceEntries = useMemo(
-    () =>
-      sortProviderInstanceEntries(
-        applyProviderInstanceSettings(deriveProviderInstanceEntries(serverProviders), settings),
-      ),
-    [serverProviders, settings],
+  // The resting value is what a new thread here actually inherits: the same project/workspace
+  // merge the composer's draft fallback applies, resolved against the catalog. Editing it still
+  // writes a project override.
+  const resolvedSelection = resolveDefaultProviderModelSelection(
+    serverProviders,
+    resolveDraftFallbackModelSelection(storedSelection, settings.newThreadModelSelection),
   );
-  const modelOptionsByInstance = useMemo(
-    () => getCustomModelOptionsByInstance(settings, serverProviders),
-    [serverProviders, settings],
+  const { instanceEntries, modelOptionsByInstance } = useModelPickerEntries(
+    settings,
+    serverProviders,
   );
   const activeEntry = instanceEntries.find(
     (entry) => entry.instanceId === resolvedSelection?.instanceId,
