@@ -1,4 +1,8 @@
 import { fromLenientJson } from "@t3tools/shared/schemaJson";
+import {
+  getDesktopDistributionProfile,
+  type DesktopDistributionId,
+} from "@t3tools/shared/desktopDistribution";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
@@ -14,8 +18,10 @@ import {
   resolveDesktopStateDir,
   type JoinPath,
 } from "./DesktopStatePaths.ts";
+import { DESKTOP_DISTRIBUTION } from "./DesktopDistribution.ts";
 
 interface EarlyDesktopSettingsInput {
+  readonly distribution?: DesktopDistributionId;
   readonly env: NodeJS.ProcessEnv;
   readonly homeDirectory: string;
   readonly joinPath: JoinPath;
@@ -45,15 +51,22 @@ const isDevelopmentEnvironment = (env: NodeJS.ProcessEnv): boolean =>
   trimNonEmpty(env.VITE_DEV_SERVER_URL) !== null;
 
 function resolveEarlyDesktopSettingsPath(input: {
+  readonly distribution?: DesktopDistributionId;
   readonly env: NodeJS.ProcessEnv;
   readonly homeDirectory: string;
   readonly joinPath: JoinPath;
 }): string {
+  const distributionProfile = getDesktopDistributionProfile(
+    input.distribution ?? DESKTOP_DISTRIBUTION,
+  );
   const t3Home = Option.fromUndefinedOr(input.env.T3CODE_HOME);
   const baseDir = resolveDesktopBaseDir({
     homeDirectory: input.homeDirectory,
     joinPath: input.joinPath,
     t3Home,
+    defaultBaseDirName: isDevelopmentEnvironment(input.env)
+      ? ".t3"
+      : distributionProfile.defaultBaseDirName,
   });
   const stateDir = resolveDesktopStateDir({
     baseDir,
@@ -80,8 +93,13 @@ export function resolveEarlyLinuxElectronOptions(
   input: EarlyLinuxElectronOptionsInput,
 ): EarlyLinuxElectronOptions {
   const preference = resolveEarlyLinuxPasswordStorePreference(input);
+  const distributionProfile = getDesktopDistributionProfile(
+    input.distribution ?? DESKTOP_DISTRIBUTION,
+  );
   return {
-    linuxWmClass: isDevelopmentEnvironment(input.env) ? "t3code-dev" : "t3code",
+    linuxWmClass: isDevelopmentEnvironment(input.env)
+      ? "t3code-dev"
+      : distributionProfile.linuxWmClass,
     passwordStore: resolveLinuxPasswordStoreSwitch({
       preference,
       env: input.env,

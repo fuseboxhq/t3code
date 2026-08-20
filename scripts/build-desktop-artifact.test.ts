@@ -31,6 +31,7 @@ import {
   packWindowsServerAsar,
   renderMacPasskeyEntitlements,
   resolveClerkPasskeyNativeArtifacts,
+  shouldStageClerkPasskeyNativeBinaries,
   resolveMacPasskeySigningConfiguration,
   resolveDesktopRuntimeDependencies,
   resolveFffNativeDependencies,
@@ -157,6 +158,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
   it("switches desktop packaging product names to nightly for nightly builds", () => {
     assert.equal(resolveDesktopProductName("0.0.17"), "T3 Code (Alpha)");
     assert.equal(resolveDesktopProductName("0.0.17-nightly.20260413.42"), "T3 Code (Nightly)");
+    assert.equal(resolveDesktopProductName("0.0.17", "fork"), "T3 Code Fork");
   });
 
   it("switches desktop packaging icons to the nightly artwork for nightly versions", () => {
@@ -171,11 +173,18 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
       linuxIconPng: BRAND_ASSET_PATHS.nightlyLinuxIconPng,
       windowsIconIco: BRAND_ASSET_PATHS.nightlyWindowsIconIco,
     });
+
+    assert.deepStrictEqual(resolveDesktopBuildIconAssets("0.0.17", "fork"), {
+      macIconPng: BRAND_ASSET_PATHS.developmentDesktopIconPng,
+      linuxIconPng: BRAND_ASSET_PATHS.developmentUniversalIconPng,
+      windowsIconIco: BRAND_ASSET_PATHS.developmentWindowsIconIco,
+    });
   });
 
   it("switches the bundled splash and favicon branding for nightly versions", () => {
     assert.equal(resolveDesktopWebAssetBrand("0.0.17"), "production");
     assert.equal(resolveDesktopWebAssetBrand("0.0.17-nightly.20260413.42"), "nightly");
+    assert.equal(resolveDesktopWebAssetBrand("0.0.17", "fork"), "development");
   });
 
   it.effect("resolves GitHub desktop publish config from Effect config", () =>
@@ -217,6 +226,21 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
         channel: "nightly",
       });
     }),
+  );
+
+  it.effect("never configures an update repository for fork builds", () =>
+    Effect.gen(function* () {
+      const config = yield* resolveGitHubPublishConfig("latest", "fork");
+      assert.isUndefined(config);
+    }).pipe(
+      Effect.provide(
+        ConfigProvider.layer(
+          ConfigProvider.fromEnv({
+            env: { T3CODE_DESKTOP_UPDATE_REPOSITORY: "pingdotgg/t3code" },
+          }),
+        ),
+      ),
+    ),
   );
 
   it("omits bundled workspace packages from staged desktop dependencies", () => {
@@ -1019,6 +1043,36 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
     }).pipe(Effect.provide(ConfigProvider.layer(ConfigProvider.fromEnv({ env: {} })))),
   );
 
+  it.effect("builds the fork with isolated desktop identity", () =>
+    Effect.gen(function* () {
+      const config = yield* createBuildConfig(
+        "mac",
+        "dmg",
+        "1.2.3",
+        false,
+        false,
+        undefined,
+        undefined,
+        "fork",
+      );
+
+      const mac = config.mac as Record<string, unknown>;
+      assert.equal(config.appId, "com.fuseboxhq.t3code.fork");
+      assert.equal(config.productName, "T3 Code Fork");
+      assert.equal(config.artifactName, "T3-Code-Fork-${version}-${arch}.${ext}");
+      assert.isUndefined(config.publish);
+      assert.deepStrictEqual(mac.protocols, [{ name: "T3 Code Fork", schemes: ["t3code-fork"] }]);
+    }).pipe(
+      Effect.provide(
+        ConfigProvider.layer(
+          ConfigProvider.fromEnv({
+            env: { T3CODE_DESKTOP_UPDATE_REPOSITORY: "pingdotgg/t3code" },
+          }),
+        ),
+      ),
+    ),
+  );
+
   it.effect("keeps executable resource editing enabled for unsigned Windows builds", () =>
     Effect.gen(function* () {
       const config = yield* createBuildConfig(
@@ -1099,6 +1153,11 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
     assert.deepStrictEqual(resolveClerkPasskeyNativeArtifacts("linux", "x64"), []);
   });
 
+  it("omits official passkey natives from fork builds", () => {
+    assert.equal(shouldStageClerkPasskeyNativeBinaries("official"), true);
+    assert.equal(shouldStageClerkPasskeyNativeBinaries("fork"), false);
+  });
+
   it("falls back to the default mock update port when the configured port is blank", () => {
     assert.equal(resolveMockUpdateServerUrl(undefined), "http://localhost:3000");
     assert.equal(resolveMockUpdateServerUrl(4123), "http://localhost:4123");
@@ -1153,6 +1212,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
   it.effect("resolves default platform and architecture from host references", () =>
     Effect.gen(function* () {
       const resolved = yield* resolveBuildOptions({
+        distribution: Option.none(),
         platform: Option.none(),
         target: Option.none(),
         arch: Option.none(),
@@ -1193,6 +1253,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
       for (const platform of ["linux", "win"] as const) {
         const error = yield* Effect.flip(
           resolveBuildOptions({
+            distribution: Option.none(),
             platform: Option.some(platform),
             target: Option.none(),
             arch: Option.some("universal"),
@@ -1217,6 +1278,7 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
   it.effect("preserves explicit false boolean flags over true env defaults", () =>
     Effect.gen(function* () {
       const resolved = yield* resolveBuildOptions({
+        distribution: Option.none(),
         platform: Option.some("mac"),
         target: Option.none(),
         arch: Option.some("arm64"),
