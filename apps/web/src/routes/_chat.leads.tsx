@@ -11,10 +11,12 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   CheckCircle2Icon,
   CircleDotIcon,
+  FolderGit2Icon,
   LayersIcon,
   LoaderIcon,
   RefreshCwIcon,
   TargetIcon,
+  XIcon,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -34,6 +36,11 @@ import {
   type MergedIssueList,
 } from "../components/leads/leadsList.logic";
 import { assignEnvironmentProjectQueries } from "../components/pullRequest/pullRequestProjectAssignment.logic";
+import {
+  findScopedProject,
+  resolveProjectScope,
+  resolveQueryEnvironmentIds,
+} from "../components/pullRequest/pullRequestList.logic";
 import { PullRequestListGhost } from "../components/pullRequest/PullRequestGhosts";
 import { PullRequestSearchInput } from "../components/pullRequest/PullRequestListFilters";
 import { PullRequestsUnavailableState } from "../components/pullRequest/PullRequestsUnavailableState";
@@ -71,6 +78,8 @@ import { COLLAPSED_SIDEBAR_TITLEBAR_INSET_CLASS } from "~/workspaceTitlebar";
 export interface LeadsSearch {
   readonly state: IssueListState;
   readonly q?: string;
+  /** Scopes the list to one project's repository, the way the pull-request page's scope does. */
+  readonly projectId?: ProjectId;
   readonly repository?: string;
   readonly number?: number;
   readonly selectedProjectId?: ProjectId;
@@ -105,6 +114,9 @@ export const Route = createFileRoute("/_chat/leads")({
   validateSearch: (raw: Record<string, unknown>): LeadsSearch => ({
     state: raw.state === "closed" || raw.state === "all" ? raw.state : "open",
     ...(typeof raw.q === "string" && raw.q ? { q: raw.q.slice(0, 200) } : {}),
+    ...(typeof raw.projectId === "string" && raw.projectId
+      ? { projectId: raw.projectId as ProjectId }
+      : {}),
     ...(typeof raw.repository === "string" && raw.repository
       ? { repository: raw.repository.slice(0, 200) }
       : {}),
@@ -162,6 +174,7 @@ function LeadsRouteView() {
           return {
             state: next.state ?? previous.state,
             ...(next.q ? { q: next.q } : {}),
+            ...(next.projectId ? { projectId: next.projectId } : {}),
             ...(next.repository ? { repository: next.repository } : {}),
             ...(next.number ? { number: next.number } : {}),
             ...(next.selectedProjectId ? { selectedProjectId: next.selectedProjectId } : {}),
@@ -209,15 +222,46 @@ function LeadsRouteView() {
   const sentParsed = useMemo(() => parseLeadQuery(sentQuery), [sentQuery]);
   const sentFilters = useMemo(() => buildLeadListFilters(sentParsed), [sentParsed]);
 
+  // The scope the URL asks for, once the environments have had their say about whether it
+  // exists — an id no connected server holds falls back to the whole list, the way the
+  // pull-request page's scope does.
+  const scopedProjectId = useMemo(
+    () => resolveProjectScope(search.projectId, projects, projectsKnown),
+    [projects, projectsKnown, search.projectId],
+  );
+  const scopedProject = useMemo(
+    () => findScopedProject(projects, null, scopedProjectId),
+    [projects, scopedProjectId],
+  );
+  // An ambiguous id — two servers, one project name — still shows a chip: any holder's title
+  // names the repository being filtered to.
+  const scopedProjectTitle =
+    scopedProject?.title ??
+    projects.find((project) => project.id === scopedProjectId)?.title ??
+    "One project";
+  const queryEnvironmentIds = useMemo(
+    () =>
+      resolveQueryEnvironmentIds(
+        environmentIds,
+        projects,
+        scopedProject,
+        scopedProjectId,
+        projectsKnown,
+      ),
+    [environmentIds, projects, projectsKnown, scopedProject, scopedProjectId],
+  );
   // Which projects each server is asked about: two servers holding the same repository would
-  // both list the same leads, so each repository is listed by one of them.
+  // both list the same leads, so each repository is listed by one of them. A scoped list asks
+  // plainly — the scope itself is the narrowing.
   const environmentQueries = useMemo((): ReadonlyArray<{
     readonly environmentId: EnvironmentId;
     readonly projectIds?: ReadonlyArray<ProjectId>;
   }> => {
-    if (!projectsKnown) return environmentIds.map((environmentId) => ({ environmentId }));
-    return assignEnvironmentProjectQueries(projects, environmentIds);
-  }, [environmentIds, projects, projectsKnown]);
+    if (!projectsKnown || scopedProjectId !== undefined) {
+      return queryEnvironmentIds.map((environmentId) => ({ environmentId }));
+    }
+    return assignEnvironmentProjectQueries(projects, queryEnvironmentIds);
+  }, [projects, projectsKnown, queryEnvironmentIds, scopedProjectId]);
 
   const assignmentKey = useMemo(
     () =>
@@ -228,7 +272,7 @@ function LeadsRouteView() {
   );
   // The scope is the question; the query narrows it. Split so carried rows can tell "same
   // question, new search" apart from "different question entirely".
-  const scopeKey = `${assignmentKey}:${search.state}`;
+  const scopeKey = `${assignmentKey}:${search.state}:${scopedProjectId ?? ""}`;
   const filterKey = `${scopeKey}:${sentQuery}`;
 
   // Where the next slice carries on from, per environment, exactly as it was handed back -
@@ -257,6 +301,7 @@ function LeadsRouteView() {
               state: search.state,
               filters: sentFilters,
               limit: pageSize,
+              ...(scopedProjectId ? { projectId: scopedProjectId } : {}),
               ...(projectIds ? { projectIds } : {}),
               ...(sentParsed.text ? { query: sentParsed.text } : {}),
               ...(cursors === undefined ? {} : { cursors }),
@@ -264,7 +309,15 @@ function LeadsRouteView() {
           },
         ];
       }),
-    [environmentQueries, pageSize, search.state, sentCursors, sentFilters, sentParsed.text],
+    [
+      environmentQueries,
+      pageSize,
+      scopedProjectId,
+      search.state,
+      sentCursors,
+      sentFilters,
+      sentParsed.text,
+    ],
   );
   const listQuery = useIssueList(listTargets);
 
@@ -700,6 +753,20 @@ function LeadsRouteView() {
                   ariaLabel="Search leads"
                   onChange={(query) => updateSearch({ q: query || undefined })}
                 />
+                {scopedProjectId !== undefined ? (
+                  <Button
+                    size="xs"
+                    variant="secondary"
+                    className="max-w-48 shrink-0"
+                    aria-label={`Stop filtering to ${scopedProjectTitle}`}
+                    title={`Filtered to ${scopedProjectTitle} — click to clear`}
+                    onClick={() => updateSearch({ projectId: undefined })}
+                  >
+                    <FolderGit2Icon aria-hidden className="size-3.5 shrink-0" />
+                    <span className="truncate">{scopedProjectTitle}</span>
+                    <XIcon aria-hidden className="size-3 shrink-0 opacity-60" />
+                  </Button>
+                ) : null}
                 <div className="flex shrink-0 items-center gap-1" role="group" aria-label="State">
                   {STATE_TABS.map((tab) => (
                     <Button

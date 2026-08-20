@@ -4019,30 +4019,32 @@ export default function Sidebar() {
                           data-thread-selection-safe
                           className="group/project-header relative mt-1 flex list-none items-center first:mt-0"
                         >
-                          <button
-                            type="button"
-                            aria-expanded={projectExpanded}
-                            onClick={() => toggleGroupedProject(project.projectKey)}
-                            className="flex min-h-8 min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md px-2.5 py-1 text-left text-sidebar-muted-foreground outline-none hover:bg-sidebar-row-hover hover:text-sidebar-foreground focus-visible:bg-sidebar-row-hover focus-visible:ring-2 focus-visible:ring-ring"
-                          >
-                            <ChevronRightIcon
-                              aria-hidden
-                              className={cn(
-                                "size-3.5 shrink-0 transition-transform duration-150",
-                                projectExpanded && "rotate-90",
-                              )}
-                            />
-                            <ProjectFavicon
-                              environmentId={project.environmentId}
-                              cwd={project.workspaceRoot}
-                              faviconPath={project.faviconPath}
-                              className="size-4 shrink-0"
-                            />
-                            {/* Two lines when the project has open work: the name, and under
-                                it the pull-request and lead counts. A quiet project keeps its
-                                one-line header. */}
-                            <span className="flex min-w-0 flex-1 flex-col justify-center">
-                              <span className="flex min-w-0 items-center gap-2">
+                          {/* Two lines when the project has open work: the header button, and
+                              under it the pull-request and lead count links. The links live
+                              beside the button rather than inside it — a link nested in a
+                              button is reachable by neither keyboard nor screen reader — and
+                              the wrapper carries the hover so the rows still read as one. */}
+                          <div className="flex min-w-0 flex-1 flex-col rounded-md group-hover/project-header:bg-sidebar-row-hover">
+                            <button
+                              type="button"
+                              aria-expanded={projectExpanded}
+                              onClick={() => toggleGroupedProject(project.projectKey)}
+                              className="flex min-h-8 min-w-0 cursor-pointer items-center gap-2 rounded-md px-2.5 py-1 text-left text-sidebar-muted-foreground outline-none hover:text-sidebar-foreground focus-visible:bg-sidebar-row-hover focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                              <ChevronRightIcon
+                                aria-hidden
+                                className={cn(
+                                  "size-3.5 shrink-0 transition-transform duration-150",
+                                  projectExpanded && "rotate-90",
+                                )}
+                              />
+                              <ProjectFavicon
+                                environmentId={project.environmentId}
+                                cwd={project.workspaceRoot}
+                                faviconPath={project.faviconPath}
+                                className="size-4 shrink-0"
+                              />
+                              <span className="flex min-w-0 flex-1 items-center gap-2">
                                 <span className="min-w-0 flex-1 truncate text-sm font-medium text-sidebar-foreground/90">
                                   {project.displayName}
                                 </span>
@@ -4056,12 +4058,12 @@ export default function Sidebar() {
                                   </span>
                                 ) : null}
                               </span>
-                              <ProjectActivityBadges
-                                memberProjectRefs={project.memberProjectRefs}
-                                activity={projectActivity}
-                              />
-                            </span>
-                          </button>
+                            </button>
+                            <ProjectActivityBadges
+                              memberProjectRefs={project.memberProjectRefs}
+                              activity={projectActivity}
+                            />
+                          </div>
                           <Tooltip>
                             <TooltipTrigger
                               render={
