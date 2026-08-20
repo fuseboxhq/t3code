@@ -815,7 +815,6 @@
     "apps/web/src/components/ui/menu.tsx:MenuPortal",
     "apps/web/src/components/ui/menu.tsx:DropdownMenuPortal",
     "apps/web/src/components/ui/menu.tsx:DropdownMenuGroup",
-    "apps/web/src/components/ui/menu.tsx:MenuCheckboxItem",
     "apps/web/src/components/ui/menu.tsx:DropdownMenuCheckboxItem",
     "apps/web/src/components/ui/menu.tsx:DropdownMenuRadioGroup",
     "apps/web/src/components/ui/menu.tsx:DropdownMenuRadioItem",

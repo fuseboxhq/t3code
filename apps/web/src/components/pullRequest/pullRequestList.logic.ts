@@ -16,6 +16,16 @@ import type {
 } from "@t3tools/contracts";
 
 /**
+ * One whole page from the host and no more: every provider asks for one row beyond the page as
+ * its "is there more" probe, and GitHub serves a hundred per request — so asking for ninety-nine
+ * costs one round trip where a hundred costs two.
+ *
+ * Exported so every reader of the feed's first page — the page itself and the sidebar's counts —
+ * asks the same question and shares one cached answer.
+ */
+export const PULL_REQUEST_LIST_PAGE_SIZE = 99;
+
+/**
  * A listed change request with the environment that read it. Nothing on a row says which machine
  * it came from, and the page unions every connected one — so acting on a row, refreshing it, or
  * opening its detail all need the tag the listing itself does not carry.
@@ -311,8 +321,8 @@ export function matchesPullRequestFilters(
   filters: PullRequestListFilters,
   viewer?: string | null,
 ): boolean {
-  const labels = entry.labels.map((label) => label.name.trim().toLowerCase());
-  const holds = (label: string) => labels.includes(label.trim().toLowerCase());
+  const labels = new Set(entry.labels.map((label) => label.name.trim().toLowerCase()));
+  const holds = (label: string) => labels.has(label.trim().toLowerCase());
   return (
     (filters.draft === undefined || entry.isDraft === (filters.draft === "only")) &&
     (filters.review === undefined ||

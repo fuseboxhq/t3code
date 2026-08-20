@@ -9,6 +9,13 @@ import type {
 
 import { parsePullRequestQuery } from "../pullRequest/pullRequestList.logic";
 
+/**
+ * One whole host search page; the feed's own default. Exported so every reader of the feed's
+ * first page — the page itself and the sidebar's counts — asks the same question and shares one
+ * cached answer.
+ */
+export const LEAD_LIST_PAGE_SIZE = 100;
+
 /** A row as the page holds it: the host's entry plus the server it was read from. */
 export interface EnvironmentIssueEntry extends IssueListEntry {
   readonly environmentId: EnvironmentId;
@@ -28,6 +35,8 @@ export interface MergedIssueList {
   readonly errors: ReadonlyArray<EnvironmentIssueError>;
   readonly truncated: boolean;
   readonly nextCursors: Readonly<Record<string, IssueListCursors>>;
+  /** The environments with rows still on their hosts — the pull-request list's own field. */
+  readonly truncatedEnvironments: ReadonlyArray<string>;
 }
 
 /**
@@ -35,32 +44,37 @@ export interface MergedIssueList {
  * one row, readable if any environment could read it — the same posture the pull-request list
  * takes, minus the fields issues do not have.
  */
+/** Two environments' views of one host folded together: readable if either could read it. */
+function foldIssueProvider(
+  held: IssueListResult["providers"][number] | undefined,
+  provider: IssueListResult["providers"][number],
+): IssueListResult["providers"][number] {
+  if (held === undefined) return provider;
+  return {
+    ...(held.configured ? held : provider),
+    projectCount: held.projectCount + provider.projectCount,
+    configured: held.configured || provider.configured,
+  };
+}
+
 export function mergeIssueLists(
   answers: ReadonlyArray<readonly [EnvironmentId, IssueListResult]>,
 ): MergedIssueList | null {
   if (answers.length === 0) return null;
   const providers = new Map<string, IssueListResult["providers"][number]>();
+  const truncatedEnvironments: string[] = [];
   const entries: EnvironmentIssueEntry[] = [];
   const errors: EnvironmentIssueError[] = [];
   const nextCursors: Record<string, IssueListCursors> = {};
   let truncated = false;
   for (const [environmentId, answer] of answers) {
     for (const provider of answer.providers) {
-      const held = providers.get(provider.host);
-      providers.set(
-        provider.host,
-        held === undefined
-          ? provider
-          : {
-              ...(held.configured ? held : provider),
-              projectCount: held.projectCount + provider.projectCount,
-              configured: held.configured || provider.configured,
-            },
-      );
+      providers.set(provider.host, foldIssueProvider(providers.get(provider.host), provider));
     }
     entries.push(...answer.entries.map((entry) => ({ ...entry, environmentId })));
     errors.push(...answer.errors.map((error) => ({ ...error, environmentId })));
     truncated ||= answer.truncated;
+    if (answer.truncated) truncatedEnvironments.push(environmentId);
     if (Object.keys(answer.nextCursors).length > 0) {
       nextCursors[environmentId] = answer.nextCursors;
     }
@@ -71,6 +85,7 @@ export function mergeIssueLists(
     errors,
     truncated,
     nextCursors,
+    truncatedEnvironments,
   };
 }
 

@@ -170,6 +170,8 @@ import {
   type SnoozePreset,
 } from "./Sidebar.snooze";
 import { ProjectFavicon } from "./ProjectFavicon";
+import { ProjectActivityBadges } from "./sidebar/ProjectActivityBadges";
+import { useProjectActivity } from "../state/projectActivityCounts";
 import { ProviderInstanceIcon } from "./chat/ProviderInstanceIcon";
 import { getTriggerDisplayModelLabel } from "./chat/providerIconUtils";
 import {
@@ -2198,6 +2200,11 @@ export default function Sidebar() {
     () => groupActiveThreadsByProject({ projects: projectGroups, threads: activeThreads }),
     [activeThreads, projectGroups],
   );
+  // Read only while a header that could show them is on screen; costs what the Pull
+  // Requests and Leads pages already cost, shared through the same atoms.
+  const projectActivity = useProjectActivity(
+    groupedModeActive && groupedActiveThreads.groups.length > 0,
+  );
   const groupedActiveProjectThreads = groupedActiveThreads.groups;
   const ungroupedActiveThreads = groupedActiveThreads.ungrouped;
   const visibleActiveThreads = useMemo(
@@ -4016,7 +4023,7 @@ export default function Sidebar() {
                             type="button"
                             aria-expanded={projectExpanded}
                             onClick={() => toggleGroupedProject(project.projectKey)}
-                            className="flex h-8 min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md px-2.5 text-left text-sidebar-muted-foreground outline-none hover:bg-sidebar-row-hover hover:text-sidebar-foreground focus-visible:bg-sidebar-row-hover focus-visible:ring-2 focus-visible:ring-ring"
+                            className="flex min-h-8 min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md px-2.5 py-1 text-left text-sidebar-muted-foreground outline-none hover:bg-sidebar-row-hover hover:text-sidebar-foreground focus-visible:bg-sidebar-row-hover focus-visible:ring-2 focus-visible:ring-ring"
                           >
                             <ChevronRightIcon
                               aria-hidden
@@ -4031,18 +4038,29 @@ export default function Sidebar() {
                               faviconPath={project.faviconPath}
                               className="size-4 shrink-0"
                             />
-                            <span className="min-w-0 flex-1 truncate text-sm font-medium text-sidebar-foreground/90">
-                              {project.displayName}
-                            </span>
-                            <GroupedProjectStatusDot
-                              threads={group.threads}
-                              snoozeNow={snoozeNow}
-                            />
-                            {!projectExpanded && group.threads.length > 1 ? (
-                              <span className="shrink-0 text-[10px] tabular-nums text-sidebar-muted-foreground/70">
-                                {group.threads.length}
+                            {/* Two lines when the project has open work: the name, and under
+                                it the pull-request and lead counts. A quiet project keeps its
+                                one-line header. */}
+                            <span className="flex min-w-0 flex-1 flex-col justify-center">
+                              <span className="flex min-w-0 items-center gap-2">
+                                <span className="min-w-0 flex-1 truncate text-sm font-medium text-sidebar-foreground/90">
+                                  {project.displayName}
+                                </span>
+                                <GroupedProjectStatusDot
+                                  threads={group.threads}
+                                  snoozeNow={snoozeNow}
+                                />
+                                {!projectExpanded && group.threads.length > 1 ? (
+                                  <span className="shrink-0 text-[10px] tabular-nums text-sidebar-muted-foreground/70">
+                                    {group.threads.length}
+                                  </span>
+                                ) : null}
                               </span>
-                            ) : null}
+                              <ProjectActivityBadges
+                                memberProjectRefs={project.memberProjectRefs}
+                                activity={projectActivity}
+                              />
+                            </span>
                           </button>
                           <Tooltip>
                             <TooltipTrigger

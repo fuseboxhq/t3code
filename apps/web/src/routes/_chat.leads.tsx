@@ -23,6 +23,7 @@ import { LeadRow } from "../components/leads/LeadRow";
 import { showLeadRowContextMenu } from "../components/leads/leadRowContextMenu";
 import {
   LEAD_LABEL,
+  LEAD_LIST_PAGE_SIZE,
   buildLeadHandoffPrompt,
   buildLeadListFilters,
   groupLeadsByProject,
@@ -32,7 +33,7 @@ import {
   type EnvironmentIssueEntry,
   type MergedIssueList,
 } from "../components/leads/leadsList.logic";
-import { assignProjectsToEnvironments } from "../components/pullRequest/pullRequestProjectAssignment.logic";
+import { assignEnvironmentProjectQueries } from "../components/pullRequest/pullRequestProjectAssignment.logic";
 import { PullRequestListGhost } from "../components/pullRequest/PullRequestGhosts";
 import { PullRequestSearchInput } from "../components/pullRequest/PullRequestListFilters";
 import { PullRequestsUnavailableState } from "../components/pullRequest/PullRequestsUnavailableState";
@@ -87,8 +88,8 @@ const STATE_TABS = [
 }>;
 
 const SEARCH_DEBOUNCE_MS = 250;
-/** One whole host search page; the feed's own default. */
-const PAGE_SIZE = 100;
+/** The feed's first-page size, shared with the sidebar's counts so both read one cached answer. */
+const PAGE_SIZE = LEAD_LIST_PAGE_SIZE;
 /** The largest page the listing accepts; past it the request is refused outright. */
 const MAX_PAGE_SIZE = 500;
 /** The list owns one environment-scoped right panel rather than borrowing a real thread's. */
@@ -215,17 +216,7 @@ function LeadsRouteView() {
     readonly projectIds?: ReadonlyArray<ProjectId>;
   }> => {
     if (!projectsKnown) return environmentIds.map((environmentId) => ({ environmentId }));
-    const assignment = assignProjectsToEnvironments(projects, environmentIds, environmentIds[0]);
-    const totals = new Map<EnvironmentId, number>();
-    for (const project of projects) {
-      totals.set(project.environmentId, (totals.get(project.environmentId) ?? 0) + 1);
-    }
-    return environmentIds.flatMap((environmentId) => {
-      const projectIds = assignment.get(environmentId);
-      if (projectIds === undefined) return [];
-      if (projectIds.length === (totals.get(environmentId) ?? 0)) return [{ environmentId }];
-      return [{ environmentId, projectIds }];
-    });
+    return assignEnvironmentProjectQueries(projects, environmentIds);
   }, [environmentIds, projects, projectsKnown]);
 
   const assignmentKey = useMemo(
