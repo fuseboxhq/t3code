@@ -19,6 +19,11 @@ Each project becomes an expandable section while pinned, Snoozed, and Settled th
 The setting is optional, persists across restarts, and can be turned off from the same menu to restore the flat thread list.
 Collapsing a project keeps the thread you are viewing visible and shows a status indicator when another thread in the project needs attention.
 
+A project header with open work on its repository shows a second line: an open pull request count and an open lead count, each behind its icon.
+Click either count to open the Pull Requests or Leads page filtered to that project.
+A count reads like "53+" when the repository holds more open work than one listing page can prove exactly.
+Quiet projects keep their one-line header.
+
 ## Environment artwork
 
 Dev and Nightly environments can identify themselves with artwork at the top of the sidebar and in

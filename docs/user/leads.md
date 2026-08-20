@@ -10,6 +10,7 @@ The entry appears once a connected server supports it.
 
 Leads are grouped by project, newest activity first, across every connected server.
 Filter by open, closed, or all states, and search by title, number, author, or label - the search also asks GitHub itself, so it finds matches in issue bodies and comments the row cannot show.
+Arriving from a sidebar project's lead count filters the list to that project; a chip beside the search box names it, and clicking the chip clears the filter.
 Rows show the issue state, title, number, author, extra labels, comment count, and age.
 
 Reading leads uses the GitHub CLI's own sign-in on each server.
