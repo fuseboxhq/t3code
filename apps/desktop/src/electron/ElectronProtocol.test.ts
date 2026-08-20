@@ -23,6 +23,11 @@ describe("ElectronProtocol", () => {
     unhandleMock.mockReset();
   });
 
+  it("resolves the fork protocol without changing development", () => {
+    assert.equal(ElectronProtocol.getDesktopScheme(false, "fork"), "t3code-fork");
+    assert.equal(ElectronProtocol.getDesktopScheme(true, "fork"), "t3code-dev");
+  });
+
   it.effect("proxies the stable renderer origin to the current app server", () =>
     Effect.gen(function* () {
       let handler: ((request: Request) => Promise<Response>) | undefined;

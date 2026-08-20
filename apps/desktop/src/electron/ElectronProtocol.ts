@@ -7,13 +7,21 @@ import * as Schema from "effect/Schema";
 import * as Scope from "effect/Scope";
 
 import * as Electron from "electron";
+import type { DesktopDistributionId } from "@t3tools/shared/desktopDistribution";
+import { getDesktopDistributionProfile } from "@t3tools/shared/desktopDistribution";
+import { DESKTOP_DISTRIBUTION } from "../app/DesktopDistribution.ts";
 
 export const DESKTOP_HOST = "app";
 export const DESKTOP_PRODUCTION_SCHEME = "t3code";
 export const DESKTOP_DEVELOPMENT_SCHEME = "t3code-dev";
 
-export function getDesktopScheme(isDevelopment: boolean): string {
-  return isDevelopment ? DESKTOP_DEVELOPMENT_SCHEME : DESKTOP_PRODUCTION_SCHEME;
+export function getDesktopScheme(
+  isDevelopment: boolean,
+  distribution: DesktopDistributionId = DESKTOP_DISTRIBUTION,
+): string {
+  return isDevelopment
+    ? DESKTOP_DEVELOPMENT_SCHEME
+    : getDesktopDistributionProfile(distribution).protocolScheme;
 }
 
 export function getDesktopOrigin(isDevelopment: boolean): string {
@@ -109,26 +117,18 @@ function withContentSecurityPolicy(response: Response, policy: string): Response
  * Must run synchronously during process bootstrap, before Electron emits `ready`.
  */
 export function registerDesktopSchemePrivilegesSync(): void {
-  Electron.protocol.registerSchemesAsPrivileged([
-    {
-      scheme: DESKTOP_PRODUCTION_SCHEME,
+  const schemes = [...new Set([getDesktopScheme(false), DESKTOP_DEVELOPMENT_SCHEME])];
+  Electron.protocol.registerSchemesAsPrivileged(
+    schemes.map((scheme) => ({
+      scheme,
       privileges: {
         standard: true,
         secure: true,
         supportFetchAPI: true,
         corsEnabled: true,
       },
-    },
-    {
-      scheme: DESKTOP_DEVELOPMENT_SCHEME,
-      privileges: {
-        standard: true,
-        secure: true,
-        supportFetchAPI: true,
-        corsEnabled: true,
-      },
-    },
-  ]);
+    })),
+  );
 }
 
 const registerDesktopSchemePrivileges = Effect.sync(registerDesktopSchemePrivilegesSync).pipe(

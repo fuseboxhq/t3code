@@ -130,6 +130,22 @@ describe("DesktopEnvironment", () => {
     }),
   );
 
+  it.effect("isolates packaged fork identity and state", () =>
+    Effect.gen(function* () {
+      const environment = yield* makeEnvironment({ distribution: "fork", isPackaged: true });
+
+      assert.equal(environment.baseDir, "/Users/alice/.t3-fork");
+      assert.equal(environment.stateDir, "/Users/alice/.t3-fork/userdata");
+      assert.equal(environment.userDataDirName, "t3code-fork");
+      assert.equal(environment.legacyUserDataDirName, "t3code-fork");
+      assert.equal(environment.appUserModelId, "com.fuseboxhq.t3code.fork");
+      assert.equal(environment.linuxDesktopEntryName, "t3code-fork.desktop");
+      assert.equal(environment.linuxWmClass, "t3code-fork");
+      assert.equal(environment.branding.baseName, "T3 Code Fork");
+      assert.equal(environment.branding.displayName, "T3 Code Fork");
+    }),
+  );
+
   it.effect("uses a configured app user model id override", () =>
     Effect.gen(function* () {
       const environment = yield* makeEnvironment(
