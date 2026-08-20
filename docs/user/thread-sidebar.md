@@ -12,6 +12,13 @@ If reordering is unavailable for one environment, update the T3 Code server runn
 environment. Older servers can still pin and unpin threads, but do not understand synced ordering;
 their pinned threads keep the default newest-first order below the ones you have arranged.
 
+## Group active threads by project
+
+When **All projects** is selected on web or desktop, open its menu and turn on **Group active threads by project**.
+Each project becomes an expandable section while pinned, Snoozed, and Settled threads keep their existing global sections.
+The setting is optional, persists across restarts, and can be turned off from the same menu to restore the flat thread list.
+Collapsing a project keeps the thread you are viewing visible and shows a status indicator when another thread in the project needs attention.
+
 ## Environment artwork
 
 Dev and Nightly environments can identify themselves with artwork at the top of the sidebar and in

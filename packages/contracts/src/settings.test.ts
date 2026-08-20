@@ -73,6 +73,7 @@ describe("ClientSettings sidebar", () => {
   it("defaults to the current sidebar with automatic merge and inactivity settling", () => {
     const settings = decodeClientSettings({});
     expect(settings.legacySidebarEnabled).toBe(false);
+    expect(settings.sidebarGroupActiveThreadsByProject).toBe(false);
     expect(settings.sidebarAutoSettleAfterDays).toBe(3);
     expect(settings.sidebarAutoSettleOnMerge).toBe(true);
   });
@@ -92,6 +93,17 @@ describe("ClientSettings sidebar", () => {
     expect(decodeClientSettingsPatch({ legacySidebarEnabled: true }).legacySidebarEnabled).toBe(
       true,
     );
+  });
+
+  it("preserves an explicit grouped active threads preference", () => {
+    expect(
+      decodeClientSettings({ sidebarGroupActiveThreadsByProject: true })
+        .sidebarGroupActiveThreadsByProject,
+    ).toBe(true);
+    expect(
+      decodeClientSettingsPatch({ sidebarGroupActiveThreadsByProject: true })
+        .sidebarGroupActiveThreadsByProject,
+    ).toBe(true);
   });
 
   it("allows auto-settle by inactivity to be disabled", () => {

@@ -48,6 +48,108 @@ type LogicalSidebarProject = SidebarProject & {
   }[];
 };
 
+export interface GroupedSidebarProjectThreads<TProject, TThread> {
+  project: TProject;
+  threads: TThread[];
+}
+
+export function groupActiveThreadsByProject<
+  TProject extends {
+    projectKey: string;
+    memberProjectRefs: readonly { environmentId: string; projectId: string }[];
+  },
+  TThread extends { environmentId: string; projectId: string },
+>(input: {
+  projects: readonly TProject[];
+  threads: readonly TThread[];
+}): GroupedSidebarProjectThreads<TProject, TThread>[] {
+  const projectKeyByMember = new Map<string, string>();
+  for (const project of input.projects) {
+    for (const member of project.memberProjectRefs) {
+      projectKeyByMember.set(`${member.environmentId}:${member.projectId}`, project.projectKey);
+    }
+  }
+
+  const threadsByProjectKey = new Map<string, TThread[]>();
+  for (const thread of input.threads) {
+    const projectKey = projectKeyByMember.get(`${thread.environmentId}:${thread.projectId}`);
+    if (projectKey === undefined) continue;
+    const projectThreads = threadsByProjectKey.get(projectKey);
+    if (projectThreads) {
+      projectThreads.push(thread);
+    } else {
+      threadsByProjectKey.set(projectKey, [thread]);
+    }
+  }
+
+  return input.projects.flatMap((project) => {
+    const threads = threadsByProjectKey.get(project.projectKey);
+    return threads && threads.length > 0 ? [{ project, threads }] : [];
+  });
+}
+
+export function groupedSidebarProjectExpansionKey(projectKey: string): string {
+  return `default-grouped:${projectKey}`;
+}
+
+export function resolveGroupedSidebarProjectExpanded(
+  expandedById: Readonly<Record<string, boolean>>,
+  projectKey: string,
+): boolean {
+  return expandedById[groupedSidebarProjectExpansionKey(projectKey)] ?? true;
+}
+
+export function resolveGroupedProjectNewThreadTarget<
+  TProject extends { environmentId: string; id: string },
+>(input: {
+  memberProjects: readonly TProject[];
+  representativeProjectRef: { environmentId: string; projectId: string };
+  preferredProjectRef: { environmentId: string; projectId: string } | null;
+}): TProject | null {
+  const preferredProject = input.preferredProjectRef
+    ? input.memberProjects.find(
+        (project) =>
+          project.environmentId === input.preferredProjectRef?.environmentId &&
+          project.id === input.preferredProjectRef.projectId,
+      )
+    : undefined;
+  return (
+    preferredProject ??
+    input.memberProjects.find(
+      (project) =>
+        project.environmentId === input.representativeProjectRef.environmentId &&
+        project.id === input.representativeProjectRef.projectId,
+    ) ??
+    input.memberProjects[0] ??
+    null
+  );
+}
+
+export function visibleGroupedActiveThreads<TThread>(input: {
+  groups: readonly { project: { projectKey: string }; threads: readonly TThread[] }[];
+  expandedById: Readonly<Record<string, boolean>>;
+  routeThreadKey: string | null;
+  getThreadKey: (thread: TThread) => string;
+}): TThread[] {
+  return input.groups.flatMap((group) => {
+    if (resolveGroupedSidebarProjectExpanded(input.expandedById, group.project.projectKey)) {
+      return [...group.threads];
+    }
+    if (input.routeThreadKey === null) return [];
+    const routeThread = group.threads.find(
+      (thread) => input.getThreadKey(thread) === input.routeThreadKey,
+    );
+    return routeThread === undefined ? [] : [routeThread];
+  });
+}
+
+export function shouldShowSidebarRowProjectIdentity(
+  groupedModeActive: boolean,
+  section: "pinned" | "active" | "snoozed" | "settled",
+): boolean {
+  return !groupedModeActive || section !== "active";
+}
+
 export type ThreadTraversalDirection = "previous" | "next";
 
 export async function archiveSelectedThreadEntries<
@@ -496,6 +598,46 @@ export function resolveSidebarThreadStatus(thread: SidebarThreadStatusInput): Si
     return "monitoring";
   }
   return "ready";
+}
+
+export type GroupedSidebarProjectStatus = Exclude<SidebarThreadStatus, "ready"> | "woke" | "unread";
+
+const GROUPED_PROJECT_STATUS_PRIORITY: Record<GroupedSidebarProjectStatus, number> = {
+  approval: 800,
+  input: 700,
+  failed: 600,
+  working: 500,
+  monitoring: 400,
+  woke: 300,
+  unread: 200,
+};
+
+export function resolveGroupedSidebarProjectStatus(
+  presentations: ReadonlyArray<{
+    status: SidebarThreadStatus;
+    isUnread: boolean;
+    isWoke: boolean;
+  }>,
+): GroupedSidebarProjectStatus | null {
+  let resolved: GroupedSidebarProjectStatus | null = null;
+  for (const presentation of presentations) {
+    const candidate: GroupedSidebarProjectStatus | null =
+      presentation.status !== "ready"
+        ? presentation.status
+        : presentation.isWoke
+          ? "woke"
+          : presentation.isUnread
+            ? "unread"
+            : null;
+    if (
+      candidate !== null &&
+      (resolved === null ||
+        GROUPED_PROJECT_STATUS_PRIORITY[candidate] > GROUPED_PROJECT_STATUS_PRIORITY[resolved])
+    ) {
+      resolved = candidate;
+    }
+  }
+  return resolved;
 }
 
 /** NaN-safe Date.parse for sort comparators: a malformed timestamp must not
