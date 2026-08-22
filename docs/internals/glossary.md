@@ -80,6 +80,10 @@ The current materialized view of orchestration state. In [the contracts][1], it 
 
 A side-effecting service that handles follow-up work after events or runtime signals. Examples include [CheckpointReactor.ts][6], [ProviderCommandReactor.ts][12], and [ProviderRuntimeIngestion.ts][5].
 
+#### Summary
+
+A model-written digest of where a thread or project has got to, stored on the read model as `summary` next to a pending-only `summaryGeneration` marker (same request-id contract as title regeneration). `thread.meta.update` and `project.meta.update` with `regenerateSummary` stamp the marker; [ThreadSummaryReactor.ts][25] generates the text, re-reads the aggregate, and completes only when its request is still current. Turn end and the optional live timer trigger thread refreshes, and a finished thread summary schedules a debounced project rollup. Prompt context is built in [summaryContext.ts][26]; thread summaries are incremental over the previous summary's `basis`.
+
 #### Receipt
 
 A typed signal emitted when an async milestone completes, such as `checkpoint.baseline.captured`, `checkpoint.diff.finalized`, or `turn.processing.quiesced`. Receipts are a test-only mechanism: the production `RuntimeReceiptBusLive` publish is a no-op and only the test layer is PubSub-backed. Do not build production behavior on them. See [RuntimeReceiptBus.ts][13] and [CheckpointReactor.ts][6].
@@ -179,3 +183,5 @@ The file patch and changed-file summary for one turn. It is usually computed in 
 [22]: ../../apps/server/src/checkpointing/Utils.ts
 [23]: ../../apps/server/src/checkpointing/Diffs.ts
 [24]: ./overview.md
+[25]: ../../apps/server/src/orchestration/Layers/ThreadSummaryReactor.ts
+[26]: ../../apps/server/src/orchestration/summaryContext.ts

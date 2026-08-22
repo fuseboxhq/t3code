@@ -259,7 +259,7 @@ export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand"
     }
 
     case "project.meta.update": {
-      yield* requireProject({
+      const project = yield* requireProject({
         readModel,
         command,
         projectId: command.projectId,
@@ -293,7 +293,42 @@ export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand"
             : {}),
           ...(command.faviconPath !== undefined ? { faviconPath: command.faviconPath } : {}),
           ...(command.scripts !== undefined ? { scripts: command.scripts } : {}),
+          // A request while one is pending is a no-op: the pending marker keeps
+          // the first request id, so the later completion is ignored as stale.
+          ...(command.regenerateSummary === true && project.summaryGeneration == null
+            ? {
+                regenerateSummary: true as const,
+                summaryGeneration: { requestId: command.commandId, startedAt: occurredAt },
+              }
+            : {}),
           updatedAt: occurredAt,
+        },
+      };
+    }
+
+    case "project.summary.regeneration.complete": {
+      const project = yield* requireProject({
+        readModel,
+        command,
+        projectId: command.projectId,
+      });
+      const requestIsCurrent = project.summaryGeneration?.requestId === command.requestId;
+      const occurredAt = yield* nowIso;
+      return {
+        ...(yield* withEventBase({
+          aggregateKind: "project",
+          aggregateId: command.projectId,
+          occurredAt,
+          commandId: command.commandId,
+        })),
+        type: "project.meta-updated",
+        payload: {
+          projectId: command.projectId,
+          ...(requestIsCurrent && command.summary !== undefined
+            ? { summary: command.summary }
+            : {}),
+          ...(requestIsCurrent ? { summaryGeneration: null } : {}),
+          updatedAt: requestIsCurrent ? occurredAt : project.updatedAt,
         },
       };
     }
@@ -842,12 +877,46 @@ export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand"
           ...(command.title !== undefined && thread.titleRegeneration != null
             ? { titleRegeneration: null }
             : {}),
+          // Same pending rule as projects: one in flight per thread.
+          ...(command.regenerateSummary === true && thread.summaryGeneration == null
+            ? {
+                regenerateSummary: true as const,
+                summaryGeneration: { requestId: command.commandId, startedAt: occurredAt },
+              }
+            : {}),
           ...(command.modelSelection !== undefined
             ? { modelSelection: command.modelSelection }
             : {}),
           ...(branch !== undefined ? { branch } : {}),
           ...(command.worktreePath !== undefined ? { worktreePath: command.worktreePath } : {}),
           updatedAt: occurredAt,
+        },
+      };
+    }
+
+    case "thread.summary.regeneration.complete": {
+      const thread = yield* requireThread({
+        readModel,
+        command,
+        threadId: command.threadId,
+      });
+      const requestIsCurrent = thread.summaryGeneration?.requestId === command.requestId;
+      const occurredAt = yield* nowIso;
+      return {
+        ...(yield* withEventBase({
+          aggregateKind: "thread",
+          aggregateId: command.threadId,
+          occurredAt,
+          commandId: command.commandId,
+        })),
+        type: "thread.meta-updated",
+        payload: {
+          threadId: command.threadId,
+          ...(requestIsCurrent && command.summary !== undefined
+            ? { summary: command.summary }
+            : {}),
+          ...(requestIsCurrent ? { summaryGeneration: null } : {}),
+          updatedAt: requestIsCurrent ? occurredAt : thread.updatedAt,
         },
       };
     }

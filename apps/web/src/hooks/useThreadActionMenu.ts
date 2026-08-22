@@ -26,6 +26,7 @@ import {
   readEnvironmentSupportsPinning,
   readEnvironmentSupportsSettlement,
   readEnvironmentSupportsSnooze,
+  readEnvironmentSupportsSummaries,
   readEnvironmentSupportsTitleRegeneration,
   readThreadShell,
 } from "../state/entities";
@@ -63,8 +64,10 @@ export function useThreadActionMenu(input: {
   /** PR feeding auto-settle classification, as resolved by the caller. */
   readonly changeRequest: ChangeRequestSettleSource | null;
   readonly onStartRename: () => void;
+  /** Opens the header's summary popover; the sidebar navigates instead. */
+  readonly onViewSummary: () => void;
 }) {
-  const { threadRef, projectCwd, changeRequest, onStartRename } = input;
+  const { threadRef, projectCwd, changeRequest, onStartRename, onViewSummary } = input;
   const {
     settleThread,
     unsettleThread,
@@ -121,8 +124,10 @@ export function useThreadActionMenu(input: {
           snooze: readEnvironmentSupportsSnooze(threadRef.environmentId),
           pinning: readEnvironmentSupportsPinning(threadRef.environmentId),
           titleRegeneration: readEnvironmentSupportsTitleRegeneration(threadRef.environmentId),
+          summaries: readEnvironmentSupportsSummaries(threadRef.environmentId),
         };
         const isRegeneratingTitle = thread.titleRegeneration != null;
+        const isSummarising = thread.summaryGeneration != null;
         const snoozePresets = resolveSnoozePresets(now, timestampFormat);
         const items = buildThreadActionMenuItems({
           branch: thread.branch ?? null,
@@ -141,6 +146,7 @@ export function useThreadActionMenu(input: {
           isSnoozed: supports.snooze && effectiveSnoozed(thread, { now: now.toISOString() }),
           canSnoozeNow: canSnooze(thread, { now: now.toISOString() }),
           isRegeneratingTitle,
+          isSummarising,
           isRunning: thread.session?.status === "running" && thread.session.activeTurnId != null,
           supports,
           snoozePresets,
@@ -227,6 +233,18 @@ export function useThreadActionMenu(input: {
               updateThreadMetadata({
                 environmentId: threadRef.environmentId,
                 input: { threadId: threadRef.threadId, regenerateTitle: true },
+              }),
+            );
+            return;
+          case "view-summary":
+            onViewSummary();
+            return;
+          case "regenerate-summary":
+            if (isSummarising) return;
+            await reportFailure("Failed to regenerate summary", () =>
+              updateThreadMetadata({
+                environmentId: threadRef.environmentId,
+                input: { threadId: threadRef.threadId, regenerateSummary: true },
               }),
             );
             return;
@@ -322,6 +340,7 @@ export function useThreadActionMenu(input: {
       handleNewThread,
       markThreadUnread,
       onStartRename,
+      onViewSummary,
       pinThread,
       projectCwd,
       settleThread,

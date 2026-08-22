@@ -5,6 +5,7 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
 import { TrimmedNonEmptyString, TrimmedString } from "./baseSchemas.ts";
 import { ThreadEnvMode } from "./environment.ts";
 import {
+  DEFAULT_SUMMARY_REASONING_EFFORT,
   DEFAULT_TEXT_GENERATION_MODEL,
   DEFAULT_TEXT_GENERATION_REASONING_EFFORT,
   ProviderOptionSelections,
@@ -536,6 +537,9 @@ export const SourceControlWritingStyleMode = Schema.Literals([
 ]);
 export type SourceControlWritingStyleMode = typeof SourceControlWritingStyleMode.Type;
 
+export const SummaryAutoRefreshMode = Schema.Literals(["off", "turn_end", "live"]);
+export type SummaryAutoRefreshMode = typeof SummaryAutoRefreshMode.Type;
+
 export const SourceControlWritingStyleSettings = Schema.Struct({
   mode: SourceControlWritingStyleMode.pipe(
     Schema.withDecodingDefault(Effect.succeed("repo_conventions" as const)),
@@ -651,6 +655,28 @@ export const ServerSettings = Schema.Struct({
   ),
   sourceControlWriterModelSelection: Schema.NullOr(ModelSelection).pipe(
     Schema.withDecodingDefault(Effect.succeed(null)),
+  ),
+  /**
+   * Model that writes thread and project summaries. Deliberately its own
+   * setting rather than an override of `textGenerationModelSelection`: titles
+   * are cheap and frequent, summaries want more reasoning.
+   */
+  summaryModelSelection: ModelSelection.pipe(
+    Schema.withDecodingDefault(
+      Effect.succeed({
+        instanceId: ProviderInstanceId.make("codex"),
+        model: DEFAULT_TEXT_GENERATION_MODEL,
+        options: [{ id: "reasoningEffort", value: DEFAULT_SUMMARY_REASONING_EFFORT }],
+      }),
+    ),
+  ),
+  /**
+   * When thread summaries refresh on their own. "turn_end" runs after each
+   * completed turn; "live" also refreshes periodically while a turn runs;
+   * "off" leaves it to the user. On-demand regeneration always works.
+   */
+  summaryAutoRefresh: SummaryAutoRefreshMode.pipe(
+    Schema.withDecodingDefault(Effect.succeed("turn_end" as const)),
   ),
   /**
    * What a brand-new thread's composer starts with anywhere in the workspace. Consulted after a
@@ -848,6 +874,8 @@ export const ServerSettingsPatch = Schema.Struct({
     }),
   ),
   sourceControlWriterModelSelection: Schema.optionalKey(Schema.NullOr(ModelSelection)),
+  summaryModelSelection: Schema.optionalKey(ModelSelection),
+  summaryAutoRefresh: Schema.optionalKey(SummaryAutoRefreshMode),
   newThreadModelSelection: Schema.optionalKey(Schema.NullOr(ModelSelection)),
   observability: Schema.optionalKey(
     Schema.Struct({

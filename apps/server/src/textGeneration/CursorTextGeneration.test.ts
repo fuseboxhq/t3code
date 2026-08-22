@@ -236,6 +236,29 @@ it.layer(CursorTextGenerationTestLayer)("CursorTextGeneration", (it) => {
     ),
   );
 
+  it.effect("generates thread summaries through Cursor ACP text generation", () =>
+    withFakeAcpAgent(
+      {
+        T3_ACP_PROMPT_RESPONSE_TEXT: JSON.stringify({
+          summary: '"Spinner fix is in review; awaiting user sign-off."',
+        }),
+      },
+      (textGeneration) =>
+        Effect.gen(function* () {
+          const generated = yield* textGeneration.generateThreadSummary({
+            cwd: process.cwd(),
+            context: "User: fix the reconnect spinner\nAgent: opened a PR.",
+            modelSelection: {
+              instanceId: ProviderInstanceId.make("cursor"),
+              model: "composer-2",
+            },
+          });
+
+          expect(generated.summary).toBe("Spinner fix is in review; awaiting user sign-off.");
+        }),
+    ),
+  );
+
   it.effect("closes the ACP child process after text generation completes", () => {
     const exitLogDir = NodeFS.mkdtempSync(
       NodePath.join(NodeOS.tmpdir(), "t3code-cursor-text-exit-log-"),

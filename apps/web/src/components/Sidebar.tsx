@@ -106,7 +106,7 @@ import { useCopyToClipboard } from "../hooks/useCopyToClipboard";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { useNowMinute } from "../hooks/useNowMinute";
 import { useEnvironments, usePrimaryEnvironmentId } from "../state/environments";
-import { useProjects, useThreadShells } from "../state/entities";
+import { readProject, useProjects, useThreadShells } from "../state/entities";
 import { environmentServerConfigsAtom, primaryServerKeybindingsAtom } from "../state/server";
 import { vcsEnvironment } from "../state/vcs";
 import { threadEnvironment } from "../state/threads";
@@ -170,6 +170,8 @@ import {
   type SnoozePreset,
 } from "./Sidebar.snooze";
 import { ProjectFavicon } from "./ProjectFavicon";
+import { ProjectSummaryControl, useRegenerateProjectSummary } from "./ProjectSummaryControl";
+import { useThreadSummaryUiStore } from "../threadSummaryUiStore";
 import { ProjectActivityBadges } from "./sidebar/ProjectActivityBadges";
 import { useProjectActivity } from "../state/projectActivityCounts";
 import { ProviderInstanceIcon } from "./chat/ProviderInstanceIcon";
@@ -1880,6 +1882,10 @@ export default function Sidebar() {
     },
   });
   const [projectScopeMenuOpen, setProjectScopeMenuOpen] = useState(false);
+  // Project whose summary popover is open; the row button and the project
+  // context menu both drive it.
+  const [summaryOpenProjectKey, setSummaryOpenProjectKey] = useState<string | null>(null);
+  const regenerateProjectSummary = useRegenerateProjectSummary();
   const newThreadContext = useHandleNewThread();
   const openAddProjectCommandPalette = useCallback(
     () => openCommandPalette({ open: "add-project" }),
@@ -3185,7 +3191,11 @@ export default function Sidebar() {
         const supportsTitleRegeneration =
           serverConfigs.get(thread.environmentId)?.environment.capabilities
             .threadTitleRegeneration === true;
+        const supportsSummaries =
+          serverConfigs.get(thread.environmentId)?.environment.capabilities.threadSummaries ===
+          true;
         const isRegeneratingTitle = thread.titleRegeneration != null;
+        const isSummarising = thread.summaryGeneration != null;
         const isSettled = settledThreadKeysRef.current.has(threadKey);
         const isSnoozed = snoozedThreadKeysRef.current.has(threadKey);
         const isPinned = thread.pinnedAt != null;
@@ -3200,6 +3210,7 @@ export default function Sidebar() {
               isSnoozed,
               canSnoozeNow: canSnooze(thread, { now: new Date().toISOString() }),
               isRegeneratingTitle,
+              isSummarising,
               isRunning:
                 thread.session?.status === "running" && thread.session.activeTurnId != null,
               supports: {
@@ -3207,6 +3218,7 @@ export default function Sidebar() {
                 snooze: supportsSnooze,
                 pinning: supportsPinning,
                 titleRegeneration: supportsTitleRegeneration,
+                summaries: supportsSummaries,
               },
               snoozePresets,
             }),
@@ -3275,6 +3287,29 @@ export default function Sidebar() {
                 stackedThreadToast({
                   type: "error",
                   title: "Failed to regenerate thread title",
+                  description: error instanceof Error ? error.message : "An error occurred.",
+                }),
+              );
+            }
+            return;
+          }
+          case "view-summary":
+            // The header's summary control opens itself once it renders this thread.
+            useThreadSummaryUiStore.getState().requestOpen(threadKey);
+            navigateToThread(threadRef);
+            return;
+          case "regenerate-summary": {
+            if (isSummarising) return;
+            const result = await updateThreadMetadata({
+              environmentId: threadRef.environmentId,
+              input: { threadId: threadRef.threadId, regenerateSummary: true },
+            });
+            if (result._tag === "Failure" && !isAtomCommandInterrupted(result)) {
+              const error = squashAtomCommandFailure(result);
+              toastManager.add(
+                stackedThreadToast({
+                  type: "error",
+                  title: "Failed to regenerate summary",
                   description: error instanceof Error ? error.message : "An error occurred.",
                 }),
               );
@@ -3537,6 +3572,60 @@ export default function Sidebar() {
       });
     },
     [isMobile, newThreadContext, setOpenMobile],
+  );
+
+  const handleProjectContextMenu = useCallback(
+    async (
+      project: SidebarProjectSnapshot,
+      supportsSummaries: boolean,
+      position: { x: number; y: number },
+    ) => {
+      const api = readLocalApi();
+      if (!api) return;
+      const projectRef = scopeProjectRef(project.environmentId, project.id);
+      const summarising = readProject(projectRef)?.summaryGeneration != null;
+      const clicked = await settlePromise(() =>
+        api.contextMenu.show(
+          [
+            { id: "new-thread", label: "New thread" },
+            ...(supportsSummaries
+              ? [
+                  { id: "summary", label: "Summary" },
+                  {
+                    id: "regenerate-summary",
+                    label: summarising ? "Summarising…" : "Regenerate summary",
+                    disabled: summarising,
+                  },
+                ]
+              : []),
+            { id: "project-settings", label: "Project settings" },
+          ],
+          position,
+        ),
+      );
+      if (clicked._tag === "Failure") return;
+      switch (clicked.value) {
+        case "new-thread":
+          createThreadInProjectGroup(project);
+          return;
+        case "summary":
+          setSummaryOpenProjectKey(project.projectKey);
+          return;
+        case "regenerate-summary":
+          if (!summarising) regenerateProjectSummary(projectRef);
+          return;
+        case "project-settings":
+          if (isMobile) setOpenMobile(false);
+          void router.navigate({
+            to: "/projects/$projectKey",
+            params: { projectKey: project.projectKey },
+          });
+          return;
+        default:
+          return;
+      }
+    },
+    [createThreadInProjectGroup, isMobile, regenerateProjectSummary, router, setOpenMobile],
   );
 
   // The button mirrors chat.new: in multi-project setups both route through
@@ -4013,11 +4102,22 @@ export default function Sidebar() {
                               scopedThreadKey(scopeThreadRef(thread.environmentId, thread.id)) ===
                               routeThreadKey,
                           );
+                      const projectRef = scopeProjectRef(project.environmentId, project.id);
+                      const projectSupportsSummaries =
+                        serverConfigs.get(project.environmentId)?.environment.capabilities
+                          .threadSummaries === true;
                       items.push(
                         <li
                           key={`project:${project.projectKey}`}
                           data-thread-selection-safe
                           className="group/project-header relative mt-1 flex list-none items-center first:mt-0"
+                          onContextMenu={(event) => {
+                            event.preventDefault();
+                            void handleProjectContextMenu(project, projectSupportsSummaries, {
+                              x: event.clientX,
+                              y: event.clientY,
+                            });
+                          }}
                         >
                           {/* Two lines when the project has open work: the header button, and
                               under it the pull-request and lead count links. The links live
@@ -4064,6 +4164,28 @@ export default function Sidebar() {
                               activity={projectActivity}
                             />
                           </div>
+                          {projectSupportsSummaries ? (
+                            <ProjectSummaryControl
+                              projectRef={projectRef}
+                              displayName={project.displayName}
+                              open={summaryOpenProjectKey === project.projectKey}
+                              onOpenChange={(open) =>
+                                setSummaryOpenProjectKey((current) =>
+                                  open
+                                    ? project.projectKey
+                                    : current === project.projectKey
+                                      ? null
+                                      : current,
+                                )
+                              }
+                              className={cn(
+                                "absolute top-0 right-7 inline-flex size-7 cursor-pointer items-center justify-center rounded-md bg-sidebar text-icon-muted outline-none hover:bg-sidebar-row-hover hover:text-sidebar-foreground focus-visible:bg-sidebar-row-hover focus-visible:text-sidebar-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring group-hover/project-header:opacity-100 group-focus-within/project-header:opacity-100",
+                                summaryOpenProjectKey === project.projectKey
+                                  ? "opacity-100"
+                                  : "opacity-0",
+                              )}
+                            />
+                          ) : null}
                           <Tooltip>
                             <TooltipTrigger
                               render={
