@@ -23,12 +23,15 @@ import {
   buildBranchNamePrompt,
   buildCommitMessagePrompt,
   buildPrContentPrompt,
+  buildProjectSummaryPrompt,
+  buildThreadSummaryPrompt,
   buildThreadTitlePrompt,
 } from "./TextGenerationPrompts.ts";
 import {
   normalizeCliError,
   sanitizeCommitSubject,
   sanitizePrTitle,
+  sanitizeSummaryText,
   sanitizeThreadTitle,
   toJsonSchemaObject,
 } from "./TextGenerationUtils.ts";
@@ -81,11 +84,7 @@ export const makeClaudeTextGeneration = Effect.fn("makeClaudeTextGeneration")(fu
     );
 
   const encodeJsonForOperation = (
-    operation:
-      | "generateCommitMessage"
-      | "generatePrContent"
-      | "generateBranchName"
-      | "generateThreadTitle",
+    operation: TextGeneration.TextGenerationOp,
     value: unknown,
     detail: string,
   ): Effect.Effect<string, TextGenerationError> =>
@@ -111,11 +110,7 @@ export const makeClaudeTextGeneration = Effect.fn("makeClaudeTextGeneration")(fu
     outputSchemaJson,
     modelSelection,
   }: {
-    operation:
-      | "generateCommitMessage"
-      | "generatePrContent"
-      | "generateBranchName"
-      | "generateThreadTitle";
+    operation: TextGeneration.TextGenerationOp;
     cwd: string;
     prompt: string;
     outputSchemaJson: S;
@@ -359,10 +354,48 @@ export const makeClaudeTextGeneration = Effect.fn("makeClaudeTextGeneration")(fu
       };
     });
 
+  const generateThreadSummary: TextGeneration.TextGeneration["Service"]["generateThreadSummary"] =
+    Effect.fn("ClaudeTextGeneration.generateThreadSummary")(function* (input) {
+      const { prompt, outputSchema } = buildThreadSummaryPrompt({
+        context: input.context,
+        previousSummary: input.previousSummary,
+      });
+
+      const generated = yield* runClaudeJson({
+        operation: "generateThreadSummary",
+        cwd: input.cwd,
+        prompt,
+        outputSchemaJson: outputSchema,
+        modelSelection: input.modelSelection,
+      });
+
+      return { summary: sanitizeSummaryText(generated.summary) };
+    });
+
+  const generateProjectSummary: TextGeneration.TextGeneration["Service"]["generateProjectSummary"] =
+    Effect.fn("ClaudeTextGeneration.generateProjectSummary")(function* (input) {
+      const { prompt, outputSchema } = buildProjectSummaryPrompt({
+        projectTitle: input.projectTitle,
+        context: input.context,
+      });
+
+      const generated = yield* runClaudeJson({
+        operation: "generateProjectSummary",
+        cwd: input.cwd,
+        prompt,
+        outputSchemaJson: outputSchema,
+        modelSelection: input.modelSelection,
+      });
+
+      return { summary: sanitizeSummaryText(generated.summary) };
+    });
+
   return {
     generateCommitMessage,
     generatePrContent,
     generateBranchName,
     generateThreadTitle,
+    generateThreadSummary,
+    generateProjectSummary,
   } satisfies TextGeneration.TextGeneration["Service"];
 });

@@ -64,6 +64,28 @@ export function resolveSourceControlWriterModelSelection(
     : settings.textGenerationModelSelection;
 }
 
+/**
+ * The summary model, falling back to the text generation model when its
+ * provider is disabled or unavailable so summaries keep working after a
+ * provider is switched off.
+ */
+export function resolveSummaryModelSelection(
+  settings: ServerSettings,
+  providers?: ReadonlyArray<ServerProvider>,
+): ModelSelection {
+  const selection = settings.summaryModelSelection;
+  if (!isModelSelectionProviderEnabled(settings, selection)) {
+    return settings.textGenerationModelSelection;
+  }
+  if (providers === undefined) {
+    return selection;
+  }
+  const provider = providers.find((candidate) => candidate.instanceId === selection.instanceId);
+  return provider?.enabled === true && isProviderAvailable(provider)
+    ? selection
+    : settings.textGenerationModelSelection;
+}
+
 export interface PersistedServerObservabilitySettings {
   readonly otlpTracesUrl: string | undefined;
   readonly otlpMetricsUrl: string | undefined;
@@ -195,6 +217,9 @@ export function applyServerSettingsPatch(
     // selection's options into the new one.
     ...(patch.newThreadModelSelection !== undefined
       ? { newThreadModelSelection: patch.newThreadModelSelection }
+      : {}),
+    ...(patch.summaryModelSelection !== undefined
+      ? { summaryModelSelection: patch.summaryModelSelection }
       : {}),
     ...(automaticGitFetchInterval !== undefined ? { automaticGitFetchInterval } : {}),
     ...(providerHealthRefreshInterval !== undefined ? { providerHealthRefreshInterval } : {}),

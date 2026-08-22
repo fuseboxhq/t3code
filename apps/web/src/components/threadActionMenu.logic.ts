@@ -17,6 +17,8 @@ export type ThreadActionMenuId =
   | "unsnooze"
   | "rename"
   | "regenerate-title"
+  | "view-summary"
+  | "regenerate-summary"
   | "mark-unread"
   | "copy-path"
   | "copy-branch"
@@ -31,6 +33,7 @@ export interface ThreadActionMenuState {
   readonly isSnoozed: boolean;
   readonly canSnoozeNow: boolean;
   readonly isRegeneratingTitle: boolean;
+  readonly isSummarising: boolean;
   /** Archive rejects a thread with an active turn, so disable it here rather than let the action fail. */
   readonly isRunning: boolean;
   readonly supports: {
@@ -38,6 +41,7 @@ export interface ThreadActionMenuState {
     readonly snooze: boolean;
     readonly pinning: boolean;
     readonly titleRegeneration: boolean;
+    readonly summaries: boolean;
   };
   readonly snoozePresets: ReadonlyArray<SnoozePreset>;
 }
@@ -98,6 +102,16 @@ export function buildThreadActionMenuItems(
             id: "regenerate-title" as const,
             label: state.isRegeneratingTitle ? "Regenerating…" : "Regenerate title",
             disabled: state.isRegeneratingTitle,
+          },
+        ]
+      : []),
+    ...(state.supports.summaries
+      ? [
+          { id: "view-summary" as const, label: "Summary" },
+          {
+            id: "regenerate-summary" as const,
+            label: state.isSummarising ? "Summarising…" : "Regenerate summary",
+            disabled: state.isSummarising,
           },
         ]
       : []),

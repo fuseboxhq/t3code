@@ -255,6 +255,10 @@ export function projectEvent(
                     ? { faviconPath: payload.faviconPath }
                     : {}),
                   ...(payload.scripts !== undefined ? { scripts: payload.scripts } : {}),
+                  ...(payload.summary !== undefined ? { summary: payload.summary } : {}),
+                  ...(payload.summaryGeneration !== undefined
+                    ? { summaryGeneration: payload.summaryGeneration }
+                    : {}),
                   updatedAt: payload.updatedAt,
                 }
               : project,
@@ -450,6 +454,10 @@ export function projectEvent(
             ...(payload.title !== undefined ? { title: payload.title } : {}),
             ...(payload.titleRegeneration !== undefined
               ? { titleRegeneration: payload.titleRegeneration }
+              : {}),
+            ...(payload.summary !== undefined ? { summary: payload.summary } : {}),
+            ...(payload.summaryGeneration !== undefined
+              ? { summaryGeneration: payload.summaryGeneration }
               : {}),
             ...(payload.modelSelection !== undefined
               ? { modelSelection: payload.modelSelection }

@@ -276,6 +276,8 @@ projectionSnapshotLayer("ProjectionSnapshotQuery", (it) => {
             model: "gpt-5-codex",
           },
           faviconPath: null,
+          summary: null,
+          summaryGeneration: null,
           scripts: [
             {
               id: "script-1",
@@ -326,6 +328,8 @@ projectionSnapshotLayer("ProjectionSnapshotQuery", (it) => {
           pinnedAt: "2026-02-24T00:00:01.000Z",
           pinOrderKey: "gm",
           titleRegeneration: null,
+          summary: null,
+          summaryGeneration: null,
           deletedAt: null,
           messages: [
             {
@@ -396,6 +400,8 @@ projectionSnapshotLayer("ProjectionSnapshotQuery", (it) => {
             model: "gpt-5-codex",
           },
           faviconPath: null,
+          summary: null,
+          summaryGeneration: null,
           scripts: [
             {
               id: "script-1",
@@ -445,6 +451,8 @@ projectionSnapshotLayer("ProjectionSnapshotQuery", (it) => {
           pinnedAt: "2026-02-24T00:00:01.000Z",
           pinOrderKey: "gm",
           titleRegeneration: null,
+          summaryGeneration: null,
+          summaryGeneratedAt: null,
           session: {
             threadId: ThreadId.make("thread-1"),
             status: "running",

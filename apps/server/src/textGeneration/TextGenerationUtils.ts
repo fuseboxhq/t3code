@@ -63,6 +63,29 @@ export function sanitizeThreadTitle(raw: string): string {
   return `${normalized.slice(0, 47).trimEnd()}...`;
 }
 
+const MAX_SUMMARY_CHARS = 2_000;
+
+/**
+ * Normalise model-written summary text: trim, collapse blank-line runs, strip
+ * wrapping quotes, and cap at the contract's bound on a word boundary. Returns
+ * an empty string when nothing usable remains so callers can treat it as a
+ * failed generation rather than persist junk.
+ */
+export function sanitizeSummaryText(raw: string): string {
+  const normalized = raw
+    .replace(/\r\n?/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+    .replace(/^['"`]+|['"`]+$/g, "")
+    .trim();
+  if (normalized.length <= MAX_SUMMARY_CHARS) {
+    return normalized;
+  }
+  const cut = normalized.slice(0, MAX_SUMMARY_CHARS - 1);
+  const lastBreak = Math.max(cut.lastIndexOf(" "), cut.lastIndexOf("\n"));
+  return `${(lastBreak > MAX_SUMMARY_CHARS / 2 ? cut.slice(0, lastBreak) : cut).trimEnd()}…`;
+}
+
 /** CLI name to human-readable label, e.g. "codex" → "Codex CLI (`codex`)" */
 function cliLabel(cliName: string): string {
   const capitalized = cliName.charAt(0).toUpperCase() + cliName.slice(1);
