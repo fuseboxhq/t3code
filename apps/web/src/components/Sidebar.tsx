@@ -4124,7 +4124,16 @@ export default function Sidebar() {
                               beside the button rather than inside it — a link nested in a
                               button is reachable by neither keyboard nor screen reader — and
                               the wrapper carries the hover so the rows still read as one. */}
-                          <div className="flex min-w-0 flex-1 flex-col rounded-md group-hover/project-header:bg-sidebar-row-hover">
+                          <div
+                            className={cn(
+                              "flex min-w-0 flex-1 flex-col rounded-md group-hover/project-header:bg-sidebar-row-hover",
+                              // Leave room for the hover buttons so the row's status label
+                              // truncates instead of disappearing under them.
+                              projectSupportsSummaries
+                                ? "group-hover/project-header:pr-14 group-focus-within/project-header:pr-14"
+                                : "group-hover/project-header:pr-7 group-focus-within/project-header:pr-7",
+                            )}
+                          >
                             <button
                               type="button"
                               aria-expanded={projectExpanded}
