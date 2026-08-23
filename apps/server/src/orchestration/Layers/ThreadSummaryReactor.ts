@@ -241,6 +241,19 @@ export const make = (options: ThreadSummaryReactorOptions = {}) =>
 
     // ── Generation ───────────────────────────────────────────────────
 
+    // The thread may have moved on while the model was working. If its turn
+    // has since ended, the turn-end refresh was skipped because a request was
+    // pending, so queue the follow-up here. A still-running turn is left to
+    // the live timer, and callers skip this after an empty result, so it
+    // cannot loop.
+    const requestFollowUpIfStale = (threadId: ThreadId) =>
+      Effect.gen(function* () {
+        const after = yield* resolveThread(threadId);
+        if (after && after.latestTurn?.state !== "running" && !isThreadSummaryCurrent(after)) {
+          yield* requestThreadSummary(threadId);
+        }
+      });
+
     const generateThreadSummary = (job: Extract<SummaryJob, { kind: "thread" }>) =>
       Effect.gen(function* () {
         const thread = yield* resolveThread(job.threadId);
@@ -277,20 +290,8 @@ export const make = (options: ThreadSummaryReactorOptions = {}) =>
             ? { summary: { text: generated.summary, generatedAt, basis: built.basis } }
             : {}),
         });
-        // The thread may have moved on while the model was working. If its
-        // turn has since ended, turn-end refresh was skipped because this
-        // request was pending, so queue the follow-up here. A still-running
-        // turn is left to the live timer, and an empty result never re-queues,
-        // so this cannot loop.
-        const after = yield* resolveThread(job.threadId);
-        if (
-          generated.summary.length > 0 &&
-          after &&
-          after.latestTurn?.state !== "running" &&
-          settings.summaryAutoRefresh !== "off" &&
-          !isThreadSummaryCurrent(after)
-        ) {
-          yield* requestThreadSummary(job.threadId);
+        if (generated.summary.length > 0 && settings.summaryAutoRefresh !== "off") {
+          yield* requestFollowUpIfStale(job.threadId);
         }
       }).pipe(
         Effect.catchCause((cause) =>
