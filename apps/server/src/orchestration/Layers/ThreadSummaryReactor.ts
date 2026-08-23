@@ -259,7 +259,13 @@ export const make = (options: ThreadSummaryReactorOptions = {}) =>
         const thread = yield* resolveThread(job.threadId);
         if (!thread || thread.summaryGeneration?.requestId !== job.requestId) return;
 
-        const built = buildThreadSummaryContext(thread);
+        // Automatic triggers only request when something changed, so an empty
+        // delta means a person asked for a regenerate with nothing new: give
+        // them a fresh rewrite of the whole thread instead of a silent no-op.
+        const incremental = buildThreadSummaryContext(thread);
+        const built = incremental.hasContent
+          ? incremental
+          : buildThreadSummaryContext({ ...thread, summary: null });
         if (!built.hasContent) {
           yield* completeThreadSummary({ threadId: job.threadId, requestId: job.requestId });
           return;

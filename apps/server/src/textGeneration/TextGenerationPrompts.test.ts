@@ -260,6 +260,13 @@ describe("buildThreadSummaryPrompt", () => {
     expect(prompt).toContain("Fix in progress.");
     expect(prompt).toContain("New activity since the previous summary:");
   });
+
+  it("asks for the fixed Goal/Done/Now/Blocked shape in plain language", () => {
+    const { prompt } = buildThreadSummaryPrompt({ context: "USER:\nFix the reconnect bug" });
+    expect(prompt).toContain("Goal:, Done:, Now:, Blocked:");
+    expect(prompt).toContain("under 90 words");
+    expect(prompt).toContain("no markdown");
+  });
 });
 
 describe("sanitizeThreadTitle", () => {

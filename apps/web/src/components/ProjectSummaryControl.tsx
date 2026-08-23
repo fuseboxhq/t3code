@@ -84,6 +84,7 @@ export const ProjectSummaryControl = memo(function ProjectSummaryControl(props: 
           generatedAt={project?.summary?.generatedAt ?? null}
           pending={pending}
           onRegenerate={() => regenerate(projectRef)}
+          cwd={project?.workspaceRoot}
         />
       </PopoverPopup>
     </Popover>
