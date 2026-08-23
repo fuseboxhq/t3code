@@ -271,6 +271,52 @@ describe("ThreadSummaryReactor", () => {
     ),
   );
 
+  it.live("queues a replacement when the thread changed while the model was working", () =>
+    run(
+      Effect.gen(function* () {
+        resetMocks();
+        const gate = yield* Deferred.make<void>();
+        generateThreadSummary
+          .mockImplementationOnce(() =>
+            Deferred.await(gate).pipe(Effect.as({ summary: "First digest" })),
+          )
+          .mockImplementation(() => Effect.succeed({ summary: "Second digest" }));
+        const reactor = yield* ThreadSummaryReactor;
+        const engine = yield* OrchestrationEngineService;
+        const h = yield* seed("replace");
+        yield* reactor.start();
+
+        yield* h.requestSummary("cmd-summary-request-replace");
+        yield* waitFor(Effect.sync(() => generateThreadSummary.mock.calls.length === 1));
+        // A new message lands and the turn ends while generation is still running.
+        yield* engine.dispatch({
+          type: "thread.turn.start",
+          commandId: CommandId.make("cmd-turn-start-replace-2"),
+          threadId: ThreadId.make("thread-replace"),
+          message: {
+            messageId: MessageId.make("user-message-replace-2"),
+            role: "user",
+            text: "Also add a regression test",
+            attachments: [],
+          },
+          interactionMode: DEFAULT_PROVIDER_INTERACTION_MODE,
+          runtimeMode: "approval-required",
+          createdAt: NOW,
+        });
+        yield* h.completeTurn("turn-2", "cmd-turn-diff-replace");
+        yield* Deferred.succeed(gate, undefined);
+
+        yield* waitFor(
+          h.readThread.pipe(Effect.map((thread) => thread?.summary?.text === "Second digest")),
+        );
+        const thread = yield* h.readThread;
+        expect(thread?.summary?.basis.messageCount).toBe(2);
+        expect(generateThreadSummary).toHaveBeenCalledTimes(2);
+        expect(generateThreadSummary.mock.calls[1]?.[0].previousSummary).toBe("First digest");
+      }),
+    ),
+  );
+
   it.live("refreshes a running thread on the live interval", () =>
     run(
       Effect.gen(function* () {
