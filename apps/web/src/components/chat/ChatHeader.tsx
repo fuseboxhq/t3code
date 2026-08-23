@@ -344,6 +344,7 @@ export const ChatHeader = memo(function ChatHeader({
             threadRef={activeThreadRef}
             summary={threadSummary}
             summaryGeneration={threadSummaryGeneration}
+            cwd={openInCwd ?? activeProjectCwd}
             open={summaryOpen}
             onOpenChange={setSummaryOpen}
           />

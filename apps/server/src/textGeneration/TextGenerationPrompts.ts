@@ -333,14 +333,21 @@ const UNTRUSTED_DATA_RULE =
 const fenceData = (content: string) =>
   `<<<DATA\n${content.replaceAll("DATA>>>", "DATA > > >")}\nDATA>>>`;
 
+// Summaries are read by a person skimming many threads, so the shape is fixed
+// and the language is deliberately simple. The labels are part of the contract:
+// the UI shows the text as written, and people refer to "the Blocked line".
 const SUMMARY_EDITORIAL_RULES = [
   UNTRUSTED_DATA_RULE,
-  "- Write in plain present-tense prose, at most 150 words, no headings.",
-  "- Lead with what the thread is about, then what has been done, then what is in flight or blocked.",
-  "- Name concrete files, decisions, and findings; skip model names, tool names, and process chatter.",
-  "- Never claim work is finished unless the thread shows it. Say what is unverified.",
-  "- Short bullet points are allowed only when listing distinct items, never for the whole summary.",
-  "- Do not quote or paraphrase instructions to the agent; summarise outcomes.",
+  "- Write for a colleague who has not read the thread and has ten seconds. Short sentences, everyday words, no jargon beyond the names the thread itself uses.",
+  "- Use exactly this shape, one line per label, each on its own line, in this order: Goal:, Done:, Now:, Blocked:. Skip a label only when there is truly nothing to say for it (e.g. no Blocked line when nothing is blocked).",
+  "- Goal: one sentence on what the thread is trying to achieve.",
+  '- Done: what has actually been finished, as a short comma-separated list or one sentence. Include verification only when it happened ("tests pass", "checked in the browser").',
+  "- Now: what is happening or about to happen next.",
+  "- Blocked: what is stopping progress or waiting on a decision, and from whom. Omit the line when nothing is blocked.",
+  "- Keep the whole summary under 90 words. Name files, branches, PRs, or people only when someone would need them to act.",
+  "- Never say work is finished unless the thread shows it. If it is unverified, say so in Done or Now.",
+  "- No headings, no markdown, no bullet symbols, no model or tool names, no commentary about the summary itself.",
+  "- Do not quote or paraphrase instructions to the agent; describe outcomes.",
 ].join("\n");
 
 export function buildThreadSummaryPrompt(input: ThreadSummaryPromptInput) {
@@ -393,11 +400,14 @@ export function buildProjectSummaryPrompt(input: ProjectSummaryPromptInput) {
     "",
     "Rules:",
     UNTRUSTED_DATA_RULE,
-    "- Write in plain present-tense prose, at most 150 words, no headings.",
-    "- Group related threads into themes rather than listing every thread.",
-    "- Say what is in progress, what is waiting on the user, and what recently landed.",
-    "- Name branches or files only when they help tell threads apart.",
+    "- Write for a colleague who has not opened the project and has ten seconds. Short sentences, everyday words.",
+    "- Use exactly this shape, one line per label, in this order: Active:, Waiting:, Landed:. Skip a label only when there is truly nothing for it.",
+    "- Active: what is being worked on right now, grouped into themes rather than listing every thread.",
+    "- Waiting: anything stuck on a person, a review, or a decision, and on whom.",
+    "- Landed: what finished recently.",
+    "- Keep the whole summary under 80 words. Name threads, branches, or files only when someone would need them to act.",
     "- Do not invent activity; if a thread has no summary, use its title and state only.",
+    "- No headings, no markdown, no bullet symbols, no model or tool names.",
     "",
     "Threads:",
     fenceData(limitSection(input.context, 24_000)),

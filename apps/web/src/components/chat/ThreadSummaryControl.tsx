@@ -11,11 +11,24 @@ import { threadEnvironment } from "../../state/threads";
 import { useAtomCommand } from "../../state/use-atom-command";
 import { useThreadSummaryUiStore } from "../../threadSummaryUiStore";
 import { formatRelativeTimeLabel } from "../../timestampFormat";
+import ChatMarkdown from "../ChatMarkdown";
 import { Button } from "../ui/button";
 import { Popover, PopoverPopup, PopoverTrigger } from "../ui/popover";
 import { Spinner } from "../ui/spinner";
 import { toastManager } from "../ui/toast";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
+
+const SUMMARY_LABEL_LINE = /^(Goal|Done|Now|Blocked|Active|Waiting|Landed):/gm;
+
+/**
+ * Summaries arrive as plain text with fixed labels (the prompt asks for no
+ * markdown). Bold the labels so the lines scan like a checklist, and let
+ * ChatMarkdown turn file names and code spans into the same chips the chat
+ * gets, with single newlines kept as line breaks.
+ */
+export function formatSummaryMarkdown(text: string): string {
+  return text.replace(SUMMARY_LABEL_LINE, "**$1:**").replace(/\n+(?=\*\*)/g, "\n\n");
+}
 
 /** Shared popover body for thread and project summaries. */
 export function SummaryPopoverBody(props: {
@@ -24,6 +37,9 @@ export function SummaryPopoverBody(props: {
   readonly generatedAt: string | null;
   readonly pending: boolean;
   readonly onRegenerate: () => void;
+  /** Working directory for file chips and links in the rendered summary. */
+  readonly cwd: string | undefined;
+  readonly threadRef?: ScopedThreadRef | undefined;
 }) {
   return (
     <div className="flex w-[26rem] max-w-[calc(100vw-2rem)] flex-col gap-3">
@@ -38,9 +54,14 @@ export function SummaryPopoverBody(props: {
         </span>
       </div>
       {props.text ? (
-        <p className="max-h-[50vh] overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed">
-          {props.text}
-        </p>
+        <div className="max-h-[50vh] overflow-y-auto text-sm leading-relaxed">
+          <ChatMarkdown
+            text={formatSummaryMarkdown(props.text)}
+            cwd={props.cwd}
+            threadRef={props.threadRef}
+            lineBreaks
+          />
+        </div>
       ) : (
         <p className="text-sm text-muted-foreground">
           {props.pending
@@ -67,10 +88,11 @@ export const ThreadSummaryControl = memo(function ThreadSummaryControl(props: {
   readonly threadRef: ScopedThreadRef;
   readonly summary: ThreadSummary | null;
   readonly summaryGeneration: SummaryGeneration | null;
+  readonly cwd: string | null;
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
 }) {
-  const { threadRef, summary, summaryGeneration, open, onOpenChange } = props;
+  const { threadRef, summary, summaryGeneration, cwd, open, onOpenChange } = props;
   const threadKey = scopedThreadKey(threadRef);
   const pendingThreadKey = useThreadSummaryUiStore((store) => store.pendingThreadKey);
   const consume = useThreadSummaryUiStore((store) => store.consume);
@@ -122,6 +144,8 @@ export const ThreadSummaryControl = memo(function ThreadSummaryControl(props: {
           generatedAt={summary?.generatedAt ?? null}
           pending={pending}
           onRegenerate={regenerate}
+          cwd={cwd ?? undefined}
+          threadRef={threadRef}
         />
       </PopoverPopup>
     </Popover>

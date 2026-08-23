@@ -317,6 +317,30 @@ describe("ThreadSummaryReactor", () => {
     ),
   );
 
+  it.live("rewrites the whole thread when a regenerate finds nothing new", () =>
+    run(
+      Effect.gen(function* () {
+        resetMocks();
+        const reactor = yield* ThreadSummaryReactor;
+        const h = yield* seed("rewrite");
+        yield* reactor.start();
+
+        yield* h.requestSummary("cmd-summary-request-rewrite-1");
+        yield* waitFor(
+          h.readThread.pipe(Effect.map((thread) => thread?.summary?.text === "Thread digest")),
+        );
+        generateThreadSummary.mockImplementation(() => Effect.succeed({ summary: "Fresh digest" }));
+        yield* h.requestSummary("cmd-summary-request-rewrite-2");
+        yield* waitFor(
+          h.readThread.pipe(Effect.map((thread) => thread?.summary?.text === "Fresh digest")),
+        );
+        const second = generateThreadSummary.mock.calls[1]?.[0];
+        expect(second?.previousSummary).toBeUndefined();
+        expect(second?.context).toContain("Please fix the reconnect bug");
+      }),
+    ),
+  );
+
   it.live("does not re-queue when the model returns nothing", () =>
     run(
       Effect.gen(function* () {
