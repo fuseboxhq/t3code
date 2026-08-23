@@ -280,9 +280,11 @@ export const make = (options: ThreadSummaryReactorOptions = {}) =>
         // The thread may have moved on while the model was working. If its
         // turn has since ended, turn-end refresh was skipped because this
         // request was pending, so queue the follow-up here. A still-running
-        // turn is left to the live timer so this cannot loop.
+        // turn is left to the live timer, and an empty result never re-queues,
+        // so this cannot loop.
         const after = yield* resolveThread(job.threadId);
         if (
+          generated.summary.length > 0 &&
           after &&
           after.latestTurn?.state !== "running" &&
           settings.summaryAutoRefresh !== "off" &&

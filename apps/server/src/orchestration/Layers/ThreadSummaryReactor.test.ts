@@ -317,6 +317,27 @@ describe("ThreadSummaryReactor", () => {
     ),
   );
 
+  it.live("does not re-queue when the model returns nothing", () =>
+    run(
+      Effect.gen(function* () {
+        resetMocks();
+        generateThreadSummary.mockImplementation(() => Effect.succeed({ summary: "" }));
+        const reactor = yield* ThreadSummaryReactor;
+        const h = yield* seed("empty");
+        yield* reactor.start();
+
+        yield* h.requestSummary("cmd-summary-request-empty");
+        yield* waitFor(
+          h.readThread.pipe(Effect.map((thread) => thread?.summaryGeneration == null)),
+        );
+        yield* Effect.sleep("50 millis");
+        yield* reactor.drain;
+        expect(generateThreadSummary).toHaveBeenCalledTimes(1);
+        expect((yield* h.readThread)?.summary ?? null).toBeNull();
+      }),
+    ),
+  );
+
   it.live("refreshes a running thread on the live interval", () =>
     run(
       Effect.gen(function* () {
