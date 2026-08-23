@@ -73,6 +73,31 @@ export interface ThreadTitleGenerationResult {
   title: string;
 }
 
+export interface ThreadSummaryGenerationInput {
+  cwd: string;
+  /**
+   * Formatted thread context. The whole thread on first generation; only what
+   * landed since the previous summary's basis when `previousSummary` is set.
+   */
+  context: string;
+  previousSummary?: string | undefined;
+  /** What model and provider to use for generation. */
+  modelSelection: ModelSelection;
+}
+
+export interface ProjectSummaryGenerationInput {
+  cwd: string;
+  projectTitle: string;
+  /** One formatted block per active thread: title, branch, state, summary. */
+  context: string;
+  /** What model and provider to use for generation. */
+  modelSelection: ModelSelection;
+}
+
+export interface SummaryGenerationResult {
+  summary: string;
+}
+
 export interface TextGenerationService {
   generateCommitMessage(
     input: CommitMessageGenerationInput,
@@ -80,6 +105,8 @@ export interface TextGenerationService {
   generatePrContent(input: PrContentGenerationInput): Promise<PrContentGenerationResult>;
   generateBranchName(input: BranchNameGenerationInput): Promise<BranchNameGenerationResult>;
   generateThreadTitle(input: ThreadTitleGenerationInput): Promise<ThreadTitleGenerationResult>;
+  generateThreadSummary(input: ThreadSummaryGenerationInput): Promise<SummaryGenerationResult>;
+  generateProjectSummary(input: ProjectSummaryGenerationInput): Promise<SummaryGenerationResult>;
 }
 
 /**
@@ -113,17 +140,29 @@ export class TextGeneration extends Context.Service<
     readonly generateThreadTitle: (
       input: ThreadTitleGenerationInput,
     ) => Effect.Effect<ThreadTitleGenerationResult, TextGenerationError>;
+
+    /** Write or revise a short digest of where a thread has got to. */
+    readonly generateThreadSummary: (
+      input: ThreadSummaryGenerationInput,
+    ) => Effect.Effect<SummaryGenerationResult, TextGenerationError>;
+
+    /** Roll a project's thread summaries up into one digest. */
+    readonly generateProjectSummary: (
+      input: ProjectSummaryGenerationInput,
+    ) => Effect.Effect<SummaryGenerationResult, TextGenerationError>;
   }
 >()("t3/textGeneration/TextGeneration") {}
 
 /** @deprecated Use `TextGeneration["Service"]`. */
 export type TextGenerationShape = TextGeneration["Service"];
 
-type TextGenerationOp =
+export type TextGenerationOp =
   | "generateCommitMessage"
   | "generatePrContent"
   | "generateBranchName"
-  | "generateThreadTitle";
+  | "generateThreadTitle"
+  | "generateThreadSummary"
+  | "generateProjectSummary";
 
 const resolveInstance = (
   registry: ProviderInstanceRegistry.ProviderInstanceRegistry["Service"],
@@ -162,6 +201,14 @@ export const makeTextGenerationFromRegistry = (
     generateThreadTitle: (input) =>
       resolveInstance(registry, "generateThreadTitle", input.modelSelection.instanceId).pipe(
         Effect.flatMap((textGeneration) => textGeneration.generateThreadTitle(input)),
+      ),
+    generateThreadSummary: (input) =>
+      resolveInstance(registry, "generateThreadSummary", input.modelSelection.instanceId).pipe(
+        Effect.flatMap((textGeneration) => textGeneration.generateThreadSummary(input)),
+      ),
+    generateProjectSummary: (input) =>
+      resolveInstance(registry, "generateProjectSummary", input.modelSelection.instanceId).pipe(
+        Effect.flatMap((textGeneration) => textGeneration.generateProjectSummary(input)),
       ),
   });
 

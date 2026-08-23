@@ -3,7 +3,9 @@ import {
   type EditorId,
   type ProjectScript,
   type ResolvedKeybindingsConfig,
+  type SummaryGeneration,
   type ThreadId,
+  type ThreadSummary,
 } from "@t3tools/contracts";
 import { scopeThreadRef } from "@t3tools/client-runtime/environment";
 import {
@@ -30,7 +32,9 @@ import ProjectScriptsControl, {
   type ProjectScriptActionResult,
 } from "../ProjectScriptsControl";
 import { OpenInPicker } from "./OpenInPicker";
+import { ThreadSummaryControl } from "./ThreadSummaryControl";
 import { useRemoteOpenState, type RemoteOpenMode } from "../../remoteOpen";
+import { useServerConfigs } from "../../state/entities";
 import { usePrimaryEnvironmentId } from "../../state/environments";
 import { useT3ProjectFileScripts } from "~/hooks/useT3ProjectFileScripts";
 import { useThreadActionMenu } from "~/hooks/useThreadActionMenu";
@@ -51,6 +55,8 @@ interface ChatHeaderProps {
   activeThreadTitle: string;
   /** Drafts have no server thread yet, so the title carries no action menu. */
   isServerThread: boolean;
+  threadSummary: ThreadSummary | null;
+  threadSummaryGeneration: SummaryGeneration | null;
   /** PR feeding the settled classification, resolved by ChatView. */
   changeRequest: ChangeRequestSettleSource | null;
   activeProjectName: string | undefined;
@@ -113,6 +119,8 @@ export const ChatHeader = memo(function ChatHeader({
   draftId,
   activeThreadTitle,
   isServerThread,
+  threadSummary,
+  threadSummaryGeneration,
   changeRequest,
   activeProjectName,
   activeProjectCwd,
@@ -188,11 +196,24 @@ export const ChatHeader = memo(function ChatHeader({
     },
     [activeThreadEnvironmentId, activeThreadId, activeThreadTitle, updateThreadMetadata],
   );
+  const serverConfigs = useServerConfigs();
+  const supportsSummaries =
+    serverConfigs.get(activeThreadEnvironmentId)?.environment.capabilities.threadSummaries === true;
+  // Keyed by thread like the rename state: navigating away closes the popover
+  // instead of carrying it over to the next thread.
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  const [summaryOpenThreadId, setSummaryOpenThreadId] = useState<ThreadId>(activeThreadId);
+  if (summaryOpenThreadId !== activeThreadId) {
+    setSummaryOpenThreadId(activeThreadId);
+    setSummaryOpen(false);
+  }
+  const openSummary = useCallback(() => setSummaryOpen(true), []);
   const { openMenu } = useThreadActionMenu({
     threadRef: isServerThread ? activeThreadRef : null,
     projectCwd: activeProjectCwd,
     changeRequest,
     onStartRename: startRename,
+    onViewSummary: openSummary,
   });
   const titleButtonRef = useRef<HTMLButtonElement | null>(null);
   const openMenuFromTitle = useCallback(() => {
@@ -318,6 +339,15 @@ export const ChatHeader = memo(function ChatHeader({
           rightPanelOpen ? "pr-0" : "pr-16",
         )}
       >
+        {isServerThread && supportsSummaries && (
+          <ThreadSummaryControl
+            threadRef={activeThreadRef}
+            summary={threadSummary}
+            summaryGeneration={threadSummaryGeneration}
+            open={summaryOpen}
+            onOpenChange={setSummaryOpen}
+          />
+        )}
         {activeProjectScripts && (
           <ProjectScriptsControl
             scripts={activeProjectScripts}

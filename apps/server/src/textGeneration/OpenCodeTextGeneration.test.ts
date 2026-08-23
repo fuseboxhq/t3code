@@ -377,6 +377,26 @@ it.layer(OpenCodeTextGenerationTestLayer)("OpenCodeTextGeneration", (it) => {
     ),
   );
 
+  it.effect("generates thread summaries through OpenCode", () =>
+    withOpenCodeTextGeneration(DEFAULT_OPENCODE_SETTINGS, (textGeneration) =>
+      Effect.gen(function* () {
+        runtimeMock.state.promptResult = {
+          data: {
+            parts: [{ type: "text", text: '{"summary":"  \\"Parsing tightened; PR open.\\"  "}' }],
+          },
+        };
+
+        const result = yield* textGeneration.generateThreadSummary({
+          cwd: process.cwd(),
+          context: "User: tighten OpenCode parsing\nAgent: opened a PR.",
+          modelSelection: DEFAULT_TEST_MODEL_SELECTION,
+        });
+
+        expect(result).toEqual({ summary: "Parsing tightened; PR open." });
+      }),
+    ),
+  );
+
   it.effect("surfaces the upstream OpenCode structured-output error message", () =>
     withOpenCodeTextGeneration(DEFAULT_OPENCODE_SETTINGS, (textGeneration) =>
       Effect.gen(function* () {

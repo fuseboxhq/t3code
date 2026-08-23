@@ -7,6 +7,7 @@
  * @module ProjectionProjectRepository
  */
 import {
+  CommandId,
   IsoDateTime,
   ModelSelection,
   ProjectId,
@@ -28,6 +29,10 @@ export const ProjectionProject = Schema.Struct({
   defaultThreadEnvMode: Schema.NullOr(ThreadEnvMode),
   faviconPath: Schema.optional(Schema.NullOr(Schema.String)),
   scripts: Schema.Array(ProjectScript),
+  summaryText: Schema.optional(Schema.NullOr(Schema.String)),
+  summaryGeneratedAt: Schema.optional(Schema.NullOr(IsoDateTime)),
+  summaryGenerationRequestId: Schema.optional(Schema.NullOr(CommandId)),
+  summaryGenerationStartedAt: Schema.optional(Schema.NullOr(IsoDateTime)),
   createdAt: IsoDateTime,
   updatedAt: IsoDateTime,
   deletedAt: Schema.NullOr(IsoDateTime),

@@ -55,6 +55,7 @@ import {
 } from "../Icons";
 import { RedactedSensitiveText } from "./RedactedSensitiveText";
 import { SourceControlWritingSettingsSection } from "./SourceControlWritingSettings";
+import { SummarySettingsSection } from "./SummarySettings";
 import {
   PolicyTooltip,
   SettingResetButton,
@@ -581,6 +582,7 @@ export function SourceControlSettingsPanel() {
       )}
 
       {isPrimaryEnvironment ? <SourceControlWritingSettingsSection /> : null}
+      {isPrimaryEnvironment ? <SummarySettingsSection /> : null}
     </SettingsPageContainer>
   );
 }

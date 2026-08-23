@@ -136,6 +136,15 @@ describe("ServerSettings.providerInstances (slice-2 invariant)", () => {
     });
   });
 
+  it("defaults summaries to Luna at medium effort, refreshing after each turn", () => {
+    expect(DEFAULT_SERVER_SETTINGS.summaryModelSelection).toEqual({
+      instanceId: ProviderInstanceId.make("codex"),
+      model: "gpt-5.6-luna",
+      options: [{ id: "reasoningEffort", value: "medium" }],
+    });
+    expect(DEFAULT_SERVER_SETTINGS.summaryAutoRefresh).toBe("turn_end");
+  });
+
   it("defaults to an empty record so legacy configs without the key still decode", () => {
     expect(DEFAULT_SERVER_SETTINGS.providerInstances).toEqual({});
   });

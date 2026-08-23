@@ -145,6 +145,25 @@ it.layer(GrokTextGenerationTestLayer)("GrokTextGeneration", (it) => {
     ),
   );
 
+  it.effect("generates thread summaries through Grok ACP text generation", () =>
+    withFakeAcpGrok(
+      {
+        T3_ACP_PROMPT_RESPONSE_TEXT: JSON.stringify({
+          summary: '"Lint job fixed; CI is green again."',
+        }),
+      },
+      (textGeneration) =>
+        Effect.gen(function* () {
+          const generated = yield* textGeneration.generateThreadSummary({
+            cwd: process.cwd(),
+            context: "User: the lint job is red\nAgent: fixed the import order.",
+            modelSelection: createModelSelection(ProviderInstanceId.make("grok"), "grok-mock-alt"),
+          });
+          expect(generated.summary).toBe("Lint job fixed; CI is green again.");
+        }),
+    ),
+  );
+
   it.effect("surfaces ACP request failures as text generation errors", () =>
     withFakeAcpGrok(
       {

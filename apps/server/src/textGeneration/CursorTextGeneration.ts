@@ -15,11 +15,14 @@ import {
   buildBranchNamePrompt,
   buildCommitMessagePrompt,
   buildPrContentPrompt,
+  buildProjectSummaryPrompt,
+  buildThreadSummaryPrompt,
   buildThreadTitlePrompt,
 } from "./TextGenerationPrompts.ts";
 import {
   sanitizeCommitSubject,
   sanitizePrTitle,
+  sanitizeSummaryText,
   sanitizeThreadTitle,
 } from "./TextGenerationUtils.ts";
 import {
@@ -50,11 +53,7 @@ export const makeCursorTextGeneration = Effect.fn("makeCursorTextGeneration")(fu
     outputSchemaJson,
     modelSelection,
   }: {
-    operation:
-      | "generateCommitMessage"
-      | "generatePrContent"
-      | "generateBranchName"
-      | "generateThreadTitle";
+    operation: TextGeneration.TextGenerationOp;
     cwd: string;
     prompt: string;
     outputSchemaJson: S;
@@ -259,10 +258,48 @@ export const makeCursorTextGeneration = Effect.fn("makeCursorTextGeneration")(fu
       } satisfies TextGeneration.ThreadTitleGenerationResult;
     });
 
+  const generateThreadSummary: TextGeneration.TextGeneration["Service"]["generateThreadSummary"] =
+    Effect.fn("CursorTextGeneration.generateThreadSummary")(function* (input) {
+      const { prompt, outputSchema } = buildThreadSummaryPrompt({
+        context: input.context,
+        previousSummary: input.previousSummary,
+      });
+
+      const generated = yield* runCursorJson({
+        operation: "generateThreadSummary",
+        cwd: input.cwd,
+        prompt,
+        outputSchemaJson: outputSchema,
+        modelSelection: input.modelSelection,
+      });
+
+      return { summary: sanitizeSummaryText(generated.summary) };
+    });
+
+  const generateProjectSummary: TextGeneration.TextGeneration["Service"]["generateProjectSummary"] =
+    Effect.fn("CursorTextGeneration.generateProjectSummary")(function* (input) {
+      const { prompt, outputSchema } = buildProjectSummaryPrompt({
+        projectTitle: input.projectTitle,
+        context: input.context,
+      });
+
+      const generated = yield* runCursorJson({
+        operation: "generateProjectSummary",
+        cwd: input.cwd,
+        prompt,
+        outputSchemaJson: outputSchema,
+        modelSelection: input.modelSelection,
+      });
+
+      return { summary: sanitizeSummaryText(generated.summary) };
+    });
+
   return {
     generateCommitMessage,
     generatePrContent,
     generateBranchName,
     generateThreadTitle,
+    generateThreadSummary,
+    generateProjectSummary,
   } satisfies TextGeneration.TextGeneration["Service"];
 });

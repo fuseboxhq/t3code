@@ -231,6 +231,45 @@ export const ProjectFaviconPath = TrimmedNonEmptyString.check(
 );
 export type ProjectFaviconPath = typeof ProjectFaviconPath.Type;
 
+/** Bounded so a runaway model cannot bloat the read model. */
+export const SummaryText = TrimmedNonEmptyString.check(Schema.isMaxLength(2_000));
+export type SummaryText = typeof SummaryText.Type;
+
+/**
+ * A model-written digest of where a thread has got to. `basis` records the
+ * thread state the summary describes so refreshes can skip when nothing new
+ * landed and feed only the delta to the model.
+ */
+export const ThreadSummary = Schema.Struct({
+  text: SummaryText,
+  generatedAt: IsoDateTime,
+  basis: Schema.Struct({
+    messageCount: NonNegativeInt,
+    turnId: Schema.NullOr(TurnId),
+    // Activities and streaming message edits change the thread without
+    // changing the counts above; tracked so a live refresh mid-turn does not
+    // mark the summary current for the rest of the turn. Optional so summaries
+    // written before these fields existed still decode.
+    activityCount: Schema.optional(NonNegativeInt),
+    lastMessageAt: Schema.optional(Schema.NullOr(IsoDateTime)),
+  }),
+});
+export type ThreadSummary = typeof ThreadSummary.Type;
+
+/** Rolled up from the project's thread summaries. */
+export const ProjectSummary = Schema.Struct({
+  text: SummaryText,
+  generatedAt: IsoDateTime,
+});
+export type ProjectSummary = typeof ProjectSummary.Type;
+
+/** Pending-only marker, same contract as `ThreadTitleRegeneration`. */
+export const SummaryGeneration = Schema.Struct({
+  requestId: CommandId,
+  startedAt: IsoDateTime,
+});
+export type SummaryGeneration = typeof SummaryGeneration.Type;
+
 export const OrchestrationProject = Schema.Struct({
   id: ProjectId,
   title: TrimmedNonEmptyString,
@@ -243,6 +282,8 @@ export const OrchestrationProject = Schema.Struct({
   // Optional on the wire so cached snapshots from older servers still decode.
   faviconPath: Schema.optional(Schema.NullOr(ProjectFaviconPath)),
   scripts: Schema.Array(ProjectScript),
+  summary: Schema.optional(Schema.NullOr(ProjectSummary)),
+  summaryGeneration: Schema.optional(Schema.NullOr(SummaryGeneration)),
   createdAt: IsoDateTime,
   updatedAt: IsoDateTime,
   deletedAt: Schema.NullOr(IsoDateTime),
@@ -411,6 +452,10 @@ export const OrchestrationThread = Schema.Struct({
   pinOrderKey: Schema.optional(Schema.NullOr(TrimmedNonEmptyString)),
   // Pending-only state. Optional so older servers remain compatible.
   titleRegeneration: Schema.optional(Schema.NullOr(ThreadTitleRegeneration)),
+  // Summary text lives on the detail only; shells carry just the pending
+  // marker and timestamp so the sidebar payload stays small.
+  summary: Schema.optional(Schema.NullOr(ThreadSummary)),
+  summaryGeneration: Schema.optional(Schema.NullOr(SummaryGeneration)),
   deletedAt: Schema.NullOr(IsoDateTime),
   messages: Schema.Array(OrchestrationMessage),
   proposedPlans: Schema.Array(OrchestrationProposedPlan).pipe(
@@ -440,6 +485,8 @@ export const OrchestrationProjectShell = Schema.Struct({
   // Optional on the wire so cached snapshots from older servers still decode.
   faviconPath: Schema.optional(Schema.NullOr(ProjectFaviconPath)),
   scripts: Schema.Array(ProjectScript),
+  summary: Schema.optional(Schema.NullOr(ProjectSummary)),
+  summaryGeneration: Schema.optional(Schema.NullOr(SummaryGeneration)),
   createdAt: IsoDateTime,
   updatedAt: IsoDateTime,
 });
@@ -469,6 +516,8 @@ export const OrchestrationThreadShell = Schema.Struct({
   pinnedAt: Schema.optional(Schema.NullOr(IsoDateTime)),
   pinOrderKey: Schema.optional(Schema.NullOr(TrimmedNonEmptyString)),
   titleRegeneration: Schema.optional(Schema.NullOr(ThreadTitleRegeneration)),
+  summaryGeneration: Schema.optional(Schema.NullOr(SummaryGeneration)),
+  summaryGeneratedAt: Schema.optional(Schema.NullOr(IsoDateTime)),
   session: Schema.NullOr(OrchestrationSession),
   latestUserMessageAt: Schema.NullOr(IsoDateTime),
   hasPendingApprovals: Schema.Boolean,
@@ -655,6 +704,7 @@ const ProjectMetaUpdateCommand = Schema.Struct({
   defaultThreadEnvMode: Schema.optional(Schema.NullOr(ThreadEnvMode)),
   faviconPath: Schema.optional(Schema.NullOr(ProjectFaviconPath)),
   scripts: Schema.optional(Schema.Array(ProjectScript)),
+  regenerateSummary: Schema.optional(Schema.Literal(true)),
 });
 
 const ProjectDeleteCommand = Schema.Struct({
@@ -768,6 +818,7 @@ const ThreadMetaUpdateCommand = Schema.Struct({
   threadId: ThreadId,
   title: Schema.optional(TrimmedNonEmptyString),
   regenerateTitle: Schema.optional(Schema.Literal(true)),
+  regenerateSummary: Schema.optional(Schema.Literal(true)),
   modelSelection: Schema.optional(ModelSelection),
   branch: Schema.optional(Schema.NullOr(TrimmedNonEmptyString)),
   expectedBranch: Schema.optional(Schema.NullOr(TrimmedNonEmptyString)),
@@ -1037,6 +1088,23 @@ const ThreadTitleRegenerationCompleteCommand = Schema.Struct({
   title: Schema.optional(TrimmedNonEmptyString),
 });
 
+/** Reactor completion for a pending thread summary; absent summary clears the marker only. */
+const ThreadSummaryRegenerationCompleteCommand = Schema.Struct({
+  type: Schema.Literal("thread.summary.regeneration.complete"),
+  commandId: CommandId,
+  threadId: ThreadId,
+  requestId: CommandId,
+  summary: Schema.optional(ThreadSummary),
+});
+
+const ProjectSummaryRegenerationCompleteCommand = Schema.Struct({
+  type: Schema.Literal("project.summary.regeneration.complete"),
+  commandId: CommandId,
+  projectId: ProjectId,
+  requestId: CommandId,
+  summary: Schema.optional(ProjectSummary),
+});
+
 const InternalOrchestrationCommand = Schema.Union([
   ThreadSessionSetCommand,
   ThreadMessageAssistantDeltaCommand,
@@ -1046,6 +1114,8 @@ const InternalOrchestrationCommand = Schema.Union([
   ThreadActivityAppendCommand,
   ThreadRevertCompleteCommand,
   ThreadTitleRegenerationCompleteCommand,
+  ThreadSummaryRegenerationCompleteCommand,
+  ProjectSummaryRegenerationCompleteCommand,
 ]);
 export type InternalOrchestrationCommand = typeof InternalOrchestrationCommand.Type;
 
@@ -1114,6 +1184,11 @@ export const ProjectMetaUpdatedPayload = Schema.Struct({
   defaultThreadEnvMode: Schema.optional(Schema.NullOr(ThreadEnvMode)),
   faviconPath: Schema.optional(Schema.NullOr(ProjectFaviconPath)),
   scripts: Schema.optional(Schema.Array(ProjectScript)),
+  /** Intent marker consumed by the summary reactor, like `regenerateTitle` on threads. */
+  regenerateSummary: Schema.optional(Schema.Literal(true)),
+  summary: Schema.optional(Schema.NullOr(ProjectSummary)),
+  /** Pending state shared with clients. Null clears a matching request. */
+  summaryGeneration: Schema.optional(Schema.NullOr(SummaryGeneration)),
   updatedAt: IsoDateTime,
 });
 
@@ -1212,6 +1287,11 @@ export const ThreadMetaUpdatedPayload = Schema.Struct({
   previousTitle: Schema.optional(TrimmedNonEmptyString),
   /** Pending state shared with clients. Null clears a matching request. */
   titleRegeneration: Schema.optional(Schema.NullOr(ThreadTitleRegeneration)),
+  /** Intent marker consumed by the summary reactor. */
+  regenerateSummary: Schema.optional(Schema.Literal(true)),
+  summary: Schema.optional(Schema.NullOr(ThreadSummary)),
+  /** Pending state shared with clients. Null clears a matching request. */
+  summaryGeneration: Schema.optional(Schema.NullOr(SummaryGeneration)),
   modelSelection: Schema.optional(ModelSelection),
   branch: Schema.optional(Schema.NullOr(TrimmedNonEmptyString)),
   worktreePath: Schema.optional(Schema.NullOr(TrimmedNonEmptyString)),

@@ -1,8 +1,11 @@
 import {
   ApprovalRequestId,
   type ChatAttachment,
+  type CommandId,
+  type IsoDateTime,
   type OrchestrationEvent,
   type OrchestrationSessionStatus,
+  type SummaryGeneration,
   ThreadId,
 } from "@t3tools/contracts";
 import * as Effect from "effect/Effect";
@@ -54,6 +57,19 @@ import {
   parseThreadSegmentFromAttachmentId,
   toSafeThreadAttachmentSegment,
 } from "../../attachmentStore.ts";
+
+/** Projection columns for a pending-summary marker; absent payload leaves them untouched. */
+function summaryGenerationColumns(summaryGeneration: SummaryGeneration | null | undefined): {
+  summaryGenerationRequestId?: CommandId | null;
+  summaryGenerationStartedAt?: IsoDateTime | null;
+} {
+  return summaryGeneration === undefined
+    ? {}
+    : {
+        summaryGenerationRequestId: summaryGeneration?.requestId ?? null,
+        summaryGenerationStartedAt: summaryGeneration?.startedAt ?? null,
+      };
+}
 
 export const ORCHESTRATION_PROJECTOR_NAMES = {
   projects: "projection.projects",
@@ -527,6 +543,13 @@ const makeOrchestrationProjectionPipeline = Effect.fn("makeOrchestrationProjecti
               ? { faviconPath: event.payload.faviconPath }
               : {}),
             ...(event.payload.scripts !== undefined ? { scripts: event.payload.scripts } : {}),
+            ...(event.payload.summary !== undefined
+              ? {
+                  summaryText: event.payload.summary?.text ?? null,
+                  summaryGeneratedAt: event.payload.summary?.generatedAt ?? null,
+                }
+              : {}),
+            ...summaryGenerationColumns(event.payload.summaryGeneration),
             updatedAt: event.payload.updatedAt,
           });
           return;
@@ -792,6 +815,17 @@ const makeOrchestrationProjectionPipeline = Effect.fn("makeOrchestrationProjecti
                   titleRegenerationStartedAt: event.payload.titleRegeneration?.startedAt ?? null,
                 }
               : {}),
+            ...(event.payload.summary !== undefined
+              ? {
+                  summaryText: event.payload.summary?.text ?? null,
+                  summaryGeneratedAt: event.payload.summary?.generatedAt ?? null,
+                  summaryBasisMessageCount: event.payload.summary?.basis.messageCount ?? null,
+                  summaryBasisTurnId: event.payload.summary?.basis.turnId ?? null,
+                  summaryBasisActivityCount: event.payload.summary?.basis.activityCount ?? null,
+                  summaryBasisLastMessageAt: event.payload.summary?.basis.lastMessageAt ?? null,
+                }
+              : {}),
+            ...summaryGenerationColumns(event.payload.summaryGeneration),
             ...(event.payload.modelSelection !== undefined
               ? { modelSelection: event.payload.modelSelection }
               : {}),

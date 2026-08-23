@@ -34,3 +34,21 @@ pill** fallback because their colors are not controlled by T3 Code.
 To generate a fresh title from the conversation, open a thread's context menu and choose
 **Regenerate title**. While T3 Code is generating it, the action reads **Regenerating…** and cannot
 be selected again. The option is hidden when the connected environment needs a server update.
+
+## Thread and project summaries
+
+Each thread can have a short summary of what it is about, what has been done, and what is still in
+flight; it appears once the first one has been generated. Open it from the summary button at the top
+of the chat, next to the project actions, or choose **Summary** in a thread's context menu.
+**Regenerate summary** in the same menu refreshes it on demand.
+
+Summaries refresh on their own after each turn the agent finishes. In Settings under **Summaries**
+you can switch this to also refresh every few minutes while a long turn is running, or turn the
+automatic refresh off and keep summaries manual. The same section picks the model that writes them.
+
+Each project rolls its active threads up into a project summary. Hover a project in the sidebar and
+use the summary button next to **New thread**, or right-click the project and choose **Summary**.
+The project summary refreshes shortly after any of its thread summaries change.
+
+While a summary is being written the button shows a spinner and the menu actions read
+**Summarising…**. Summaries are hidden when the connected environment needs a server update.
