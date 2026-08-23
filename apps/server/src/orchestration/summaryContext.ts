@@ -104,7 +104,14 @@ export function buildThreadSummaryContext(thread: SummaryThread): ThreadSummaryC
   const previous = thread.summary ?? null;
   const deltaMode = previous !== null && previous.basis.messageCount <= thread.messages.length;
 
-  const messages = deltaMode ? thread.messages.slice(previous.basis.messageCount) : thread.messages;
+  // New messages plus any older message that kept streaming after the last
+  // summary was written (the assistant reply is counted as soon as it starts).
+  const messages = deltaMode
+    ? thread.messages.filter(
+        (message, index) =>
+          index >= previous.basis.messageCount || message.updatedAt > previous.generatedAt,
+      )
+    : thread.messages;
   const activities = deltaMode
     ? thread.activities.filter((activity) => activity.createdAt > previous.generatedAt)
     : thread.activities;
@@ -125,11 +132,23 @@ export function buildThreadSummaryContext(thread: SummaryThread): ThreadSummaryC
   return {
     context,
     previousSummary: deltaMode ? previous.text : undefined,
-    basis: {
-      messageCount: thread.messages.length,
-      turnId: thread.latestTurn?.turnId ?? null,
-    },
-    hasContent: messagesSection.length > 0 || activitySection.length > 0,
+    basis: summaryBasis(thread),
+    hasContent:
+      messagesSection.length > 0 || activitySection.length > 0 || checkpointSection.length > 0,
+  };
+}
+
+/** The thread state a summary describes; compared field by field by `isThreadSummaryCurrent`. */
+function summaryBasis(thread: SummaryThread): ThreadSummary["basis"] {
+  return {
+    messageCount: thread.messages.length,
+    turnId: thread.latestTurn?.turnId ?? null,
+    activityCount: thread.activities.length,
+    lastMessageAt: thread.messages.reduce<string | null>(
+      (latest, message) =>
+        latest === null || message.updatedAt > latest ? message.updatedAt : latest,
+      null,
+    ),
   };
 }
 
@@ -137,9 +156,12 @@ export function buildThreadSummaryContext(thread: SummaryThread): ThreadSummaryC
 export function isThreadSummaryCurrent(thread: SummaryThread): boolean {
   const summary = thread.summary;
   if (!summary) return false;
+  const current = summaryBasis(thread);
   return (
-    summary.basis.messageCount === thread.messages.length &&
-    summary.basis.turnId === (thread.latestTurn?.turnId ?? null)
+    summary.basis.messageCount === current.messageCount &&
+    summary.basis.turnId === current.turnId &&
+    (summary.basis.activityCount ?? current.activityCount) === current.activityCount &&
+    (summary.basis.lastMessageAt ?? current.lastMessageAt) === current.lastMessageAt
   );
 }
 

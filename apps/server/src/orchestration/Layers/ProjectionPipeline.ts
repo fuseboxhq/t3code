@@ -821,6 +821,8 @@ const makeOrchestrationProjectionPipeline = Effect.fn("makeOrchestrationProjecti
                   summaryGeneratedAt: event.payload.summary?.generatedAt ?? null,
                   summaryBasisMessageCount: event.payload.summary?.basis.messageCount ?? null,
                   summaryBasisTurnId: event.payload.summary?.basis.turnId ?? null,
+                  summaryBasisActivityCount: event.payload.summary?.basis.activityCount ?? null,
+                  summaryBasisLastMessageAt: event.payload.summary?.basis.lastMessageAt ?? null,
                 }
               : {}),
             ...summaryGenerationColumns(event.payload.summaryGeneration),

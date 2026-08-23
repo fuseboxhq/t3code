@@ -20,8 +20,9 @@ import {
   CommandId,
   type OrchestrationEvent,
   type ProjectId,
+  TextGenerationError,
   type ThreadId,
-  type TurnId,
+  type ThreadSummary,
 } from "@t3tools/contracts";
 import { makeDrainableWorker } from "@t3tools/shared/DrainableWorker";
 import { resolveSummaryModelSelection } from "@t3tools/shared/serverSettings";
@@ -62,6 +63,7 @@ export interface ThreadSummaryReactorOptions {
 
 const DEFAULT_LIVE_REFRESH_INTERVAL = Duration.minutes(3);
 const DEFAULT_PROJECT_ROLLUP_DEBOUNCE = Duration.seconds(30);
+const GENERATION_TIMEOUT = Duration.minutes(5);
 
 type SummaryJob =
   | { readonly kind: "thread"; readonly threadId: ThreadId; readonly requestId: CommandId }
@@ -102,6 +104,22 @@ export const make = (options: ThreadSummaryReactorOptions = {}) =>
           ),
         );
 
+    // Jobs run one at a time, so a provider that never answers would stall
+    // every later summary. Cap each call; the failure path clears the marker.
+    const bounded = <A, R>(
+      operation: "generateThreadSummary" | "generateProjectSummary",
+      effect: Effect.Effect<A, TextGenerationError, R>,
+    ): Effect.Effect<A, TextGenerationError, R> =>
+      effect.pipe(
+        Effect.timeoutOrElse({
+          duration: GENERATION_TIMEOUT,
+          orElse: () =>
+            Effect.fail(
+              new TextGenerationError({ operation, detail: "Summary generation timed out." }),
+            ),
+        }),
+      );
+
     // ── Dispatch helpers ─────────────────────────────────────────────
 
     const requestThreadSummary = (threadId: ThreadId) =>
@@ -133,11 +151,7 @@ export const make = (options: ThreadSummaryReactorOptions = {}) =>
     const completeThreadSummary = (input: {
       readonly threadId: ThreadId;
       readonly requestId: CommandId;
-      readonly summary?: {
-        readonly text: string;
-        readonly generatedAt: string;
-        readonly basis: { readonly messageCount: number; readonly turnId: TurnId | null };
-      };
+      readonly summary?: ThreadSummary;
     }) =>
       serverCommandId("thread-summary-complete").pipe(
         Effect.flatMap((commandId) =>
@@ -172,20 +186,22 @@ export const make = (options: ThreadSummaryReactorOptions = {}) =>
 
     // ── Project rollup debounce ──────────────────────────────────────
 
-    const projectRollupTimers = new Map<ProjectId, Fiber.Fiber<unknown>>();
+    const pendingProjectRollups = new Set<ProjectId>();
 
     const scheduleProjectRollup = (projectId: ProjectId, scope: Scope.Scope) =>
       Effect.gen(function* () {
         // A pending timer already covers this window; the rollup reads the
-        // latest thread summaries when it fires, so nothing is lost.
-        if (projectRollupTimers.has(projectId)) return;
-        const fiber = yield* Effect.sleep(projectRollupDebounce).pipe(
+        // latest thread summaries when it fires, so nothing is lost. The set
+        // entry is claimed before the fork so concurrent callers cannot both
+        // schedule one.
+        if (pendingProjectRollups.has(projectId)) return;
+        pendingProjectRollups.add(projectId);
+        yield* Effect.sleep(projectRollupDebounce).pipe(
           Effect.andThen(requestProjectSummary(projectId)),
           logWarning("summary reactor failed to request project rollup", { projectId }),
-          Effect.ensuring(Effect.sync(() => projectRollupTimers.delete(projectId))),
+          Effect.ensuring(Effect.sync(() => pendingProjectRollups.delete(projectId))),
           Effect.forkIn(scope),
         );
-        projectRollupTimers.set(projectId, fiber);
       });
 
     // ── Live refresh timers ──────────────────────────────────────────
@@ -241,12 +257,15 @@ export const make = (options: ThreadSummaryReactorOptions = {}) =>
           resolveThreadWorkspaceCwd({ thread, projects: project ? [project] : [] }) ??
           process.cwd();
         const settings = yield* serverSettingsService.getSettings;
-        const generated = yield* textGeneration.generateThreadSummary({
-          cwd,
-          context: built.context,
-          previousSummary: built.previousSummary,
-          modelSelection: resolveSummaryModelSelection(settings),
-        });
+        const generated = yield* bounded(
+          "generateThreadSummary",
+          textGeneration.generateThreadSummary({
+            cwd,
+            context: built.context,
+            previousSummary: built.previousSummary,
+            modelSelection: resolveSummaryModelSelection(settings),
+          }),
+        );
 
         const latest = yield* resolveThread(job.threadId);
         if (!latest || latest.summaryGeneration?.requestId !== job.requestId) return;
@@ -293,12 +312,15 @@ export const make = (options: ThreadSummaryReactorOptions = {}) =>
         }
 
         const settings = yield* serverSettingsService.getSettings;
-        const generated = yield* textGeneration.generateProjectSummary({
-          cwd: project.workspaceRoot,
-          projectTitle: project.title,
-          context: built.context,
-          modelSelection: resolveSummaryModelSelection(settings),
-        });
+        const generated = yield* bounded(
+          "generateProjectSummary",
+          textGeneration.generateProjectSummary({
+            cwd: project.workspaceRoot,
+            projectTitle: project.title,
+            context: built.context,
+            modelSelection: resolveSummaryModelSelection(settings),
+          }),
+        );
 
         const latest = yield* resolveProject(job.projectId);
         if (!latest || latest.summaryGeneration?.requestId !== job.requestId) return;

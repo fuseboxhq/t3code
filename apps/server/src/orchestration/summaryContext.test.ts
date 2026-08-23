@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 import type { OrchestrationThread } from "@t3tools/contracts";
-import { EventId, MessageId, TurnId } from "@t3tools/contracts";
+import { CheckpointRef, EventId, MessageId, TurnId } from "@t3tools/contracts";
 
 import {
   buildProjectSummaryContext,
@@ -61,7 +61,12 @@ describe("buildThreadSummaryContext", () => {
     expect(built.previousSummary).toBeUndefined();
     expect(built.context).toContain("USER:\nFix the reconnect bug");
     expect(built.context).toContain("- [tool] Edited relay.ts");
-    expect(built.basis).toEqual({ messageCount: 2, turnId: "turn-1" });
+    expect(built.basis).toEqual({
+      messageCount: 2,
+      turnId: "turn-1",
+      activityCount: 1,
+      lastMessageAt: "2026-01-01T00:00:02.000Z",
+    });
     expect(built.hasContent).toBe(true);
   });
 
@@ -102,13 +107,78 @@ describe("buildThreadSummaryContext", () => {
     expect(built.context).toContain("Fix the reconnect bug");
   });
 
+  it("treats a streamed message edit or new activity as fresh content", () => {
+    const summary = {
+      text: "Done",
+      generatedAt: "2026-01-01T00:00:03.000Z",
+      basis: {
+        messageCount: 2,
+        turnId: TurnId.make("turn-1"),
+        activityCount: 1,
+        lastMessageAt: "2026-01-01T00:00:02.000Z",
+      },
+    };
+    const streamed = {
+      ...baseThread,
+      summary,
+      messages: [
+        baseThread.messages[0]!,
+        {
+          ...baseThread.messages[1]!,
+          text: "Found it in relay.ts; patched and added a test.",
+          updatedAt: "2026-01-01T00:00:04.000Z",
+        },
+      ],
+    };
+    expect(isThreadSummaryCurrent(streamed)).toBe(false);
+    const built = buildThreadSummaryContext(streamed);
+    expect(built.previousSummary).toBe("Done");
+    expect(built.context).toContain("patched and added a test");
+
+    const withActivity = {
+      ...baseThread,
+      summary,
+      activities: [
+        ...baseThread.activities,
+        activity(2, "tool", "Ran tests", "2026-01-01T00:00:05.000Z"),
+      ],
+    };
+    expect(isThreadSummaryCurrent(withActivity)).toBe(false);
+  });
+
+  it("counts checkpoint-only changes as content", () => {
+    const built = buildThreadSummaryContext({
+      ...baseThread,
+      messages: [],
+      activities: [],
+      checkpoints: [
+        {
+          turnId: TurnId.make("turn-1"),
+          checkpointTurnCount: 1,
+          checkpointRef: CheckpointRef.make("ref-1"),
+          status: "ready",
+          files: [{ path: "relay.ts", kind: "modified", additions: 3, deletions: 1 }],
+          assistantMessageId: null,
+          completedAt: "2026-01-01T00:00:06.000Z",
+        },
+      ],
+    });
+    expect(built.hasContent).toBe(true);
+    expect(built.context).toContain("relay.ts (modified, +3/-1)");
+  });
+
   it("reports no content when nothing landed since the summary", () => {
     const thread: Thread = {
       ...baseThread,
       summary: {
         text: "Done",
         generatedAt: "2026-01-01T00:00:09.000Z",
-        basis: { messageCount: 2, turnId: TurnId.make("turn-1") },
+        basis: {
+          messageCount: 2,
+          turnId: TurnId.make("turn-1"),
+          activityCount: 1,
+          lastMessageAt: "2026-01-01T00:00:02.000Z",
+        },
       },
     };
     expect(buildThreadSummaryContext(thread).hasContent).toBe(false);

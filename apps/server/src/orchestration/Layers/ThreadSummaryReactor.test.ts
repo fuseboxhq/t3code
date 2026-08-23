@@ -12,6 +12,7 @@ import {
   TurnId,
 } from "@t3tools/contracts";
 import * as Clock from "effect/Clock";
+import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -64,17 +65,22 @@ const projectionSnapshotLayer = OrchestrationProjectionSnapshotQueryLive.pipe(
   Layer.provide(RepositoryIdentityResolver.layer),
   Layer.provide(SqlitePersistenceMemory),
 );
-const TestLayer = Layer.effect(
-  ThreadSummaryReactor,
-  makeThreadSummaryReactor({ projectRollupDebounce: Duration.millis(20) }),
-).pipe(
-  Layer.provideMerge(orchestrationLayer),
-  Layer.provideMerge(projectionSnapshotLayer),
-  Layer.provideMerge(Layer.mock(TextGeneration, { generateThreadSummary, generateProjectSummary })),
-  Layer.provideMerge(ServerSettingsService.layerTest()),
-  Layer.provideMerge(ServerConfig.layerTest(process.cwd(), { prefix: "t3-summary-reactor-" })),
-  Layer.provideMerge(NodeServices.layer),
-);
+const makeTestLayer = (options: Parameters<typeof makeThreadSummaryReactor>[0]) =>
+  Layer.effect(
+    ThreadSummaryReactor,
+    makeThreadSummaryReactor({ projectRollupDebounce: Duration.millis(20), ...options }),
+  ).pipe(
+    Layer.provideMerge(orchestrationLayer),
+    Layer.provideMerge(projectionSnapshotLayer),
+    Layer.provideMerge(
+      Layer.mock(TextGeneration, { generateThreadSummary, generateProjectSummary }),
+    ),
+    Layer.provideMerge(ServerSettingsService.layerTest()),
+    Layer.provideMerge(ServerConfig.layerTest(process.cwd(), { prefix: "t3-summary-reactor-" })),
+    Layer.provideMerge(NodeServices.layer),
+  );
+const TestLayer = makeTestLayer({});
+const LiveTestLayer = makeTestLayer({ liveRefreshInterval: Duration.millis(30) });
 
 const waitFor = <E>(predicate: Effect.Effect<boolean, E>, timeoutMs = 5_000) =>
   Effect.gen(function* () {
@@ -165,8 +171,10 @@ const seed = (suffix: string) =>
   });
 
 /** Each test gets a fresh in-memory engine and its own reactor scope; live clock so the rollup debounce fires. */
-const run = <A, E>(effect: Effect.Effect<A, E, Layer.Success<typeof TestLayer> | Scope.Scope>) =>
-  Effect.scoped(effect).pipe(Effect.provide(TestLayer));
+const run = <A, E>(
+  effect: Effect.Effect<A, E, Layer.Success<typeof TestLayer> | Scope.Scope>,
+  layer: typeof TestLayer = TestLayer,
+) => Effect.scoped(effect).pipe(Effect.provide(layer));
 
 describe("ThreadSummaryReactor", () => {
   it.live("summarises on turn end, skips when nothing changed, and rolls up the project", () =>
@@ -228,6 +236,77 @@ describe("ThreadSummaryReactor", () => {
         );
         expect((yield* h.readThread)?.summary ?? null).toBeNull();
       }),
+    ),
+  );
+
+  it.live("drops a result whose request is no longer current", () =>
+    run(
+      Effect.gen(function* () {
+        resetMocks();
+        const gate = yield* Deferred.make<void>();
+        generateThreadSummary.mockImplementation(() =>
+          Deferred.await(gate).pipe(Effect.as({ summary: "Late digest" })),
+        );
+        const reactor = yield* ThreadSummaryReactor;
+        const engine = yield* OrchestrationEngineService;
+        const h = yield* seed("stale");
+        yield* reactor.start();
+
+        yield* h.requestSummary("cmd-summary-request-stale");
+        yield* waitFor(Effect.sync(() => generateThreadSummary.mock.calls.length === 1));
+        const pending = (yield* h.readThread)?.summaryGeneration;
+        expect(pending).not.toBeNull();
+        // Something else clears the marker while generation is still running.
+        yield* engine.dispatch({
+          type: "thread.summary.regeneration.complete",
+          commandId: CommandId.make("cmd-summary-clear-stale"),
+          threadId: ThreadId.make("thread-stale"),
+          requestId: pending!.requestId,
+        });
+        yield* Deferred.succeed(gate, undefined);
+        yield* reactor.drain;
+        yield* settle;
+        expect((yield* h.readThread)?.summary ?? null).toBeNull();
+      }),
+    ),
+  );
+
+  it.live("refreshes a running thread on the live interval", () =>
+    run(
+      Effect.gen(function* () {
+        resetMocks();
+        const settings = yield* ServerSettingsService;
+        yield* settings.updateSettings({ summaryAutoRefresh: "live" });
+        yield* Effect.addFinalizer(() =>
+          settings.updateSettings({ summaryAutoRefresh: "turn_end" }).pipe(Effect.orDie),
+        );
+        const reactor = yield* ThreadSummaryReactor;
+        const engine = yield* OrchestrationEngineService;
+        // Start first so the reactor sees the turn start that arms the timer.
+        yield* reactor.start();
+        const h = yield* seed("live");
+        // A turn only counts as running once the session adopts it.
+        yield* engine.dispatch({
+          type: "thread.session.set",
+          commandId: CommandId.make("cmd-session-running-live"),
+          threadId: ThreadId.make("thread-live"),
+          session: {
+            threadId: ThreadId.make("thread-live"),
+            status: "running",
+            providerName: "codex",
+            runtimeMode: "approval-required",
+            activeTurnId: TurnId.make("turn-live"),
+            lastError: null,
+            updatedAt: NOW,
+          },
+          createdAt: NOW,
+        });
+        yield* waitFor(
+          h.readThread.pipe(Effect.map((thread) => thread?.summary?.text === "Thread digest")),
+        );
+        expect(generateThreadSummary).toHaveBeenCalledTimes(1);
+      }),
+      LiveTestLayer,
     ),
   );
 

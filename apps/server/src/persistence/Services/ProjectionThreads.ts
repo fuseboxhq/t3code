@@ -49,6 +49,8 @@ export const ProjectionThread = Schema.Struct({
   summaryGeneratedAt: Schema.optional(Schema.NullOr(IsoDateTime)),
   summaryBasisMessageCount: Schema.optional(Schema.NullOr(NonNegativeInt)),
   summaryBasisTurnId: Schema.optional(Schema.NullOr(TurnId)),
+  summaryBasisActivityCount: Schema.optional(Schema.NullOr(NonNegativeInt)),
+  summaryBasisLastMessageAt: Schema.optional(Schema.NullOr(IsoDateTime)),
   summaryGenerationRequestId: Schema.optional(Schema.NullOr(CommandId)),
   summaryGenerationStartedAt: Schema.optional(Schema.NullOr(IsoDateTime)),
   latestUserMessageAt: Schema.NullOr(IsoDateTime),

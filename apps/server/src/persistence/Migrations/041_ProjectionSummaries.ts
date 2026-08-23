@@ -21,6 +21,12 @@ export default Effect.gen(function* () {
   if (!hasThreadColumn("summary_basis_turn_id")) {
     yield* sql`ALTER TABLE projection_threads ADD COLUMN summary_basis_turn_id TEXT`;
   }
+  if (!hasThreadColumn("summary_basis_activity_count")) {
+    yield* sql`ALTER TABLE projection_threads ADD COLUMN summary_basis_activity_count INTEGER`;
+  }
+  if (!hasThreadColumn("summary_basis_last_message_at")) {
+    yield* sql`ALTER TABLE projection_threads ADD COLUMN summary_basis_last_message_at TEXT`;
+  }
   if (!hasThreadColumn("summary_generation_request_id")) {
     yield* sql`ALTER TABLE projection_threads ADD COLUMN summary_generation_request_id TEXT`;
   }

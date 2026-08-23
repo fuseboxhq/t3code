@@ -246,6 +246,12 @@ export const ThreadSummary = Schema.Struct({
   basis: Schema.Struct({
     messageCount: NonNegativeInt,
     turnId: Schema.NullOr(TurnId),
+    // Activities and streaming message edits change the thread without
+    // changing the counts above; tracked so a live refresh mid-turn does not
+    // mark the summary current for the rest of the turn. Optional so summaries
+    // written before these fields existed still decode.
+    activityCount: Schema.optional(NonNegativeInt),
+    lastMessageAt: Schema.optional(Schema.NullOr(IsoDateTime)),
   }),
 });
 export type ThreadSummary = typeof ThreadSummary.Type;

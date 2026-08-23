@@ -105,9 +105,12 @@ it.layer(NodeServices.layer)("summary regeneration decider", (it) => {
           readModel: makeReadModel({ threadPending: true }),
         }),
       );
+      expect(event.type).toBe("thread.meta-updated");
       if (event.type === "thread.meta-updated") {
         expect(event.payload.regenerateSummary).toBeUndefined();
         expect(event.payload.summaryGeneration).toBeUndefined();
+        // Nothing happened, so recency must not move.
+        expect(event.payload.updatedAt).toBe(UPDATED_AT);
       }
     }),
   );
@@ -131,6 +134,7 @@ it.layer(NodeServices.layer)("summary regeneration decider", (it) => {
           readModel: makeReadModel({ threadPending: true }),
         }),
       );
+      expect(event.type).toBe("thread.meta-updated");
       if (event.type === "thread.meta-updated") {
         expect(event.payload.summary).toEqual(summary);
         expect(event.payload.summaryGeneration).toBeNull();
@@ -156,6 +160,7 @@ it.layer(NodeServices.layer)("summary regeneration decider", (it) => {
           readModel: makeReadModel({ threadPending: true }),
         }),
       );
+      expect(event.type).toBe("thread.meta-updated");
       if (event.type === "thread.meta-updated") {
         expect(event.payload).toEqual({
           threadId: ThreadId.make("thread-1"),
@@ -178,6 +183,7 @@ it.layer(NodeServices.layer)("summary regeneration decider", (it) => {
           readModel: makeReadModel({}),
         }),
       );
+      expect(request.type).toBe("project.meta-updated");
       if (request.type === "project.meta-updated") {
         expect(request.payload.summaryGeneration?.requestId).toBe("cmd-project-summary-request");
       }
@@ -193,6 +199,7 @@ it.layer(NodeServices.layer)("summary regeneration decider", (it) => {
           readModel: makeReadModel({ projectPending: true }),
         }),
       );
+      expect(stale.type).toBe("project.meta-updated");
       if (stale.type === "project.meta-updated") {
         expect(stale.payload.summary).toBeUndefined();
         expect(stale.payload.updatedAt).toBe(UPDATED_AT);

@@ -199,7 +199,14 @@ export const ChatHeader = memo(function ChatHeader({
   const serverConfigs = useServerConfigs();
   const supportsSummaries =
     serverConfigs.get(activeThreadEnvironmentId)?.environment.capabilities.threadSummaries === true;
+  // Keyed by thread like the rename state: navigating away closes the popover
+  // instead of carrying it over to the next thread.
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [summaryOpenThreadId, setSummaryOpenThreadId] = useState<ThreadId>(activeThreadId);
+  if (summaryOpenThreadId !== activeThreadId) {
+    setSummaryOpenThreadId(activeThreadId);
+    setSummaryOpen(false);
+  }
   const openSummary = useCallback(() => setSummaryOpen(true), []);
   const { openMenu } = useThreadActionMenu({
     threadRef: isServerThread ? activeThreadRef : null,

@@ -306,6 +306,12 @@ function mapThreadSummary(row: Schema.Schema.Type<typeof ProjectionThreadDbRowSc
         basis: {
           messageCount: row.summaryBasisMessageCount,
           turnId: row.summaryBasisTurnId ?? null,
+          ...(row.summaryBasisActivityCount != null
+            ? { activityCount: row.summaryBasisActivityCount }
+            : {}),
+          ...(row.summaryBasisLastMessageAt !== undefined
+            ? { lastMessageAt: row.summaryBasisLastMessageAt }
+            : {}),
         },
       }
     : null;
@@ -475,6 +481,8 @@ const makeProjectionSnapshotQuery = Effect.gen(function* () {
           summary_generated_at AS "summaryGeneratedAt",
           summary_basis_message_count AS "summaryBasisMessageCount",
           summary_basis_turn_id AS "summaryBasisTurnId",
+          summary_basis_activity_count AS "summaryBasisActivityCount",
+          summary_basis_last_message_at AS "summaryBasisLastMessageAt",
           summary_generation_request_id AS "summaryGenerationRequestId",
           summary_generation_started_at AS "summaryGenerationStartedAt",
           latest_user_message_at AS "latestUserMessageAt",
@@ -517,6 +525,8 @@ const makeProjectionSnapshotQuery = Effect.gen(function* () {
           summary_generated_at AS "summaryGeneratedAt",
           summary_basis_message_count AS "summaryBasisMessageCount",
           summary_basis_turn_id AS "summaryBasisTurnId",
+          summary_basis_activity_count AS "summaryBasisActivityCount",
+          summary_basis_last_message_at AS "summaryBasisLastMessageAt",
           summary_generation_request_id AS "summaryGenerationRequestId",
           summary_generation_started_at AS "summaryGenerationStartedAt",
           latest_user_message_at AS "latestUserMessageAt",
@@ -561,6 +571,8 @@ const makeProjectionSnapshotQuery = Effect.gen(function* () {
           summary_generated_at AS "summaryGeneratedAt",
           summary_basis_message_count AS "summaryBasisMessageCount",
           summary_basis_turn_id AS "summaryBasisTurnId",
+          summary_basis_activity_count AS "summaryBasisActivityCount",
+          summary_basis_last_message_at AS "summaryBasisLastMessageAt",
           summary_generation_request_id AS "summaryGenerationRequestId",
           summary_generation_started_at AS "summaryGenerationStartedAt",
           latest_user_message_at AS "latestUserMessageAt",
@@ -1017,6 +1029,8 @@ const makeProjectionSnapshotQuery = Effect.gen(function* () {
           summary_generated_at AS "summaryGeneratedAt",
           summary_basis_message_count AS "summaryBasisMessageCount",
           summary_basis_turn_id AS "summaryBasisTurnId",
+          summary_basis_activity_count AS "summaryBasisActivityCount",
+          summary_basis_last_message_at AS "summaryBasisLastMessageAt",
           summary_generation_request_id AS "summaryGenerationRequestId",
           summary_generation_started_at AS "summaryGenerationStartedAt",
           latest_user_message_at AS "latestUserMessageAt",

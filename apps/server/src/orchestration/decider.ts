@@ -301,7 +301,19 @@ export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand"
                 summaryGeneration: { requestId: command.commandId, startedAt: occurredAt },
               }
             : {}),
-          updatedAt: occurredAt,
+          // A suppressed request that carries nothing else must not move the
+          // project in recency orderings.
+          updatedAt:
+            command.regenerateSummary === true &&
+            project.summaryGeneration != null &&
+            command.title === undefined &&
+            command.workspaceRoot === undefined &&
+            command.defaultModelSelection === undefined &&
+            command.defaultThreadEnvMode === undefined &&
+            command.faviconPath === undefined &&
+            command.scripts === undefined
+              ? project.updatedAt
+              : occurredAt,
         },
       };
     }
@@ -889,7 +901,18 @@ export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand"
             : {}),
           ...(branch !== undefined ? { branch } : {}),
           ...(command.worktreePath !== undefined ? { worktreePath: command.worktreePath } : {}),
-          updatedAt: occurredAt,
+          // Same no-op rule as projects: a suppressed summary request alone
+          // leaves the thread's updatedAt untouched.
+          updatedAt:
+            command.regenerateSummary === true &&
+            thread.summaryGeneration != null &&
+            command.title === undefined &&
+            command.regenerateTitle !== true &&
+            command.modelSelection === undefined &&
+            command.branch === undefined &&
+            command.worktreePath === undefined
+              ? thread.updatedAt
+              : occurredAt,
         },
       };
     }
