@@ -369,7 +369,9 @@ export function resolveRemoteT3CliPackageSpec(input: {
   readonly updateChannel: DesktopUpdateChannel;
   readonly isDevelopment?: boolean;
 }): string {
-  const appVersion = input.appVersion.trim();
+  // Fork builds stamp "-fork.<sha>" into the app version for identification,
+  // but npm only has the base version; install what the stamp was made from.
+  const appVersion = input.appVersion.trim().replace(/-fork\.[0-9a-z]+$/i, "");
   if (!input.isDevelopment && PUBLISHABLE_T3_VERSION_PATTERN.test(appVersion)) {
     return `t3@${appVersion}`;
   }

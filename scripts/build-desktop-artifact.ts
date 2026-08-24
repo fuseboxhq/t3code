@@ -2737,9 +2737,11 @@ const buildDesktopArtifact = Effect.fn("buildDesktopArtifact")(function* (
   const baseAppVersion = options.version ?? serverPackageJson.version;
   // Fork builds all share the upstream version number, so bake the commit in:
   // "0.0.33-fork.6bb4dd64" answers "which build am I running" from Finder or
-  // the About panel. An explicit --build-version still wins unchanged.
+  // the About panel. An explicit --build-version still wins unchanged, and a
+  // gitless build (hash "unknown") stays unstamped rather than sharing a
+  // meaningless suffix.
   const appVersion =
-    options.distribution === "fork" && options.version === undefined
+    options.distribution === "fork" && options.version === undefined && commitHash !== "unknown"
       ? `${baseAppVersion}-fork.${commitHash.slice(0, 8)}`
       : baseAppVersion;
   const iconAssets = resolveDesktopBuildIconAssets(appVersion, options.distribution);

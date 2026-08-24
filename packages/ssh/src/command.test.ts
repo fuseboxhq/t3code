@@ -115,6 +115,14 @@ describe("ssh command", () => {
         }),
         "t3@0.0.17-nightly.20260415.44",
       );
+      // A fork identification stamp is not on npm; the base version is.
+      assert.equal(
+        resolveRemoteT3CliPackageSpec({
+          appVersion: "0.0.17-fork.6bb4dd642243",
+          updateChannel: "latest",
+        }),
+        "t3@0.0.17",
+      );
       assert.equal(
         resolveRemoteT3CliPackageSpec({
           appVersion: "0.0.0-dev",
