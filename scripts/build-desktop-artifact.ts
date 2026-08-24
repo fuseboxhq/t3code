@@ -2732,10 +2732,17 @@ const buildDesktopArtifact = Effect.fn("buildDesktopArtifact")(function* (
       }),
   });
 
-  const appVersion = options.version ?? serverPackageJson.version;
   const distributionProfile = getDesktopDistributionProfile(options.distribution);
-  const iconAssets = resolveDesktopBuildIconAssets(appVersion, options.distribution);
   const commitHash = yield* resolveGitCommitHash(repoRoot);
+  const baseAppVersion = options.version ?? serverPackageJson.version;
+  // Fork builds all share the upstream version number, so bake the commit in:
+  // "0.0.33-fork.6bb4dd64" answers "which build am I running" from Finder or
+  // the About panel. An explicit --build-version still wins unchanged.
+  const appVersion =
+    options.distribution === "fork" && options.version === undefined
+      ? `${baseAppVersion}-fork.${commitHash.slice(0, 8)}`
+      : baseAppVersion;
+  const iconAssets = resolveDesktopBuildIconAssets(appVersion, options.distribution);
   const mkdir = options.keepStage ? fs.makeTempDirectory : fs.makeTempDirectoryScoped;
   const stageRoot = yield* mkdir({
     prefix: `t3code-desktop-${options.platform}-stage-`,
