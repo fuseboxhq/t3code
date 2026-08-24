@@ -136,6 +136,10 @@ describe("ServerSettings.providerInstances (slice-2 invariant)", () => {
     });
   });
 
+  it("defaults new threads to a fresh worktree (fork default)", () => {
+    expect(DEFAULT_SERVER_SETTINGS.defaultThreadEnvMode).toBe("worktree");
+  });
+
   it("defaults summaries to Luna at medium effort, refreshing after each turn", () => {
     expect(DEFAULT_SERVER_SETTINGS.summaryModelSelection).toEqual({
       instanceId: ProviderInstanceId.make("codex"),
