@@ -920,6 +920,7 @@ const makeWsRpcLayer = (
 
             if (bootstrap?.prepareWorktree) {
               let worktreeBaseRef = bootstrap.prepareWorktree.baseBranch;
+              let worktreeBaseRefName = bootstrap.prepareWorktree.baseBranch;
               // "Start from origin" is a stored default; repos without an
               // origin remote fall back to the local base branch instead of
               // failing the whole bootstrap on `git fetch origin`.
@@ -940,12 +941,13 @@ const makeWsRpcLayer = (
                   fallbackRemoteName: "origin",
                 });
                 worktreeBaseRef = resolvedRemoteBase.commitSha;
+                worktreeBaseRefName = resolvedRemoteBase.remoteRefName;
               }
               const worktree = yield* gitWorkflow.createWorktree({
                 cwd: bootstrap.prepareWorktree.projectCwd,
                 refName: worktreeBaseRef,
                 newRefName: bootstrap.prepareWorktree.branch,
-                baseRefName: bootstrap.prepareWorktree.baseBranch,
+                baseRefName: worktreeBaseRefName,
                 path: null,
               });
               targetWorktreePath = worktree.worktree.path;

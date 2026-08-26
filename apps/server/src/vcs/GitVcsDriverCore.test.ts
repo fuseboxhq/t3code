@@ -1502,6 +1502,31 @@ it.layer(TestLayer)("GitVcsDriver core integration", (it) => {
   });
 
   describe("remote operations", () => {
+    it.effect("resolves a local branch through its differently named upstream", () =>
+      Effect.gen(function* () {
+        const cwd = yield* makeTmpDir();
+        const remote = yield* makeTmpDir("git-remote-");
+        const { initialBranch } = yield* initRepoWithCommit(cwd);
+        yield* git(remote, ["init", "--bare"]);
+        yield* git(cwd, ["remote", "add", "origin", remote]);
+        yield* git(cwd, ["push", "-u", "origin", initialBranch]);
+        yield* git(cwd, ["branch", "local-only"]);
+        yield* git(cwd, ["branch", "--set-upstream-to", `origin/${initialBranch}`, "local-only"]);
+        const remoteHead = yield* git(cwd, ["rev-parse", `origin/${initialBranch}`]);
+
+        const resolvedBase = yield* (yield* GitVcsDriver.GitVcsDriver).resolveRemoteTrackingCommit({
+          cwd,
+          refName: "local-only",
+          fallbackRemoteName: "origin",
+        });
+
+        assert.deepEqual(resolvedBase, {
+          commitSha: remoteHead,
+          remoteRefName: `origin/${initialBranch}`,
+        });
+      }),
+    );
+
     it.effect("creates a worktree from the latest fetched remote commit", () =>
       Effect.gen(function* () {
         const cwd = yield* makeTmpDir();

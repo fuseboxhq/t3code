@@ -2918,12 +2918,24 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
   const resolveRemoteTrackingCommit: GitVcsDriver.GitVcsDriver["Service"]["resolveRemoteTrackingCommit"] =
     Effect.fn("resolveRemoteTrackingCommit")(function* (input) {
       const remoteNames = yield* listRemoteNames(input.cwd);
-      const parsedRemoteRef = parseRemoteRefWithRemoteNames(
-        input.refName,
-        remoteNames.toSorted((left, right) => right.length - left.length),
-      );
+      const sortedRemoteNames = remoteNames.toSorted((left, right) => right.length - left.length);
+      const parsedRemoteRef = parseRemoteRefWithRemoteNames(input.refName, sortedRemoteNames);
+      const upstreamRef = parsedRemoteRef
+        ? null
+        : yield* runGitStdout(
+            "GitVcsDriver.resolveRemoteTrackingCommit.upstream",
+            input.cwd,
+            ["rev-parse", "--abbrev-ref", "--symbolic-full-name", `${input.refName}@{upstream}`],
+            true,
+          ).pipe(Effect.map((stdout) => stdout.trim()));
+      const parsedUpstreamRef = upstreamRef
+        ? parseRemoteRefWithRemoteNames(upstreamRef, sortedRemoteNames)
+        : null;
       const remoteRefName =
-        parsedRemoteRef?.remoteRef ?? `${input.fallbackRemoteName}/${input.refName}`;
+        parsedRemoteRef?.remoteRef ??
+        (parsedUpstreamRef?.remoteName === input.fallbackRemoteName
+          ? parsedUpstreamRef.remoteRef
+          : `${input.fallbackRemoteName}/${input.refName}`);
       const commitSha = yield* runGitStdout("GitVcsDriver.resolveRemoteTrackingCommit", input.cwd, [
         "rev-parse",
         "--verify",

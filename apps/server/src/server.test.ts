@@ -7426,7 +7426,7 @@ it.layer(NodeServices.layer)("server router seam", (it) => {
                 },
                 prepareWorktree: {
                   projectCwd: "/tmp/project",
-                  baseBranch: "main",
+                  baseBranch: "local-only",
                   branch: "t3code/bootstrap-refName",
                   startFromOrigin: true,
                 },
@@ -7452,7 +7452,7 @@ it.layer(NodeServices.layer)("server router seam", (it) => {
           cwd: "/tmp/project",
           refName: fetchedOriginCommit,
           newRefName: "t3code/bootstrap-refName",
-          baseRefName: "main",
+          baseRefName: "origin/main",
           path: null,
         });
         assert.deepEqual(fetchRemote.mock.calls[0]?.[0], {
@@ -7461,7 +7461,7 @@ it.layer(NodeServices.layer)("server router seam", (it) => {
         });
         assert.deepEqual(resolveRemoteTrackingCommit.mock.calls[0]?.[0], {
           cwd: "/tmp/project",
-          refName: "main",
+          refName: "local-only",
           fallbackRemoteName: "origin",
         });
         assert.deepEqual(bootstrapGitOperations, [
