@@ -2512,10 +2512,21 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
         `GitVcsDriver.listRefs: remote name lookup returned code ${remoteNamesResult.exitCode} for ${gitCommonDir}: ${remoteNamesResult.stderr.trim()}. Falling back to an empty remote name list.`,
       );
     }
-    const defaultBranch =
+    const refLines = refsResult.stdout.split("\n");
+    const originHeadBranch =
       defaultRefResult.exitCode === 0
         ? defaultRefResult.stdout.trim().replace(/^refs\/remotes\/origin\//, "")
-        : null;
+        : "";
+    // Some clones never create refs/remotes/origin/HEAD. Prefer an existing
+    // main ref in that case so new worktrees do not inherit a feature checkout.
+    const hasMainBranch = refLines.some((line) => {
+      const [fullRefName, , symbolicTarget] = line.split("\t");
+      return (
+        !symbolicTarget &&
+        (fullRefName === "refs/heads/main" || fullRefName === "refs/remotes/origin/main")
+      );
+    });
+    const defaultBranch = originHeadBranch || (hasMainBranch ? "main" : null);
     const parsedWorktreeEntries =
       worktreeListResult.exitCode === 0
         ? [...parseWorktreeBranchPaths(worktreeListResult.stdout)].map(
@@ -2536,7 +2547,7 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
     const localBranches: Array<{ readonly ref: VcsRef; readonly lastCommit: number }> = [];
     const remoteBranches: Array<{ readonly ref: VcsRef; readonly lastCommit: number }> = [];
 
-    for (const line of refsResult.stdout.split("\n")) {
+    for (const line of refLines) {
       if (line.length === 0) continue;
       const [fullRefName, lastCommitRaw, symbolicTarget] = line.split("\t");
       if (!fullRefName || symbolicTarget) continue;

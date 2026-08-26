@@ -1302,6 +1302,29 @@ it.layer(TestLayer)("GitVcsDriver core integration", (it) => {
       }),
     );
 
+    it.effect("uses main as the default when origin HEAD is missing", () =>
+      Effect.gen(function* () {
+        const cwd = yield* makeTmpDir();
+        const remote = yield* makeTmpDir("git-vcs-driver-remote-");
+        yield* initRepoWithCommit(cwd);
+        yield* git(cwd, ["branch", "-M", "main"]);
+        yield* git(remote, ["init", "--bare"]);
+        yield* git(cwd, ["remote", "add", "origin", remote]);
+        yield* git(cwd, ["push", "-u", "origin", "main"]);
+        yield* git(cwd, ["checkout", "-b", "feature/current-checkout"]);
+        const driver = yield* GitVcsDriver.GitVcsDriver;
+
+        const refs = yield* driver.listRefs({ cwd, includeMatchingRemoteRefs: true });
+
+        assert.equal(refs.refs.find((ref) => ref.name === "main")?.isDefault, true);
+        assert.equal(refs.refs.find((ref) => ref.name === "origin/main")?.isDefault, true);
+        assert.equal(
+          refs.refs.find((ref) => ref.name === "feature/current-checkout")?.isDefault,
+          false,
+        );
+      }),
+    );
+
     it.effect("creates, checks out, renames, and lists refs", () =>
       Effect.gen(function* () {
         const cwd = yield* makeTmpDir();
