@@ -132,6 +132,63 @@ it.layer(NodeServices.layer)("migrate-dev-db", (it) => {
     }),
   );
 
+  it.effect("accepts and repairs the fork's historical migration 41", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const sourceDir = yield* fs.makeTempDirectoryScoped({ prefix: "migrate-dev-db-fork-41-" });
+      const destDir = yield* fs.makeTempDirectoryScoped({
+        prefix: "migrate-dev-db-fork-41-dest-",
+      });
+      const source = yield* createFixtureSource(sourceDir);
+
+      yield* withDatabase(
+        source,
+        Effect.gen(function* () {
+          const sql = yield* SqlClient.SqlClient;
+          yield* sql`UPDATE effect_sql_migrations
+            SET name = 'ProjectionSummaries' WHERE migration_id = 41`;
+          yield* sql`DELETE FROM effect_sql_migrations WHERE migration_id BETWEEN 42 AND 44`;
+          yield* sql`ALTER TABLE auth_sessions DROP COLUMN client_surface`;
+          yield* sql`ALTER TABLE auth_sessions DROP COLUMN client_app_version`;
+          yield* sql`ALTER TABLE projection_threads DROP COLUMN linked_pull_request_json`;
+          yield* sql`ALTER TABLE projection_threads DROP COLUMN unsettled_at`;
+        }),
+      );
+
+      const result = yield* runMigrateDevDb(
+        { baseDir: destDir, source, projects: 5, threadsPerProject: 10 },
+        { sharedHome: sourceDir },
+      );
+      assert.deepStrictEqual(result.executedMigrations, [
+        "42_ProjectionThreadLinkedPullRequest",
+        "43_ProjectionThreadsUnsettledAt",
+        "44_ForkSchemaCompatibility",
+      ]);
+
+      const columns = yield* withDatabase(
+        result.databasePath,
+        Effect.gen(function* () {
+          const sql = yield* SqlClient.SqlClient;
+          const auth = yield* sql<{ readonly name: string }>`PRAGMA table_info(auth_sessions)`;
+          const threads = yield* sql<{ readonly name: string }>`
+            PRAGMA table_info(projection_threads)
+          `;
+          return {
+            auth: new Set(auth.map((column) => column.name)),
+            threads: new Set(threads.map((column) => column.name)),
+          };
+        }),
+      );
+      assert.ok(columns.auth.has("client_surface"));
+      assert.ok(columns.auth.has("client_app_version"));
+      assert.ok(columns.threads.has("linked_pull_request_json"));
+      assert.ok(columns.threads.has("unsettled_at"));
+      assert.ok(columns.threads.has("summary_text"));
+      assert.equal(path.dirname(result.databasePath), path.join(destDir, "userdata"));
+    }),
+  );
+
   it.effect("refuses while a dev server holds the destination", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

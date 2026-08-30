@@ -901,6 +901,9 @@ export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand"
             : {}),
           ...(branch !== undefined ? { branch } : {}),
           ...(command.worktreePath !== undefined ? { worktreePath: command.worktreePath } : {}),
+          ...(command.linkedPullRequest !== undefined
+            ? { linkedPullRequest: command.linkedPullRequest }
+            : {}),
           // Same no-op rule as projects: a suppressed summary request alone
           // leaves the thread's updatedAt untouched.
           updatedAt:
@@ -910,7 +913,8 @@ export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand"
             command.regenerateTitle !== true &&
             command.modelSelection === undefined &&
             command.branch === undefined &&
-            command.worktreePath === undefined
+            command.worktreePath === undefined &&
+            command.linkedPullRequest === undefined
               ? thread.updatedAt
               : occurredAt,
         },

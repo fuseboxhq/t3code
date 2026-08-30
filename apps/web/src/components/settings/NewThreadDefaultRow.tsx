@@ -67,6 +67,7 @@ export function NewThreadDefaultRow({
               prompt=""
               onPromptChange={() => {}}
               modelOptions={selection.options ?? []}
+              planModeEnabled={settings.planModeEnabled}
               allowPromptInjectedEffort={false}
               triggerVariant="outline"
               triggerClassName="min-w-0 max-w-none shrink-0 text-foreground/90 hover:text-foreground"

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { ServerProvider } from "@t3tools/contracts";
+import type { ProviderInstanceId, ServerProvider } from "@t3tools/contracts";
 import type { UnifiedSettings } from "@t3tools/contracts/settings";
 
 import { getCustomModelOptionsByInstance } from "../../modelSelection";
@@ -17,6 +17,8 @@ import {
 export function useModelPickerEntries(
   settings: UnifiedSettings,
   serverProviders: ReadonlyArray<ServerProvider>,
+  selectedInstanceId?: ProviderInstanceId | null,
+  selectedModel?: string | null,
 ) {
   const instanceEntries = useMemo(
     () =>
@@ -26,8 +28,9 @@ export function useModelPickerEntries(
     [serverProviders, settings],
   );
   const modelOptionsByInstance = useMemo(
-    () => getCustomModelOptionsByInstance(settings, serverProviders),
-    [serverProviders, settings],
+    () =>
+      getCustomModelOptionsByInstance(settings, serverProviders, selectedInstanceId, selectedModel),
+    [selectedInstanceId, selectedModel, serverProviders, settings],
   );
   return { instanceEntries, modelOptionsByInstance };
 }

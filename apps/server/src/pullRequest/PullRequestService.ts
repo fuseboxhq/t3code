@@ -104,16 +104,7 @@ const DIFF_CACHE_TTL = Duration.seconds(60);
 const COMMIT_DIFF_CACHE_TTL = Duration.minutes(10);
 /** Sized like the client's own stale time; a row's counts move only when somebody pushes. */
 const LIST_STATS_CACHE_TTL = Duration.seconds(60);
-/**
- * How long a cache's last success may still be served while a fresh read runs behind it.
- * Bounded by how the page actually revalidates: clients re-read on mount and once a minute
- * while open, and every one of those reads repopulates the cache in the background — so in
- * steady use a "stale" answer is at most a refresh cycle old, and the window only stretches
- * that far when nobody has looked at the page for minutes. An explicit refresh or a mutation
- * bumps the epochs and skips held answers entirely.
- */
-const LIST_STALE_WINDOW = Duration.minutes(10);
-const DETAIL_STALE_WINDOW = Duration.minutes(5);
+/** A diff can stay interactive while its next cached value is fetched off the critical path. */
 const DIFF_STALE_WINDOW = Duration.minutes(10);
 /** How long one host's signed-in login is believed without asking its CLI again. */
 const VIEWER_CACHE_TTL = Duration.minutes(10);
@@ -1893,10 +1884,6 @@ export const make = Effect.gen(function* () {
       timeToLive: (exit) => (Exit.isSuccess(exit) ? LIST_CACHE_TTL : Duration.zero),
     },
   );
-  const staleList = staleWhileRevalidate<PullRequestListResult>(
-    LIST_STALE_WINDOW,
-    LIST_CACHE_CAPACITY,
-  );
   const list: PullRequestService["Service"]["list"] = (input) => {
     const key = JSON.stringify([
       epochs.listingsEpoch(),
@@ -1923,7 +1910,7 @@ export const make = Effect.gen(function* () {
         ? null
         : Object.entries(input.cursors).toSorted(([left], [right]) => left.localeCompare(right)),
     ]);
-    return staleList(key, Cache.get(listCache, key));
+    return Cache.get(listCache, key);
   };
 
   const detailCache = yield* Cache.makeWith(
@@ -1936,10 +1923,6 @@ export const make = Effect.gen(function* () {
       timeToLive: (exit) => (Exit.isSuccess(exit) ? DETAIL_CACHE_TTL : Duration.zero),
     },
   );
-  const staleDetail = staleWhileRevalidate<PullRequestDetail>(
-    DETAIL_STALE_WINDOW,
-    DETAIL_CACHE_CAPACITY,
-  );
   const detail: PullRequestService["Service"]["detail"] = (input) => {
     const key = JSON.stringify([
       epochs.refEpoch(input),
@@ -1947,7 +1930,7 @@ export const make = Effect.gen(function* () {
       input.repository,
       input.number,
     ]);
-    return staleDetail(key, Cache.get(detailCache, key));
+    return Cache.get(detailCache, key);
   };
 
   const activityCache = yield* Cache.makeWith(
@@ -1960,10 +1943,6 @@ export const make = Effect.gen(function* () {
       timeToLive: (exit) => (Exit.isSuccess(exit) ? DETAIL_CACHE_TTL : Duration.zero),
     },
   );
-  const staleActivity = staleWhileRevalidate<PullRequestActivity>(
-    DETAIL_STALE_WINDOW,
-    DETAIL_CACHE_CAPACITY,
-  );
   const activity: PullRequestService["Service"]["activity"] = (input) => {
     const key = JSON.stringify([
       epochs.refEpoch(input),
@@ -1971,7 +1950,7 @@ export const make = Effect.gen(function* () {
       input.repository,
       input.number,
     ]);
-    return staleActivity(key, Cache.get(activityCache, key));
+    return Cache.get(activityCache, key);
   };
 
   const diffCache = yield* Cache.makeWith(
@@ -2033,10 +2012,6 @@ export const make = Effect.gen(function* () {
   // shares between clients like every other read. Refs are sorted so one page's worth of rows
   // is one key however the client assembled them, and the listings epoch rides along so the
   // refresh that forgets the listing forgets its decorations with it.
-  const staleListStats = staleWhileRevalidate<PullRequestListStatsResult>(
-    LIST_STALE_WINDOW,
-    LIST_STATS_CACHE_CAPACITY,
-  );
   const listStats: PullRequestService["Service"]["listStats"] = (input) => {
     if (input.refs.length === 0) return Effect.succeed({ stats: [] });
     const key = JSON.stringify([
@@ -2047,7 +2022,7 @@ export const make = Effect.gen(function* () {
           `${left[0]} ${left[1]} ${left[2]}`.localeCompare(`${right[0]} ${right[1]} ${right[2]}`),
         ),
     ]);
-    return staleListStats(key, Cache.get(listStatsCache, key));
+    return Cache.get(listStatsCache, key);
   };
 
   const invalidate: PullRequestService["Service"]["invalidate"] = (input) =>

@@ -343,6 +343,14 @@ const verifyMigrationSlots = Effect.fn("verifyMigrationSlots")(function* () {
   const appliedById = new Map(applied.map((row) => [Number(row.migration_id), row.name]));
   for (const [slot, codeName] of migrationManifest) {
     const appliedName = appliedById.get(slot);
+    const isForkMigration41 =
+      slot === 41 &&
+      codeName === "AuthSessionClientConnection" &&
+      appliedName === "ProjectionSummaries";
+    // Fork builds before v0.0.36 assigned ProjectionSummaries to slot 41.
+    // Migration 44 deliberately reconciles that historical collision by
+    // applying both schemas idempotently, so this one mismatch is expected.
+    if (isForkMigration41) continue;
     if (appliedName !== undefined && appliedName !== codeName) {
       return yield* new MigrateDevDbSlotCollisionError({ slot, codeName, appliedName });
     }
