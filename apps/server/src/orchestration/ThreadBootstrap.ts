@@ -64,7 +64,7 @@ function legacySetupFailureDescription(cause: unknown): string {
   return String(cause);
 }
 
-export function projectSetupScriptCompatibilityDetail(
+function projectSetupScriptCompatibilityDetail(
   error: ProjectSetupScriptRunner.ProjectSetupScriptRunnerError,
 ): string {
   switch (error._tag) {
