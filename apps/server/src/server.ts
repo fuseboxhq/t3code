@@ -64,6 +64,7 @@ import { ProviderRuntimeIngestionLive } from "./orchestration/Layers/ProviderRun
 import { ProviderCommandReactorLive } from "./orchestration/Layers/ProviderCommandReactor.ts";
 import { CheckpointReactorLive } from "./orchestration/Layers/CheckpointReactor.ts";
 import { ThreadDeletionReactorLive } from "./orchestration/Layers/ThreadDeletionReactor.ts";
+import * as ThreadBootstrap from "./orchestration/ThreadBootstrap.ts";
 import { ThreadSummaryReactorLive } from "./orchestration/Layers/ThreadSummaryReactor.ts";
 import * as AgentAwarenessRelay from "./relay/AgentAwarenessRelay.ts";
 import { hasCloudPublicConfig } from "./cloud/publicConfig.ts";
@@ -378,7 +379,12 @@ const ProviderRuntimeLayerLive = ProviderSessionReaperLive.pipe(
   Layer.provideMerge(OrchestrationLayerLive),
 );
 
-const RuntimeCoreDependenciesLive = ReactorLayerLive.pipe(
+// Both the WebSocket dispatch path and the MCP thread tools bootstrap new
+// threads through this one service; it sits above the reactors because it
+// fences thread creation on the deletion reactor.
+const ThreadBootstrapLayerLive = ThreadBootstrap.layer.pipe(Layer.provideMerge(ReactorLayerLive));
+
+const RuntimeCoreDependenciesLive = ThreadBootstrapLayerLive.pipe(
   // Core Services
   Layer.provideMerge(ServerSettingsLayerLive),
   Layer.provideMerge(CheckpointingLayerLive),

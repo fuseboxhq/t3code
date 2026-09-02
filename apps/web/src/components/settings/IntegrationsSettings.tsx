@@ -355,6 +355,42 @@ function BrowserAppearanceSetting({ disabled }: { readonly disabled: boolean }) 
   );
 }
 
+function AgentSubthreadsSetting() {
+  const settings = usePrimarySettings();
+  const updateSettings = useUpdatePrimarySettings();
+
+  return (
+    <SettingsRow
+      {...searchableSetting("agent-subthreads")}
+      description="Let agents spawn sub-threads in their own project and wait on their results. Sub-threads show up in the sidebar nested under the thread that started them. When off, the thread tools are withheld from agent sessions."
+      status={
+        settings.enableAgentSubthreads
+          ? undefined
+          : "Applies to sessions started from now on; a running agent keeps the tools it was given."
+      }
+      resetAction={
+        settings.enableAgentSubthreads !== DEFAULT_UNIFIED_SETTINGS.enableAgentSubthreads ? (
+          <SettingResetButton
+            label="agent sub-threads"
+            onClick={() =>
+              updateSettings({
+                enableAgentSubthreads: DEFAULT_UNIFIED_SETTINGS.enableAgentSubthreads,
+              })
+            }
+          />
+        ) : null
+      }
+      control={
+        <Switch
+          checked={settings.enableAgentSubthreads}
+          onCheckedChange={(checked) => updateSettings({ enableAgentSubthreads: Boolean(checked) })}
+          aria-label="Allow agent sub-threads"
+        />
+      }
+    />
+  );
+}
+
 function AgentBrowserAccessSetting() {
   const settings = usePrimarySettings();
   const updateSettings = useUpdatePrimarySettings();
@@ -476,6 +512,9 @@ export function IntegrationsSettingsPanel() {
         ) : (
           previewDefaults
         )}
+      </SettingsSection>
+      <SettingsSection id="agents" title="Agents">
+        <AgentSubthreadsSetting />
       </SettingsSection>
     </SettingsPageContainer>
   );

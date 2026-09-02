@@ -27,6 +27,7 @@ import {
   type CanonicalRequestType,
   type ClaudeSettings,
   EventId,
+  AGENT_MCP_TOOL_TIMEOUT_MS,
   type ProviderApprovalDecision,
   ProviderDriverKind,
   ProviderInstanceId,
@@ -4330,7 +4331,9 @@ export const makeClaudeAdapter = Effect.fn("makeClaudeAdapter")(function* (
         canUseTool,
         onUserDialog,
         supportedDialogKinds: ["resume_return"],
-        env: claudeEnvironment,
+        env: mcpSession
+          ? { ...claudeEnvironment, MCP_TOOL_TIMEOUT: String(AGENT_MCP_TOOL_TIMEOUT_MS) }
+          : claudeEnvironment,
         additionalDirectories,
         ...(Object.keys(extraArgs).length > 0 ? { extraArgs } : {}),
         ...(mcpSession

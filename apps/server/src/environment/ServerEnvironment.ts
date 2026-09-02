@@ -162,6 +162,7 @@ export const make = Effect.gen(function* () {
       threadTitleRegeneration: true,
       threadSummaries: true,
       threadPullRequestLinking: true,
+      agentSubthreads: true,
       ...(serverSelfUpdate === null ? {} : { serverSelfUpdate }),
       ...(serverSelfUpdate === "boot-service" ? { serverSelfUpdateProgress: true } : {}),
     },

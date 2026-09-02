@@ -48,6 +48,7 @@ layer("044_ForkSchemaCompatibility", (it) => {
       assert.ok(authColumns.has("client_app_version"));
       assert.ok(threadColumns.has("linked_pull_request_json"));
       assert.ok(threadColumns.has("unsettled_at"));
+      assert.ok(threadColumns.has("parent_thread_id"));
       assert.ok(threadColumns.has("summary_text"));
       assert.ok(projectColumns.has("summary_text"));
       assert.deepStrictEqual(migrations, [
@@ -55,6 +56,7 @@ layer("044_ForkSchemaCompatibility", (it) => {
         { migration_id: 42, name: "ProjectionThreadLinkedPullRequest" },
         { migration_id: 43, name: "ProjectionThreadsUnsettledAt" },
         { migration_id: 44, name: "ForkSchemaCompatibility" },
+        { migration_id: 45, name: "ProjectionThreadsParent" },
       ]);
     }),
   );

@@ -34,6 +34,10 @@ A Git worktree used as an isolated workspace for a thread. If a thread has a `wo
 
 The main durable unit of conversation and workspace history. In [the orchestration contracts][1], a thread holds messages, activities, checkpoints, and session-related state. See [projector.ts][4].
 
+#### Sub-thread
+
+A thread an agent spawned from another thread in the same project through the `thread_*` MCP tools. It carries `parentThreadId` in [the contracts][1] and is otherwise an ordinary thread; the parent agent can only wait on, read, message, or interrupt its own sub-threads. See [agent-subthreads.md][27].
+
 #### Turn
 
 A single user-to-assistant work cycle inside a thread. It starts with user input and ends when the session leaves `running` status, which [projector.ts][4] treats as the authoritative completion signal (`settledTurnStateForSessionStatus`). Checkpoint and diff work may settle afterward without changing when the turn ended. See [the contracts][1] and [ProviderRuntimeIngestion.ts][5].
@@ -189,3 +193,4 @@ The file patch and changed-file summary for one turn. It is usually computed in 
 [24]: ./overview.md
 [25]: ../../apps/server/src/orchestration/Layers/ThreadSummaryReactor.ts
 [26]: ../../apps/server/src/orchestration/summaryContext.ts
+[27]: ./agent-subthreads.md
