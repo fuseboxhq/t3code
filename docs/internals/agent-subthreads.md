@@ -31,7 +31,9 @@ An agent can only wait on, read, message, or interrupt threads it spawned.
 Spawning is capped at `AGENT_THREAD_MAX_CHILDREN` (16) live children per parent, counted from the projection.
 
 `thread_spawn` inherits from the parent: model selection resolves as project default, then the parent's own selection, with explicit `provider` / `model` / `reasoningEffort` overriding field by field (`resolveSpawnModelSelection`).
-`runtimeMode` defaults to the parent's; `worktree: "new"` creates a worktree branched from the parent's branch through the same bootstrap block the composer uses.
+`runtimeMode` is always `full-access`, since no one is there to answer a sub-thread's approval prompts.
+`worktree: "new"` creates a worktree through the same bootstrap block the composer uses, branched from the branch the parent's checkout is currently on (read live with `localStatus`, not from the thread's recorded `branch`, which goes stale as soon as the agent checks something else out).
+The child's recorded `branch` comes from the same live read.
 
 ## State derivation
 

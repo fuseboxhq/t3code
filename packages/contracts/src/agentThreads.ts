@@ -54,9 +54,6 @@ export const AgentThreadSpawnInput = Schema.Struct({
     description:
       "Reasoning effort for the model, using the provider's own option ids (for example 'high', 'xhigh', 'max'). Ignored when the model has no effort option.",
   }),
-  runtimeMode: Schema.optional(RuntimeMode).annotate({
-    description: "Permission mode for the sub-thread. Defaults to the caller's mode.",
-  }),
   interactionMode: Schema.optional(ProviderInteractionMode).annotate({
     description: "'default' or 'plan'. Defaults to 'default'.",
   }),

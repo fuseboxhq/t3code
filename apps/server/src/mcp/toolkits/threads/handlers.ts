@@ -196,24 +196,33 @@ const threadSpawn = Effect.fn("ThreadToolkit.spawn")(function* (input: AgentThre
   const { project, modelSelection } = yield* resolveModel(scope, input, parent);
   const ids = yield* serverIds(scope, "spawn");
   const createdAt = yield* nowIso;
-  const runtimeMode = input.runtimeMode ?? parent.runtimeMode;
+  // Nobody sits on a sub-thread to click approvals, so any mode that stops to
+  // ask would just stall it. Always full access.
+  const runtimeMode = "full-access";
   const interactionMode = input.interactionMode ?? "default";
   const title = input.title ?? titleFromPrompt(input.prompt);
 
+  // The thread's recorded branch goes stale the moment the agent checks
+  // something else out (and may have been deleted since), so read what the
+  // parent's checkout is on right now. The recorded name only covers a
+  // detached HEAD.
+  const git = yield* GitWorkflowService.GitWorkflowService;
+  const parentCwd = parent.worktreePath ?? project.workspaceRoot;
+  const liveStatus = yield* git
+    .localStatus({ cwd: parentCwd })
+    .pipe(Effect.mapError(dispatchFailure(scope, "read git status")));
+  const branch = liveStatus.refName ?? parent.branch;
+
   let bootstrap: ThreadTurnStartBootstrap;
+  let operation = "spawn sub-thread";
   if (input.worktree === "new") {
-    const git = yield* GitWorkflowService.GitWorkflowService;
-    const baseBranch =
-      parent.branch ??
-      (yield* git
-        .localStatus({ cwd: project.workspaceRoot })
-        .pipe(Effect.mapError(dispatchFailure(scope, "read git status")))).refName;
-    if (baseBranch === null) {
+    if (branch === null) {
       return yield* invalidInput(
         scope,
-        "Cannot create a worktree: the project has no current branch.",
+        `Cannot create a worktree: '${parentCwd}' has no current branch.`,
       );
     }
+    operation = `spawn sub-thread in a new worktree from '${branch}'`;
     bootstrap = {
       createThread: {
         projectId: parent.projectId,
@@ -221,14 +230,14 @@ const threadSpawn = Effect.fn("ThreadToolkit.spawn")(function* (input: AgentThre
         modelSelection,
         runtimeMode,
         interactionMode,
-        branch: baseBranch,
+        branch,
         worktreePath: null,
         parentThreadId: scope.threadId,
         createdAt,
       },
       prepareWorktree: {
         projectCwd: project.workspaceRoot,
-        baseBranch,
+        baseBranch: branch,
         branch: buildTemporaryWorktreeBranchName(() => ids.hex),
       },
       runSetupScript: true,
@@ -241,7 +250,7 @@ const threadSpawn = Effect.fn("ThreadToolkit.spawn")(function* (input: AgentThre
         modelSelection,
         runtimeMode,
         interactionMode,
-        branch: parent.branch,
+        branch,
         worktreePath: parent.worktreePath,
         parentThreadId: scope.threadId,
         createdAt,
@@ -262,7 +271,7 @@ const threadSpawn = Effect.fn("ThreadToolkit.spawn")(function* (input: AgentThre
       bootstrap,
       createdAt,
     })
-    .pipe(Effect.mapError(dispatchFailure(scope, "spawn sub-thread")));
+    .pipe(Effect.mapError(dispatchFailure(scope, operation)));
 
   const child = yield* loadChild(scope, ids.threadId);
   return { thread: summarizeChild(child), messageId: ids.messageId };
