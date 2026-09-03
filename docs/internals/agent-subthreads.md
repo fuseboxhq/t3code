@@ -52,4 +52,6 @@ An empty `Schema.Struct({})` encodes through `Tool.getJsonSchema` as `anyOf: [ob
 ## Client expectations
 
 Clients nest a thread under its `parentThreadId` in the sidebar only when the environment reports `agentSubthreads`.
+The web sidebar does this in `nestSubthreadsForSidebar` (`apps/web/src/components/Sidebar.logic.ts`): it re-orders the already-sorted active list so each child follows its parent and tags rows with a depth, and the row indents by that depth.
+Nesting is confined to the active inbox and only when the parent is in it too; a child whose parent is pinned, snoozed, settled, or gone renders as a normal top-level row rather than disappearing.
 Sub-threads are otherwise ordinary threads: they can be opened, typed into, and deleted, and deleting the parent does not cascade.

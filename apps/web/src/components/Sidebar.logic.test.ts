@@ -11,6 +11,7 @@ import {
   getVisibleSidebarThreadIds,
   groupActiveThreadsByProject,
   groupedSidebarProjectExpansionKey,
+  nestSubthreadsForSidebar,
   resolveAdjacentThreadId,
   reduceSidebarProjectScopeMenuState,
   getFallbackThreadIdAfterDelete,
@@ -1023,6 +1024,55 @@ describe("sortThreadsForSidebar", () => {
     ]);
 
     expect(sorted.map((thread) => thread.id)).toEqual(["newest", "stale-stamp"]);
+  });
+});
+
+describe("nestSubthreadsForSidebar", () => {
+  const row = (id: string, parentThreadId: string | null = null, environmentId = "env") => ({
+    id,
+    environmentId,
+    parentThreadId,
+  });
+  const ids = (nested: ReadonlyArray<{ thread: { id: string }; depth: number }>) =>
+    nested.map((entry) => `${entry.thread.id}@${entry.depth}`);
+
+  it("moves sub-threads directly under their parent, recursively, keeping sibling order", () => {
+    const nested = nestSubthreadsForSidebar(
+      [
+        row("child-b", "parent"),
+        row("other"),
+        row("grandchild", "child-a"),
+        row("child-a", "parent"),
+        row("parent"),
+      ],
+      () => true,
+    );
+
+    expect(ids(nested)).toEqual(["other@0", "parent@0", "child-b@1", "child-a@1", "grandchild@2"]);
+  });
+
+  it("leaves a sub-thread flat when its parent is not in the list or nesting is off", () => {
+    const nested = nestSubthreadsForSidebar(
+      [row("orphan", "settled-parent"), row("parent"), row("child", "parent", "legacy")],
+      (thread) => thread.environmentId !== "legacy",
+    );
+
+    expect(ids(nested)).toEqual(["orphan@0", "parent@0", "child@0"]);
+  });
+
+  it("only nests within the same environment", () => {
+    const nested = nestSubthreadsForSidebar(
+      [row("parent", null, "a"), row("child", "parent", "b")],
+      () => true,
+    );
+
+    expect(ids(nested)).toEqual(["parent@0", "child@0"]);
+  });
+
+  it("does not drop rows on a cyclic parent chain", () => {
+    const nested = nestSubthreadsForSidebar([row("x", "y"), row("y", "x")], () => true);
+
+    expect(ids(nested).toSorted()).toEqual(["x@0", "y@0"]);
   });
 });
 
