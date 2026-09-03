@@ -172,6 +172,7 @@ export function summarizeAgentThread(
     branch: thread.branch,
     worktreePath: thread.worktreePath,
     lastError: thread.session?.lastError ?? null,
+    settled: thread.settledOverride === "settled",
     createdAt: thread.createdAt,
     updatedAt: thread.updatedAt,
   };

@@ -5,7 +5,7 @@ The user-facing description is in [docs/user/agent-subthreads.md](../user/agent-
 
 ## Shape
 
-- `packages/contracts/src/agentThreads.ts` - the agent-facing schemas for the six `thread_*` tools, the coarse `AgentThreadState`, the timeout and child-count constants, and the tagged error union.
+- `packages/contracts/src/agentThreads.ts` - the agent-facing schemas for the seven `thread_*` tools, the coarse `AgentThreadState`, the timeout and child-count constants, and the tagged error union.
   These are the wire shapes an agent sees, so they are prose-annotated and kept separate from the orchestration commands.
 - `packages/contracts/src/orchestration.ts` - `parentThreadId` on the thread, thread shell, `thread.create` command, bootstrap create block, and `thread.created` event.
   Optional everywhere so payloads from a server without the feature still decode.
@@ -49,6 +49,7 @@ Without that the client kills the wait before it can report.
 
 MCP clients validate every advertised tool's `inputSchema` as `{ "type": "object", ... }`.
 An empty `Schema.Struct({})` encodes through `Tool.getJsonSchema` as `anyOf: [object, array]`, and the Claude client responds by dropping every tool on the server, preview tools included, with no error surfaced to the agent.
+`thread_settle` dispatches the same `thread.settle` command as the sidebar, so the decider's guards (live session, open approval) apply unchanged; `AgentThreadSummary.settled` mirrors `settledOverride === "settled"` so an orchestrator can see what it has already tidied.
 `thread_list` therefore takes an optional `state` filter rather than no input, and `apps/server/src/mcp/toolkits/tools.test.ts` asserts the object shape for every toolkit so the next zero-argument tool fails in CI instead of in a live session.
 
 ## Client expectations

@@ -401,6 +401,24 @@ const threadInterrupt = Effect.fn("ThreadToolkit.interrupt")(function* (input: {
   return { thread: summarizeChild(updated) };
 });
 
+const threadSettle = Effect.fn("ThreadToolkit.settle")(function* (input: {
+  readonly threadId: ThreadId;
+}) {
+  const scope = yield* requireThreadsScope();
+  const child = yield* loadChild(scope, input.threadId);
+  const engine = yield* OrchestrationEngineService;
+  const ids = yield* serverIds(scope, "settle");
+  yield* engine
+    .dispatch({
+      type: "thread.settle",
+      commandId: ids.commandId,
+      threadId: child.id,
+    })
+    .pipe(Effect.mapError(dispatchFailure(scope, "settle sub-thread")));
+  const updated = yield* loadChild(scope, child.id);
+  return { thread: summarizeChild(updated) };
+});
+
 const handlers = {
   thread_spawn: (input) => threadSpawn(input),
   thread_wait: (input) => threadWait(input),
@@ -408,6 +426,7 @@ const handlers = {
   thread_send: (input) => threadSend(input),
   thread_list: (input) => threadList(input),
   thread_interrupt: (input) => threadInterrupt(input),
+  thread_settle: (input) => threadSettle(input),
 } satisfies Parameters<typeof ThreadToolkit.toLayer>[0];
 
 export const ThreadToolkitHandlersLive = ThreadToolkit.toLayer(handlers);
