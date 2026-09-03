@@ -18,16 +18,17 @@ With the switch off, the thread tools are simply absent from the agent's tool li
 
 ## What the agent gets
 
-The agent sees six tools, all under the `t3-code` MCP server (`mcp__t3-code__thread_spawn` in Claude, `thread_spawn` in Codex).
+The agent sees seven tools, all under the `t3-code` MCP server (`mcp__t3-code__thread_spawn` in Claude, `thread_spawn` in Codex).
 
-| Tool               | What it does                                                                                                                   |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| `thread_spawn`     | Creates a sub-thread in the caller's project and sends it a first message. Returns straight away with the new thread id.       |
-| `thread_wait`      | Blocks until the listed sub-threads finish their current turn, or until a timeout. Returns each thread's state and `timedOut`. |
-| `thread_result`    | Returns the sub-thread's last completed assistant message plus its state.                                                      |
-| `thread_send`      | Sends a follow-up message to a sub-thread, keeping its context. Sending while it is still working steers the current turn.     |
-| `thread_list`      | Lists the caller's sub-threads and their state, optionally filtered by state.                                                  |
-| `thread_interrupt` | Stops a sub-thread's current turn. The thread stays and can be resumed with `thread_send`.                                     |
+| Tool               | What it does                                                                                                                     |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `thread_spawn`     | Creates a sub-thread in the caller's project and sends it a first message. Returns straight away with the new thread id.         |
+| `thread_wait`      | Blocks until the listed sub-threads finish their current turn, or until a timeout. Returns each thread's state and `timedOut`.   |
+| `thread_result`    | Returns the sub-thread's last completed assistant message plus its state.                                                        |
+| `thread_send`      | Sends a follow-up message to a sub-thread, keeping its context. Sending while it is still working steers the current turn.       |
+| `thread_list`      | Lists the caller's sub-threads and their state, optionally filtered by state.                                                    |
+| `thread_interrupt` | Stops a sub-thread's current turn. The thread stays and can be resumed with `thread_send`.                                       |
+| `thread_settle`    | Moves a finished sub-thread to the settled shelf, the same as clicking Settle. Refused while it is working or awaiting approval. |
 
 `thread_spawn` takes a `prompt` and optional `title`, `provider`, `model`, `reasoningEffort`, `interactionMode` and `worktree`.
 Anything left out is inherited: the project's default model, then the parent's own model; the parent's checkout.

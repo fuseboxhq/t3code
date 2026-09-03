@@ -6,6 +6,7 @@ import {
   AgentThreadResult,
   AgentThreadSendInput,
   AgentThreadSendResult,
+  AgentThreadSettleResult,
   AgentThreadSpawnInput,
   AgentThreadSpawnResult,
   AgentThreadTargetInput,
@@ -117,6 +118,20 @@ export const ThreadInterruptTool = Tool.make("thread_interrupt", {
   .annotate(Tool.Idempotent, true)
   .annotate(Tool.OpenWorld, false);
 
+export const ThreadSettleTool = Tool.make("thread_settle", {
+  description:
+    "Settle a finished sub-thread: it moves from under your thread to the sidebar's settled shelf, keeping its transcript. Refused while the sub-thread is still working or waiting on an approval. thread_send un-settles it.",
+  parameters: AgentThreadTargetInput,
+  success: AgentThreadSettleResult,
+  failure: AgentThreadError,
+  dependencies,
+})
+  .annotate(Tool.Title, "Settle sub-thread")
+  .annotate(Tool.Readonly, false)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, true)
+  .annotate(Tool.OpenWorld, false);
+
 export const ThreadToolkit = Toolkit.make(
   ThreadSpawnTool,
   ThreadWaitTool,
@@ -124,4 +139,5 @@ export const ThreadToolkit = Toolkit.make(
   ThreadSendTool,
   ThreadListTool,
   ThreadInterruptTool,
+  ThreadSettleTool,
 );

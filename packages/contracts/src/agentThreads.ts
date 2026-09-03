@@ -126,6 +126,8 @@ export const AgentThreadSummary = Schema.Struct({
   branch: Schema.NullOr(TrimmedNonEmptyString),
   worktreePath: Schema.NullOr(TrimmedNonEmptyString),
   lastError: Schema.NullOr(TrimmedNonEmptyString),
+  /** True once the thread was explicitly settled (moved to the sidebar's settled shelf). */
+  settled: Schema.Boolean,
   createdAt: IsoDateTime,
   updatedAt: IsoDateTime,
 });
@@ -165,6 +167,11 @@ export const AgentThreadInterruptResult = Schema.Struct({
   thread: AgentThreadSummary,
 });
 export type AgentThreadInterruptResult = typeof AgentThreadInterruptResult.Type;
+
+export const AgentThreadSettleResult = Schema.Struct({
+  thread: AgentThreadSummary,
+});
+export type AgentThreadSettleResult = typeof AgentThreadSettleResult.Type;
 
 const AgentThreadErrorScope = {
   environmentId: EnvironmentId,
