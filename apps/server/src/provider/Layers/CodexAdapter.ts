@@ -8,6 +8,7 @@
  * @module CodexAdapterLive
  */
 import {
+  AGENT_MCP_TOOL_TIMEOUT_MS,
   type CanonicalItemType,
   type CanonicalRequestType,
   type CodexSettings,
@@ -1711,6 +1712,8 @@ export const makeCodexAdapter = Effect.fn("makeCodexAdapter")(function* (
                   `mcp_servers.t3-code.url=${mcpSession.endpoint}`,
                   "-c",
                   'mcp_servers.t3-code.bearer_token_env_var="T3_MCP_BEARER_TOKEN"',
+                  "-c",
+                  `mcp_servers.t3-code.tool_timeout_sec=${Math.ceil(AGENT_MCP_TOOL_TIMEOUT_MS / 1000)}`,
                 ],
               }
             : {}),

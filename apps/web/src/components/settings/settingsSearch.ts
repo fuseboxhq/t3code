@@ -220,6 +220,12 @@ export const SETTINGS_SEARCH_ITEMS = [
     targetId: "browser",
   },
   {
+    id: "agent-subthreads",
+    title: "Agent sub-threads",
+    to: "/settings/integrations",
+    targetId: "agents",
+  },
+  {
     id: "browser-default-viewport",
     title: "Default browser viewport",
     to: "/settings/integrations",

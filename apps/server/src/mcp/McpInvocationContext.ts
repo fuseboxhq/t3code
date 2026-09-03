@@ -7,7 +7,12 @@ import {
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 
-export type McpCapability = "preview";
+/**
+ * `preview`: drive the collaborative browser. `threads`: spawn and follow
+ * sub-threads in the calling thread's project. Each maps to its own server
+ * setting and is minted into the credential independently.
+ */
+export type McpCapability = "preview" | "threads";
 
 export interface McpInvocationScope {
   readonly environmentId: EnvironmentId;
@@ -23,8 +28,12 @@ export class McpInvocationContext extends Context.Service<
   McpInvocationScope
 >()("t3/mcp/McpInvocationContext") {}
 
+/**
+ * Preview-only guard: its failure type is `PreviewAutomationUnavailableError`,
+ * so other capabilities need their own check with their own error.
+ */
 export const requireMcpCapability = Effect.fn("mcp.requireCapability")(function* (
-  capability: McpCapability,
+  capability: "preview",
 ) {
   const invocation = yield* McpInvocationContext;
   if (!invocation.capabilities.has(capability)) {

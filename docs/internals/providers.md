@@ -58,7 +58,8 @@ owners cache this result for the lifetime of the spawned process. External actio
 they create their server connection, not for each model or SDK request.
 
 Chat adapters keep their own server per thread. They register a thread-specific `t3-code` MCP
-connection, while OpenCode stores MCP connections by directory. Sharing these chat servers
+connection (the preview and sub-thread tools, see [agent-subthreads.md](./agent-subthreads.md)),
+while OpenCode stores MCP connections by directory. Sharing these chat servers
 without changing MCP routing would let two threads in one directory replace each other's
 connection.
 
