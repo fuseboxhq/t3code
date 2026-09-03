@@ -169,8 +169,10 @@ describe("resolveSpawnModelSelection", () => {
 describe("deriveAgentThreadState", () => {
   const message = (role: OrchestrationMessage["role"], streaming = false) =>
     ({ role, streaming }) as OrchestrationMessage;
-  const session = (status: OrchestrationSession["status"], lastError: string | null = null) =>
-    ({ status, lastError }) as OrchestrationSession;
+  const session = (status: OrchestrationSession["status"], lastError: string | null = null) => ({
+    status,
+    lastError,
+  });
 
   it("treats a pending user message as busy even before the session reports running", () => {
     expect(deriveAgentThreadState(null, message("user"))).toBe("starting");

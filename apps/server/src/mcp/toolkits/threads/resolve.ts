@@ -128,7 +128,7 @@ export function resolveSpawnModelSelection(context: ModelResolutionContext): Mod
  * ready or stopped from the previous turn.
  */
 export function deriveAgentThreadState(
-  session: OrchestrationSession | null,
+  session: Pick<OrchestrationSession, "status" | "lastError"> | null,
   lastMessage: OrchestrationMessage | undefined,
 ): AgentThreadState {
   switch (session?.status) {
