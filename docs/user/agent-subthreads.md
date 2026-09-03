@@ -33,6 +33,7 @@ The agent sees six tools, all under the `t3-code` MCP server (`mcp__t3-code__thr
 Anything left out is inherited: the project's default model, then the parent's own model; the parent's checkout.
 Pass `provider: "codex"` on its own and the sub-thread runs on that provider's default model.
 Pass `worktree: "new"` and the sub-thread gets a fresh git worktree branched from whatever branch the parent's checkout is on at that moment, which is the right choice when several sub-threads will edit files at once.
+If that checkout is on a detached HEAD, the branch the thread was created with is used instead, and the spawn fails with a clear message if there is no branch at all.
 
 The sub-thread state an agent sees is deliberately coarse: `starting`, `running`, `idle` or `failed`.
 `idle` means the last turn finished and the thread is waiting for a follow-up.
