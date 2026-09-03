@@ -29,10 +29,11 @@ The agent sees six tools, all under the `t3-code` MCP server (`mcp__t3-code__thr
 | `thread_list`      | Lists the caller's sub-threads and their state, optionally filtered by state.                                                  |
 | `thread_interrupt` | Stops a sub-thread's current turn. The thread stays and can be resumed with `thread_send`.                                     |
 
-`thread_spawn` takes a `prompt` and optional `title`, `provider`, `model`, `reasoningEffort`, `runtimeMode`, `interactionMode` and `worktree`.
-Anything left out is inherited: the project's default model, then the parent's own model; the parent's permission mode; the parent's checkout.
+`thread_spawn` takes a `prompt` and optional `title`, `provider`, `model`, `reasoningEffort`, `interactionMode` and `worktree`.
+Anything left out is inherited: the project's default model, then the parent's own model; the parent's checkout.
 Pass `provider: "codex"` on its own and the sub-thread runs on that provider's default model.
-Pass `worktree: "new"` and the sub-thread gets a fresh git worktree branched from the parent's branch, which is the right choice when several sub-threads will edit files at once.
+Pass `worktree: "new"` and the sub-thread gets a fresh git worktree branched from whatever branch the parent's checkout is on at that moment, which is the right choice when several sub-threads will edit files at once.
+If that checkout is on a detached HEAD, the branch the thread was created with is used instead, and the spawn fails with a clear message if there is no branch at all.
 
 The sub-thread state an agent sees is deliberately coarse: `starting`, `running`, `idle` or `failed`.
 `idle` means the last turn finished and the thread is waiting for a follow-up.
@@ -43,7 +44,8 @@ The sub-thread state an agent sees is deliberately coarse: `starting`, `running`
 A thread can have at most 16 sub-threads.
 A single `thread_wait` blocks for up to 25 minutes (10 by default); the agent calls it again to keep waiting, so long tasks are fine.
 An agent can only see and talk to sub-threads it spawned itself; it cannot reach other threads in the project.
-Sub-threads run under the same permission mode as the parent unless the agent asks for a different one, so an approval-required parent produces approval-required children and you will get their approval prompts in the usual places.
+Sub-threads always run with full access, whatever mode the parent is in.
+Nobody is watching a sub-thread to answer approval prompts, so any other mode would only stall it; if a task needs a human in the loop, run it as a normal thread instead.
 
 ## What you see in the sidebar
 
