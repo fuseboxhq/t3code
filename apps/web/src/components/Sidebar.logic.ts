@@ -722,6 +722,72 @@ export function sortThreadsForSidebar<
   );
 }
 
+export interface NestedSidebarThread<T> {
+  thread: T;
+  /** 0 for a top-level row; each level of agent-spawned sub-thread adds one. */
+  depth: number;
+}
+
+/**
+ * Moves every agent-spawned sub-thread directly under its parent, in the order
+ * the incoming sort gave the siblings, and tags each row with its depth so the
+ * sidebar can indent it. Everything else keeps its sorted slot.
+ *
+ * A sub-thread only nests when its parent is in the same list: a parent that
+ * is pinned, snoozed, settled, or gone leaves the child as a plain top-level
+ * row rather than hiding it. `canNest` gates the whole thing per thread, so
+ * environments whose server does not report the sub-thread capability render
+ * flat even if a payload happens to carry a parent id.
+ */
+export function nestSubthreadsForSidebar<
+  T extends {
+    readonly id: string;
+    readonly environmentId: string;
+    readonly parentThreadId?: string | null | undefined;
+  },
+>(threads: readonly T[], canNest: (thread: T) => boolean): NestedSidebarThread<T>[] {
+  const key = (thread: Pick<T, "environmentId" | "id">) => `${thread.environmentId}:${thread.id}`;
+  const present = new Set(threads.map(key));
+  const childrenByParentKey = new Map<string, T[]>();
+  const nestedKeys = new Set<string>();
+  for (const thread of threads) {
+    if (thread.parentThreadId == null || !canNest(thread)) continue;
+    const parentKey = `${thread.environmentId}:${thread.parentThreadId}`;
+    if (!present.has(parentKey)) continue;
+    nestedKeys.add(key(thread));
+    const siblings = childrenByParentKey.get(parentKey);
+    if (siblings) {
+      siblings.push(thread);
+    } else {
+      childrenByParentKey.set(parentKey, [thread]);
+    }
+  }
+
+  const ordered: NestedSidebarThread<T>[] = [];
+  const emitted = new Set<string>();
+  const emit = (thread: T, depth: number) => {
+    const threadKey = key(thread);
+    // A parent chain cannot loop in practice (a child is created after its
+    // parent), but a corrupt projection must not recurse forever.
+    if (emitted.has(threadKey)) return;
+    emitted.add(threadKey);
+    ordered.push({ thread, depth });
+    for (const child of childrenByParentKey.get(threadKey) ?? []) {
+      emit(child, depth + 1);
+    }
+  };
+  for (const thread of threads) {
+    if (!nestedKeys.has(key(thread))) emit(thread, 0);
+  }
+  // Threads only reachable through a cycle never got a root; surface them flat.
+  for (const thread of threads) {
+    if (emitted.has(key(thread))) continue;
+    emitted.add(key(thread));
+    ordered.push({ thread, depth: 0 });
+  }
+  return ordered;
+}
+
 // Pinned-reorder key math and the keyed sort live in client-runtime
 // (state/thread-sort) so web and mobile compute identical pinned orders.
 export {

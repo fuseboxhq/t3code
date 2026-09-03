@@ -131,6 +131,7 @@ import {
   formatWorkingDurationLabel,
   firstValidTimestampMs,
   groupActiveThreadsByProject,
+  nestSubthreadsForSidebar,
   groupedSidebarProjectExpansionKey,
   hasUnseenCompletion,
   isSidebarNestedLinkClick,
@@ -815,6 +816,9 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: {
   projectFaviconPath: string | null;
   projectTitle: string | null;
   showProjectIdentity: boolean;
+  // Nesting level of an agent-spawned sub-thread under its parent card; 0 for
+  // a top-level row. Each level indents the card by one step.
+  depth: number;
   providerEntryByInstanceId: ReadonlyMap<string, ProviderInstanceEntry>;
   timestampFormat: TimestampFormat;
   onThreadClick: (event: ReactMouseEvent, threadRef: ScopedThreadRef) => void;
@@ -1467,24 +1471,39 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: {
   const diff = latestTurnDiff(thread);
 
   const sortable = props.sortable;
+  // A sub-thread lives in its parent's project by construction, so the
+  // project header would only repeat the row above it; nested cards always
+  // take the compact shape.
+  const showProjectIdentity = props.showProjectIdentity && props.depth === 0;
+  // Each nesting level steps in one guide-line width past the row above it,
+  // on top of the grouped-mode inset when that applies. Inline because the
+  // depth is data.
+  const indentRem = (props.showProjectIdentity ? 0 : 0.75) + props.depth * 0.75;
+  const indentStyle =
+    props.depth > 0
+      ? { marginInlineStart: `${indentRem}rem`, width: `calc(100% - ${indentRem}rem)` }
+      : undefined;
   return (
     <li
       data-thread-item
+      data-thread-depth={props.depth > 0 ? props.depth : undefined}
       ref={sortable?.setNodeRef}
       style={
         sortable
           ? {
+              ...indentStyle,
               transform: CSS.Translate.toString(sortable.transform),
               transition: sortable.transition,
             }
-          : undefined
+          : indentStyle
       }
       {...(sortable?.listeners ?? {})}
       className={cn(
         "list-none py-0.5 [content-visibility:auto]",
-        props.showProjectIdentity
+        showProjectIdentity
           ? "[contain-intrinsic-size:auto_96px]"
           : "ms-3 w-[calc(100%-0.75rem)] border-s border-sidebar-border/60 ps-1 [contain-intrinsic-size:auto_64px]",
+        props.depth > 0 && "border-s border-sidebar-border/60 ps-1",
         sortable?.isDragging && "z-20 opacity-80",
       )}
     >
@@ -1507,11 +1526,11 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: {
           <div
             className={cn(
               "relative z-10 px-[var(--sidebar-row-content-inset)] py-[var(--sidebar-content-inset)]",
-              props.showProjectIdentity ? "h-[4.875rem]" : "h-[3.5rem]",
+              showProjectIdentity ? "h-[4.875rem]" : "h-[3.5rem]",
             )}
           >
             <div className="flex h-5 min-w-0 items-center gap-1.5">
-              {props.showProjectIdentity ? (
+              {showProjectIdentity ? (
                 <>
                   <ProjectFavicon
                     environmentId={thread.environmentId}
@@ -1643,7 +1662,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: {
                 ) : null}
               </span>
             </div>
-            {props.showProjectIdentity ? <div className="mt-1 flex min-w-0">{title}</div> : null}
+            {showProjectIdentity ? <div className="mt-1 flex min-w-0">{title}</div> : null}
             {isRegeneratingTitle ? (
               <span role="status" className="sr-only">
                 Regenerating title
@@ -2175,6 +2194,7 @@ export default function Sidebar() {
     pinnedThreads,
     reorderablePinnedKeys,
     activeThreads,
+    activeThreadDepthByKey,
     snoozedThreads,
     settledThreads,
     snoozeNow,
@@ -2235,6 +2255,15 @@ export default function Sidebar() {
         active.push(thread);
       }
     }
+    // Agent-spawned sub-threads sit under their parent in the inbox; the
+    // nesting rides on the sorted order, so grouping, keyboard traversal and
+    // prewarm all see the same tree. Only environments whose server reports
+    // the capability nest.
+    const nestedActive = nestSubthreadsForSidebar(
+      sortThreadsForSidebar(active),
+      (thread) =>
+        serverConfigs.get(thread.environmentId)?.environment.capabilities.agentSubthreads === true,
+    );
     // One shared rule on every platform (see sortPinnedThreadsByOrderKey):
     // user-arranged keys first, keyless threads in creation order below.
     // Server capability only gates DRAGGING — it must not influence the
@@ -2251,7 +2280,15 @@ export default function Sidebar() {
           )
           .map((thread) => scopedThreadKey(scopeThreadRef(thread.environmentId, thread.id))),
       ),
-      activeThreads: sortThreadsForSidebar(active),
+      activeThreads: nestedActive.map((entry) => entry.thread),
+      activeThreadDepthByKey: new Map(
+        nestedActive
+          .filter((entry) => entry.depth > 0)
+          .map((entry) => [
+            scopedThreadKey(scopeThreadRef(entry.thread.environmentId, entry.thread.id)),
+            entry.depth,
+          ]),
+      ),
       // Soonest wake first: "what comes back next" is the shelf's question.
       snoozedThreads: snoozed.toSorted(
         (left, right) =>
@@ -4122,6 +4159,9 @@ export default function Sidebar() {
                           groupedModeActive,
                           section,
                         )}
+                        depth={
+                          section === "active" ? (activeThreadDepthByKey.get(threadKey) ?? 0) : 0
+                        }
                         providerEntryByInstanceId={
                           providerEntriesByEnvironment.get(thread.environmentId) ??
                           EMPTY_PROVIDER_ENTRIES

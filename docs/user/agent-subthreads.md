@@ -1,7 +1,7 @@
 # Agent sub-threads
 
 An agent running in a T3 Code thread can start more threads in the same project, hand each one a task, wait for them to finish, and read what they produced.
-Those sub-threads are ordinary threads: they show in the sidebar, you can open them, read along, and type into them yourself.
+Those sub-threads are ordinary threads: they show in the sidebar nested under the thread that spawned them, and you can open them, read along, and type into them yourself.
 The parent keeps its own context small by delegating the heavy lifting and only pulling back the result.
 
 This is how you run one model as an orchestrator over others.
@@ -47,9 +47,10 @@ Sub-threads run under the same permission mode as the parent unless the agent as
 
 ## What you see in the sidebar
 
-Sub-threads appear in the sidebar of the same project with the title the agent gave them (the first line of the prompt when it gave none).
+Sub-threads appear directly under their parent in the sidebar, indented one step per level, with the title the agent gave them (the first line of the prompt when it gave none).
+They nest only while the parent is in the same section of the list: pin, snooze, or settle the parent and its sub-threads stay in the inbox as ordinary rows until it comes back.
 Open one to watch it work or to step in and type; the parent's `thread_result` reads whatever the sub-thread last answered, whoever asked.
-Deleting a sub-thread is the same as deleting any thread.
+Deleting a sub-thread is the same as deleting any thread, and deleting the parent leaves its sub-threads in place.
 
 ## Teaching an agent to use it
 
