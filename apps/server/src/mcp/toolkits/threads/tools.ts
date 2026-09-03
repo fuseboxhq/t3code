@@ -36,7 +36,7 @@ const dependencies = [
 
 export const ThreadSpawnTool = Tool.make("thread_spawn", {
   description:
-    "Start a sub-thread in your project and send it a first message. The sub-thread is a real T3 Code thread, nested under yours in the sidebar, running on its own provider session. Returns immediately; use thread_wait to block until it finishes and thread_result to read its answer. Give it everything it needs in the prompt: it cannot see your conversation.",
+    "Start a sub-thread in your project and send it a first message. The sub-thread is a real T3 Code thread in your project, visible in the sidebar, running on its own provider session. Returns immediately; use thread_wait to block until it finishes and thread_result to read its answer. Give it everything it needs in the prompt: it cannot see your conversation.",
   parameters: AgentThreadSpawnInput,
   success: AgentThreadSpawnResult,
   failure: AgentThreadError,

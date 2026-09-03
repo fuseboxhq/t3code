@@ -362,7 +362,7 @@ function AgentSubthreadsSetting() {
   return (
     <SettingsRow
       {...searchableSetting("agent-subthreads")}
-      description="Let agents spawn sub-threads in their own project and wait on their results. Sub-threads show up in the sidebar nested under the thread that started them. When off, the thread tools are withheld from agent sessions."
+      description="Let agents spawn sub-threads in their own project and wait on their results. Sub-threads show up in the sidebar alongside the thread that started them. When off, the thread tools are withheld from agent sessions."
       status={
         settings.enableAgentSubthreads
           ? undefined

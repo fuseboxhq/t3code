@@ -151,9 +151,10 @@ export type AgentThreadWaitResult = typeof AgentThreadWaitResult.Type;
 
 export const AgentThreadResult = Schema.Struct({
   thread: AgentThreadSummary,
-  /** Text of the last completed assistant message, or null if there is none yet. */
+  /** Text of the last completed assistant message anywhere in the thread, or null if there is none yet. */
   finalMessage: Schema.NullOr(Schema.String),
   finalMessageId: Schema.NullOr(MessageId),
+  /** Every message in the thread across all turns. */
   messageCount: Schema.Int,
 });
 export type AgentThreadResult = typeof AgentThreadResult.Type;

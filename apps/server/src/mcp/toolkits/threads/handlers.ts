@@ -13,6 +13,7 @@ import {
   type AgentThreadSummary,
   type OrchestrationEvent,
   type OrchestrationThread,
+  type OrchestrationThreadDetailWindow,
   type OrchestrationThreadShell,
   type ThreadTurnStartBootstrap,
 } from "@t3tools/contracts";
@@ -105,17 +106,19 @@ const loadParent = Effect.fn("ThreadToolkit.loadParent")(function* (scope: Threa
 });
 
 /**
- * Detail read bounded to the latest turn: enough to tell whether a turn is
- * in flight and to read the last assistant message, without hydrating the
- * whole transcript on every wait tick.
+ * Detail read bounded to the latest turn by default: enough to tell whether a
+ * turn is in flight and to read the last assistant message, without hydrating
+ * the whole transcript on every wait tick. `thread_result` passes no bound so
+ * its counts and final message cover the whole thread.
  */
 const loadChild = Effect.fn("ThreadToolkit.loadChild")(function* (
   scope: ThreadsScope,
   targetThreadId: ThreadId,
+  window: OrchestrationThreadDetailWindow | undefined = { turnLimit: 1 },
 ) {
   const query = yield* ProjectionSnapshotQuery;
   const snapshot = yield* query
-    .getThreadDetailSnapshot(targetThreadId, { turnLimit: 1 })
+    .getThreadDetailSnapshot(targetThreadId, window)
     .pipe(Effect.mapError(dispatchFailure(scope, "read sub-thread")));
   if (
     Option.isNone(snapshot) ||
@@ -342,7 +345,7 @@ const threadResult = Effect.fn("ThreadToolkit.result")(function* (input: {
   readonly threadId: ThreadId;
 }) {
   const scope = yield* requireThreadsScope();
-  const child = yield* loadChild(scope, input.threadId);
+  const child = yield* loadChild(scope, input.threadId, undefined);
   const final = lastCompletedAssistantMessage(child.messages);
   return {
     thread: summarizeChild(child),

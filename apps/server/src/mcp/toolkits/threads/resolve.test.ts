@@ -3,6 +3,7 @@ import {
   ProviderDriverKind,
   ProviderInstanceId,
   type OrchestrationMessage,
+  type OrchestrationSession,
   type ServerProvider,
 } from "@t3tools/contracts";
 
@@ -168,10 +169,8 @@ describe("resolveSpawnModelSelection", () => {
 describe("deriveAgentThreadState", () => {
   const message = (role: OrchestrationMessage["role"], streaming = false) =>
     ({ role, streaming }) as OrchestrationMessage;
-  const session = (
-    status: "running" | "ready" | "error" | "stopped",
-    lastError: string | null = null,
-  ) => ({ status, lastError }) as never;
+  const session = (status: OrchestrationSession["status"], lastError: string | null = null) =>
+    ({ status, lastError }) as OrchestrationSession;
 
   it("treats a pending user message as busy even before the session reports running", () => {
     expect(deriveAgentThreadState(null, message("user"))).toBe("starting");
