@@ -37,7 +37,7 @@ const dependencies = [
 
 export const ThreadSpawnTool = Tool.make("thread_spawn", {
   description:
-    "Start a sub-thread in your project and send it a first message. The sub-thread is a real T3 Code thread in your project, shown in the sidebar nested under yours, running on its own provider session with full access (no approval prompts). Returns immediately; use thread_wait to block until it finishes and thread_result to read its answer. Give it everything it needs in the prompt: it cannot see your conversation.",
+    "Start a sub-thread in your project and send it a first message. The sub-thread is a real T3 Code thread in your project, shown in the sidebar nested under yours, running on its own provider session with full access (no approval prompts). Returns immediately; use thread_wait to block until it finishes, thread_result to read its answer, and thread_settle once you are done with it. Give it everything it needs in the prompt: it cannot see your conversation.",
   parameters: AgentThreadSpawnInput,
   success: AgentThreadSpawnResult,
   failure: AgentThreadError,
@@ -65,7 +65,7 @@ export const ThreadWaitTool = Tool.make("thread_wait", {
 
 export const ThreadResultTool = Tool.make("thread_result", {
   description:
-    "Read a sub-thread's latest completed assistant message along with its state. Call after thread_wait reports it idle.",
+    "Read a sub-thread's latest completed assistant message along with its state. Call after thread_wait reports it idle. Once you have used the result and have no follow-up, thread_settle the sub-thread.",
   parameters: AgentThreadTargetInput,
   success: AgentThreadResult,
   failure: AgentThreadError,
@@ -120,7 +120,7 @@ export const ThreadInterruptTool = Tool.make("thread_interrupt", {
 
 export const ThreadSettleTool = Tool.make("thread_settle", {
   description:
-    "Settle a finished sub-thread: it moves from under your thread to the sidebar's settled shelf, keeping its transcript. Refused while the sub-thread is still working or waiting on an approval. thread_send un-settles it.",
+    "Settle a finished sub-thread: it moves from under your thread to the sidebar's settled shelf, keeping its transcript. Call it on every sub-thread you are done with, before you end your turn, so the sidebar only shows live work. Refused while the sub-thread is still working or waiting on an approval. thread_send un-settles it.",
   parameters: AgentThreadTargetInput,
   success: AgentThreadSettleResult,
   failure: AgentThreadError,

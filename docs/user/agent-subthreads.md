@@ -57,6 +57,7 @@ Deleting a sub-thread is the same as deleting any thread, and deleting the paren
 
 ## Teaching an agent to use it
 
-The tools carry their own descriptions, so an agent will usually work out the spawn → wait → result loop on its own.
+The tools carry their own descriptions, so an agent will usually work out the spawn → wait → result → settle loop on its own.
 For a repeatable workflow, put the pattern in the agent's instructions (`CLAUDE.md`, `AGENTS.md` or a skill).
-The two rules that matter most: give a sub-thread everything it needs in the prompt because it cannot see the parent's conversation, and always call `thread_wait` before `thread_result` so you read a finished answer rather than a half-streamed one.
+The three rules that matter most: give a sub-thread everything it needs in the prompt because it cannot see the parent's conversation, always call `thread_wait` before `thread_result` so you read a finished answer rather than a half-streamed one, and `thread_settle` each sub-thread once its result has been used so the sidebar only shows live work.
+A line like "settle every sub-thread you are done with before ending your turn" in the agent's instructions is enough; the settled thread keeps its transcript and `thread_send` brings it back if the agent needs it again.
