@@ -65,7 +65,11 @@ layer("048_ForkSchemaCompatibility", (it) => {
       ]);
     }),
   );
+});
 
+const collisionLayer = it.layer(Layer.mergeAll(NodeSqliteClient.layerMemory()));
+
+collisionLayer("048_ForkSchemaCompatibility migration ID collisions", (it) => {
   it.effect("replays upstream migrations whose IDs were already used by the fork", () =>
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
@@ -135,7 +139,7 @@ layer("048_ForkSchemaCompatibility", (it) => {
         )
       `;
 
-      yield* runMigrations();
+      const executed = yield* runMigrations();
 
       const projectColumns = yield* columnNames("projection_projects");
       const projects = yield* sql<{ readonly selection: string | null }>`
@@ -149,6 +153,12 @@ layer("048_ForkSchemaCompatibility", (it) => {
         WHERE event_id = 'event-project-auto'
       `;
 
+      assert.deepStrictEqual(executed, [
+        [46, "RepairAutomaticSettlementTimestamps"],
+        [47, "ProjectionProjectIcon"],
+        [48, "ForkSchemaCompatibility"],
+        [49, "ProjectionThreadsParent"],
+      ]);
       assert.ok(projectColumns.has("auto_pull"));
       assert.deepStrictEqual(projects, [{ selection: null }]);
       assert.deepStrictEqual(events, [{ model: null }]);

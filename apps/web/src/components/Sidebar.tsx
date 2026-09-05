@@ -153,7 +153,6 @@ import {
   resolveGroupedSidebarProjectExpanded,
   resolveGroupedSidebarProjectStatus,
   resolveGroupedProjectNewThreadTarget,
-  resolveSettledTimestamp,
   resolveSidebarThreadStatus,
   searchSidebarThreadsByTitle,
   shouldCreateNewThreadInCurrentProject,
@@ -4556,7 +4555,9 @@ export default function Sidebar() {
                               <ProjectFavicon
                                 environmentId={project.environmentId}
                                 cwd={project.workspaceRoot}
+                                projectName={project.displayName}
                                 faviconPath={project.faviconPath}
+                                projectIcon={project.projectIcon}
                                 className="size-4 shrink-0"
                               />
                               <span className="flex min-w-0 flex-1 items-center gap-2">

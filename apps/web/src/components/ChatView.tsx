@@ -207,11 +207,7 @@ import {
 import { newDraftId, newMessageId, newThreadId } from "~/lib/utils";
 import { useBrowserHistoryStore } from "~/browserHistoryStore";
 import { registerFaviconProjectForThread } from "~/browserFaviconStore";
-import {
-  getProviderModelCapabilities,
-  repickedModelSelection,
-  resolveSelectableProvider,
-} from "../providerModels";
+import { getProviderModelCapabilities, repickedModelSelection } from "../providerModels";
 import {
   applyProviderInstanceSettings,
   deriveProviderInstanceEntries,
