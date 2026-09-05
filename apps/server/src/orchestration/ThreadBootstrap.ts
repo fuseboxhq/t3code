@@ -22,7 +22,6 @@ import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import * as GitWorkflowService from "../git/GitWorkflowService.ts";
@@ -328,16 +327,22 @@ const make = Effect.gen(function* () {
               cwd: bootstrap.prepareWorktree.projectCwd,
               remoteName: "origin",
             });
-            const resolvedRemoteBase = yield* gitWorkflow
-              .resolveRemoteTrackingCommit({
+            // Only a missing remote branch falls back to the local one; any
+            // other resolution failure (auth, corrupt repo) must surface
+            // rather than quietly start the thread from stale local code.
+            const remoteBaseExists = yield* gitWorkflow.remoteBranchExists({
+              cwd: bootstrap.prepareWorktree.projectCwd,
+              refName: bootstrap.prepareWorktree.baseBranch,
+              remoteName: "origin",
+            });
+            if (remoteBaseExists) {
+              const resolvedRemoteBase = yield* gitWorkflow.resolveRemoteTrackingCommit({
                 cwd: bootstrap.prepareWorktree.projectCwd,
                 refName: bootstrap.prepareWorktree.baseBranch,
                 fallbackRemoteName: "origin",
-              })
-              .pipe(Effect.option);
-            if (Option.isSome(resolvedRemoteBase)) {
-              worktreeBaseRef = resolvedRemoteBase.value.commitSha;
-              worktreeBaseRefName = resolvedRemoteBase.value.remoteRefName;
+              });
+              worktreeBaseRef = resolvedRemoteBase.commitSha;
+              worktreeBaseRefName = resolvedRemoteBase.remoteRefName;
             }
           }
           const worktree = yield* gitWorkflow.createWorktree({

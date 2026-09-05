@@ -283,7 +283,6 @@ const ReactorLayerLive = Layer.empty.pipe(
   Layer.provideMerge(ThreadDeletionReactorLive),
   Layer.provideMerge(ThreadSummaryReactorLive),
   Layer.provideMerge(ThreadSettlementReactor.layer),
-  Layer.provideMerge(ThreadSummaryReactorLive),
   Layer.provideMerge(AgentAwarenessRelay.layer.pipe(Layer.provide(ServerSecretStore.layer))),
   Layer.provideMerge(RuntimeReceiptBusLive),
 );
