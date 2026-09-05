@@ -1,26 +1,27 @@
-# Customize a project icon
+# Project settings
 
-T3 Code selects a project icon automatically. It checks `t3.json`, common favicon and app icon
-paths, and icon links in project HTML files.
+Open **Settings → Projects** and select a project to change its preferences.
 
-To choose a different icon:
+## Project icons
 
-1. Open **Settings** and select **Projects**.
-2. Select the project.
-3. Under **Appearance**, select **Choose a project file**.
-4. Search for an image file and select it.
+Choose an icon, emoji, or image from the project to make it easier to recognize. The choice applies
+to every checkout in the project group and appears on connected clients. Choose **Automatic** to
+let T3 Code detect an icon again.
 
-T3 Code supports SVG, PNG, ICO, JPEG, GIF, AVIF, and WebP files. The selected path applies to
-each checkout in the project group and appears on your connected clients.
+## Keep the default branch current
 
-To use automatic detection again, select **Automatic**.
+Enable **Automatically pull** to keep the default-branch checkout up to date with its configured
+upstream.
+
+T3 Code only pulls when it can fast-forward and the checkout has no changed files, untracked files,
+or local commits. It skips checkouts on another branch or without an upstream. If a checkout has
+local work, resolve it yourself before automatic pulls can resume.
 
 ## Default model for new threads
 
-New threads in a project start with the model and effort set under **New threads** in its project settings.
-Where a project sets a model but no effort, the workspace-wide default fills the effort in.
+New threads in a project use the provider, model, and options under **New threads** in its project settings.
+If a project selects the same provider instance and model without setting an option, it inherits a compatible option from the workspace default.
 
-The workspace-wide default lives in Settings under **Providers**, in the **New threads** row.
-It applies to every project that has not chosen its own default model.
-Resolution is most specific first: the project's default, then the workspace default, then the provider's own defaults.
-Clearing the project setting falls back to the workspace default; clearing both falls back to the provider.
+The workspace default lives in the **New threads** row under **Settings → Providers**.
+Projects without their own default inherit it.
+Clearing both settings falls back to the provider default.

@@ -22,6 +22,7 @@ import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import * as GitWorkflowService from "../git/GitWorkflowService.ts";
@@ -327,13 +328,17 @@ const make = Effect.gen(function* () {
               cwd: bootstrap.prepareWorktree.projectCwd,
               remoteName: "origin",
             });
-            const resolvedRemoteBase = yield* gitWorkflow.resolveRemoteTrackingCommit({
-              cwd: bootstrap.prepareWorktree.projectCwd,
-              refName: bootstrap.prepareWorktree.baseBranch,
-              fallbackRemoteName: "origin",
-            });
-            worktreeBaseRef = resolvedRemoteBase.commitSha;
-            worktreeBaseRefName = resolvedRemoteBase.remoteRefName;
+            const resolvedRemoteBase = yield* gitWorkflow
+              .resolveRemoteTrackingCommit({
+                cwd: bootstrap.prepareWorktree.projectCwd,
+                refName: bootstrap.prepareWorktree.baseBranch,
+                fallbackRemoteName: "origin",
+              })
+              .pipe(Effect.option);
+            if (Option.isSome(resolvedRemoteBase)) {
+              worktreeBaseRef = resolvedRemoteBase.value.commitSha;
+              worktreeBaseRefName = resolvedRemoteBase.value.remoteRefName;
+            }
           }
           const worktree = yield* gitWorkflow.createWorktree({
             cwd: bootstrap.prepareWorktree.projectCwd,

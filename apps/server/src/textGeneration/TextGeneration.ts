@@ -98,17 +98,6 @@ export interface SummaryGenerationResult {
   summary: string;
 }
 
-export interface TextGenerationService {
-  generateCommitMessage(
-    input: CommitMessageGenerationInput,
-  ): Promise<CommitMessageGenerationResult>;
-  generatePrContent(input: PrContentGenerationInput): Promise<PrContentGenerationResult>;
-  generateBranchName(input: BranchNameGenerationInput): Promise<BranchNameGenerationResult>;
-  generateThreadTitle(input: ThreadTitleGenerationInput): Promise<ThreadTitleGenerationResult>;
-  generateThreadSummary(input: ThreadSummaryGenerationInput): Promise<SummaryGenerationResult>;
-  generateProjectSummary(input: ProjectSummaryGenerationInput): Promise<SummaryGenerationResult>;
-}
-
 /**
  * TextGeneration - Service tag for commit and change request text generation.
  */
@@ -152,9 +141,6 @@ export class TextGeneration extends Context.Service<
     ) => Effect.Effect<SummaryGenerationResult, TextGenerationError>;
   }
 >()("t3/textGeneration/TextGeneration") {}
-
-/** @deprecated Use `TextGeneration["Service"]`. */
-export type TextGenerationShape = TextGeneration["Service"];
 
 export type TextGenerationOp =
   | "generateCommitMessage"

@@ -10,6 +10,8 @@ export interface CacheEpochs {
   readonly listingsEpoch: () => number;
   /** Strand every listing entry made under the old epoch. */
   readonly bumpListingsEpoch: () => void;
+  /** Strand all listing and reference entries, returning the new shared revision. */
+  readonly bumpAllEpochs: () => number;
   /** One reference's current epoch, part of its detail-shaped cache keys. */
   readonly refEpoch: (ref: CacheEpochRef) => number;
   /** Strand every entry the reference's old epoch keyed. */
@@ -37,6 +39,13 @@ export function makeCacheEpochs(capacity = 2_048): CacheEpochs {
     listingsEpoch: () => listings,
     bumpListingsEpoch: () => {
       listings = ++counter;
+    },
+    bumpAllEpochs: () => {
+      const revision = ++counter;
+      listings = revision;
+      floor = revision;
+      refEpochs.clear();
+      return revision;
     },
     refEpoch: (ref) => refEpochs.get(scopeOf(ref)) ?? floor,
     bumpRefEpoch: (ref) => {
