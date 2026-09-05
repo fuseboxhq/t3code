@@ -25,7 +25,7 @@ import { OrchestrationEventStoreLive } from "../../persistence/Layers/Orchestrat
 import { SqlitePersistenceMemory } from "../../persistence/Layers/Sqlite.ts";
 import * as RepositoryIdentityResolver from "../../project/RepositoryIdentityResolver.ts";
 import { ServerSettingsService } from "../../serverSettings.ts";
-import { TextGeneration, type TextGenerationShape } from "../../textGeneration/TextGeneration.ts";
+import { TextGeneration } from "../../textGeneration/TextGeneration.ts";
 import { OrchestrationEngineService } from "../Services/OrchestrationEngine.ts";
 import { ProjectionSnapshotQuery } from "../Services/ProjectionSnapshotQuery.ts";
 import { ThreadSummaryReactor } from "../Services/ThreadSummaryReactor.ts";
@@ -39,8 +39,8 @@ import { make as makeThreadSummaryReactor } from "./ThreadSummaryReactor.ts";
 const NOW = "2026-01-01T00:00:00.000Z";
 const MODEL = { instanceId: ProviderInstanceId.make("codex"), model: "gpt-5.6-luna" };
 
-const generateThreadSummary = vi.fn<TextGenerationShape["generateThreadSummary"]>();
-const generateProjectSummary = vi.fn<TextGenerationShape["generateProjectSummary"]>();
+const generateThreadSummary = vi.fn<TextGeneration["Service"]["generateThreadSummary"]>();
+const generateProjectSummary = vi.fn<TextGeneration["Service"]["generateProjectSummary"]>();
 
 const resetMocks = () => {
   generateThreadSummary.mockReset();
