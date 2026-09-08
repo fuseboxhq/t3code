@@ -29,6 +29,7 @@ on:
       - "package.json"
       - "pnpm-lock.yaml"
       - ".github/workflows/desktop-windows-build.yml"
+  workflow_dispatch:
 
 concurrency:
   group: desktop-windows-build-${{ github.event.pull_request.number || github.sha }}
