@@ -832,7 +832,17 @@ export const BackgroundActivitySettings = Schema.Struct({
 }).pipe(Schema.withDecodingDefault(Effect.succeed({})));
 export type BackgroundActivitySettings = typeof BackgroundActivitySettings.Type;
 
+/** Environment-owned Jev configuration. Clients receive a marker for a saved key. */
+export const JEV_API_KEY_REDACTED = "••••••";
+export const JevSettings = Schema.Struct({
+  enabled: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
+  apiKey: Schema.String.check(Schema.isMaxLength(4096)).pipe(
+    Schema.withDecodingDefault(Effect.succeed("")),
+  ),
+});
+
 export const ServerSettings = Schema.Struct({
+  jev: JevSettings.pipe(Schema.withDecodingDefault(Effect.succeed({}))),
   // Legacy token-by-token assistant output. Deliberately a fresh key (was
   // `enableAssistantStreaming`): decoding drops the old key, so everyone,
   // including prior opt-ins, resets to the buffered default.
@@ -1150,6 +1160,12 @@ const OpenCodeSettingsPatch = Schema.Struct({
 });
 
 export const ServerSettingsPatch = Schema.Struct({
+  jev: Schema.optionalKey(
+    Schema.Struct({
+      enabled: Schema.optionalKey(Schema.Boolean),
+      apiKey: Schema.optionalKey(Schema.String.check(Schema.isMaxLength(4096))),
+    }),
+  ),
   // Server settings
   enableLegacyTokenStreaming: Schema.optionalKey(Schema.Boolean),
   enableProviderUpdateChecks: Schema.optionalKey(Schema.Boolean),

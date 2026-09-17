@@ -1,6 +1,7 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import {
   DEFAULT_SERVER_SETTINGS,
+  JEV_API_KEY_REDACTED,
   ProviderDriverKind,
   ProviderInstanceId,
   resolveProviderInstanceEnabled,
@@ -24,6 +25,7 @@ import { SqlitePersistenceMemory } from "./persistence/Layers/Sqlite.ts";
 import * as ServerSettingsModule from "./serverSettings.ts";
 
 const decodeSettingsPatch = Schema.decodeUnknownEffect(ServerSettingsPatch);
+const decodePersistedSettings = Schema.decodeUnknownEffect(Schema.fromJsonString(ServerSettings));
 const decodeServerSettings = Schema.decodeUnknownEffect(ServerSettings);
 
 const makeServerSettingsLayer = () =>
@@ -1101,5 +1103,55 @@ it.layer(NodeServices.layer)("server settings", (it) => {
         "sk-or-secret",
       );
     }).pipe(Effect.provide(makeServerSettingsLayer())),
+  );
+  it.effect(
+    "persists Jev keys separately, redacts clients, and preserves, replaces, and removes them",
+    () =>
+      Effect.gen(function* () {
+        const settings = yield* ServerSettingsModule.ServerSettingsService;
+        const config = yield* ServerConfig.ServerConfig;
+        const fs = yield* FileSystem.FileSystem;
+        assert.deepEqual((yield* settings.getSettings).jev, { enabled: false, apiKey: "" });
+        const saved = yield* settings.updateSettings({
+          jev: { enabled: true, apiKey: " jev-secret " },
+        });
+        assert.equal(saved.jev.apiKey, "jev-secret");
+        const client = ServerSettingsModule.redactServerSettingsForClient(saved);
+        assert.deepEqual(client.jev, { enabled: true, apiKey: JEV_API_KEY_REDACTED });
+        assert.notInclude(yield* fs.readFileString(config.settingsPath), "jev-secret");
+        const persisted = yield* decodePersistedSettings(
+          yield* fs.readFileString(config.settingsPath),
+        );
+        assert.equal(persisted.jev.apiKey, JEV_API_KEY_REDACTED);
+        const reloaded = yield* Effect.gen(function* () {
+          return yield* (yield* ServerSettingsModule.ServerSettingsService).getSettings;
+        }).pipe(
+          Effect.provide(
+            Layer.fresh(ServerSettingsModule.layer.pipe(Layer.provide(ServerSecretStore.layer))),
+          ),
+        );
+        assert.equal(reloaded.jev.apiKey, "jev-secret");
+
+        assert.equal(
+          (yield* settings.updateSettings(yield* decodeSettingsPatch({ jev: { enabled: false } })))
+            .jev.apiKey,
+          "jev-secret",
+        );
+        assert.equal(
+          (yield* settings.updateSettings({ jev: client.jev })).jev.apiKey,
+          "jev-secret",
+        );
+        assert.equal(
+          (yield* settings.updateSettings({ jev: { apiKey: "replacement" } })).jev.apiKey,
+          "replacement",
+        );
+        yield* settings.updateSettings({ jev: { apiKey: "", enabled: false } });
+        assert.deepEqual((yield* settings.getSettings).jev, { enabled: false, apiKey: "" });
+        assert.notInclude(yield* fs.readFileString(config.settingsPath), "replacement");
+        const removed = yield* Effect.gen(function* () {
+          return yield* (yield* ServerSecretStore.ServerSecretStore).get("jev-api-key");
+        }).pipe(Effect.provide(ServerSecretStore.layer));
+        assert.equal(Option.isNone(removed), true);
+      }).pipe(Effect.provide(makeServerSettingsLayer())),
   );
 });

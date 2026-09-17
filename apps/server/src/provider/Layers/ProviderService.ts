@@ -723,6 +723,7 @@ const makeProviderService = Effect.fn("makeProviderService")(function* (
         new Set<McpInvocationContext.McpCapability>([
           ...(settings.enableAgentBrowserAccess ? (["preview"] as const) : []),
           ...(settings.enableAgentSubthreads ? (["threads"] as const) : []),
+          ...(settings.jev.enabled && settings.jev.apiKey ? (["jev"] as const) : []),
         ]),
     ),
     Effect.catch((cause) =>

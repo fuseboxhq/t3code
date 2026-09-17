@@ -135,6 +135,8 @@ export const ExecutionEnvironmentCapabilities = Schema.Struct({
       MCP tools that agents use to spawn sub-threads. Clients nest child
       threads under their parent only when this is true. */
   agentSubthreads: Schema.optionalKey(Schema.Boolean),
+  /** Server supports environment-owned Jev settings and evaluation tools. */
+  jev: Schema.optionalKey(Schema.Boolean),
   /** The update path clients should offer for this server. Absent on
       servers that must be relaunched manually (dev checkouts, Windows
       foreground runs, pre-update servers). */

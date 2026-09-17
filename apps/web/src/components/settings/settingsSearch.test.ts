@@ -111,6 +111,26 @@ describe("searchSettings", () => {
     },
   );
 
+  it("only offers Jev search when a connected environment supports it", () => {
+    const availability = {
+      hasCloudPublicConfig: false,
+      hasPrimaryEnvironment: false,
+      hasProviderSettingsEnvironment: true,
+      canManageLocalBackend: false,
+      isWslSettingsRowVisible: false,
+      hasThreadAutoSettlement: false,
+    };
+    expect(searchSettings("typesafe", filterAvailableSettingsSearchItems(availability))).toEqual(
+      [],
+    );
+    expect(
+      searchSettings(
+        "typesafe",
+        filterAvailableSettingsSearchItems({ ...availability, hasJev: true }),
+      )[0]?.id,
+    ).toBe("jev-mode");
+  });
+
   it("returns no results for an empty query", () => {
     expect(searchSettings("   ", ITEMS)).toEqual([]);
   });

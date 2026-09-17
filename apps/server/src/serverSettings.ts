@@ -15,6 +15,7 @@ import {
   DEFAULT_TEXT_GENERATION_MODEL_BY_PROVIDER,
   DEFAULT_MODEL_BY_PROVIDER,
   DEFAULT_SERVER_SETTINGS,
+  JEV_API_KEY_REDACTED,
   type ModelSelection,
   type ProviderInstanceConfig,
   type ProviderInstanceEnvironmentVariable,
@@ -181,7 +182,12 @@ export function redactServerSettingsForClient(settings: ServerSettings): ServerS
       },
     ]),
   );
-  return { ...settings, providerInstances, usageLimitSources };
+  return {
+    ...settings,
+    jev: { ...settings.jev, apiKey: settings.jev.apiKey ? JEV_API_KEY_REDACTED : "" },
+    providerInstances,
+    usageLimitSources,
+  };
 }
 
 export class ServerSettingsService extends Context.Service<
@@ -554,8 +560,20 @@ const make = Effect.gen(function* () {
           managementKey: Option.isSome(secret) ? textDecoder.decode(secret.value) : "",
         };
       }
+      let jev = settings.jev;
+      if (jev.apiKey === JEV_API_KEY_REDACTED) {
+        const secret = yield* secretStore
+          .get("jev-api-key")
+          .pipe(
+            Effect.mapError(
+              (cause) => new ServerSettingsError({ settingsPath, operation: "read-secret", cause }),
+            ),
+          );
+        jev = { ...jev, apiKey: Option.isSome(secret) ? textDecoder.decode(secret.value) : "" };
+      }
       return {
         ...settings,
+        jev,
         providerInstances: providerInstances as ServerSettings["providerInstances"],
         usageLimitSources: usageLimitSources as ServerSettings["usageLimitSources"],
       };
@@ -715,8 +733,28 @@ const make = Effect.gen(function* () {
           );
       }
 
+      let jev = next.jev;
+      if (jev.apiKey !== JEV_API_KEY_REDACTED) {
+        const apiKey = jev.apiKey.trim();
+        yield* (
+          apiKey
+            ? secretStore.set("jev-api-key", textEncoder.encode(apiKey))
+            : secretStore.remove("jev-api-key")
+        ).pipe(
+          Effect.mapError(
+            (cause) =>
+              new ServerSettingsError({
+                settingsPath,
+                operation: apiKey ? "write-secret" : "remove-secret",
+                cause,
+              }),
+          ),
+        );
+        jev = { ...jev, apiKey: apiKey ? JEV_API_KEY_REDACTED : "" };
+      }
       return {
         ...next,
+        jev,
         providerInstances: providerInstances as ServerSettings["providerInstances"],
         usageLimitSources: usageLimitSources as ServerSettings["usageLimitSources"],
       };

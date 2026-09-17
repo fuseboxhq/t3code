@@ -215,20 +215,18 @@ function makeFakeCodexAdapter(
     ): Effect.Effect<void, ProviderAdapterError> => Effect.void,
   );
 
-  const stopSession = vi.fn(
-    (threadId: ThreadId): Effect.Effect<void, ProviderAdapterError> =>
-      Effect.sync(() => {
-        sessions.delete(threadId);
-      }),
+  const stopSession = vi.fn((threadId: ThreadId): Effect.Effect<void, ProviderAdapterError> =>
+    Effect.sync(() => {
+      sessions.delete(threadId);
+    }),
   );
 
-  const listSessions = vi.fn(
-    (): Effect.Effect<ReadonlyArray<ProviderSession>> =>
-      Effect.sync(() => Array.from(sessions.values())),
+  const listSessions = vi.fn((): Effect.Effect<ReadonlyArray<ProviderSession>> =>
+    Effect.sync(() => Array.from(sessions.values())),
   );
 
-  const hasSession = vi.fn(
-    (threadId: ThreadId): Effect.Effect<boolean> => Effect.succeed(sessions.has(threadId)),
+  const hasSession = vi.fn((threadId: ThreadId): Effect.Effect<boolean> =>
+    Effect.succeed(sessions.has(threadId)),
   );
 
   const readThread = vi.fn(
@@ -262,11 +260,10 @@ function makeFakeCodexAdapter(
       Effect.succeed({ feedbackId: `feedback-${input.threadId}` }),
   );
 
-  const stopAll = vi.fn(
-    (): Effect.Effect<void, ProviderAdapterError> =>
-      Effect.sync(() => {
-        sessions.clear();
-      }),
+  const stopAll = vi.fn((): Effect.Effect<void, ProviderAdapterError> =>
+    Effect.sync(() => {
+      sessions.clear();
+    }),
   );
 
   const adapter: ProviderAdapterShape<ProviderAdapterError> = {
@@ -4308,7 +4305,11 @@ describe("agent browser access", () => {
   const revokedThreads: Array<ThreadId> = [];
 
   const startSessionWith = (
-    settings: { enableAgentBrowserAccess: boolean; enableAgentSubthreads: boolean },
+    settings: {
+      enableAgentBrowserAccess: boolean;
+      enableAgentSubthreads: boolean;
+      jev?: { enabled: boolean; apiKey: string };
+    },
     threadId: ThreadId,
   ) =>
     Effect.gen(function* () {
@@ -4411,6 +4412,23 @@ describe("agent browser access", () => {
       );
 
       assert.deepEqual(issued, [{ threadId, capabilities: ["preview"] }]);
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+  it.effect("grants Jev independently only when enabled with a key", () =>
+    Effect.gen(function* () {
+      const threadId = asThreadId("thread-jev");
+      assert.deepEqual(
+        yield* startSessionWith({ ...allOff, jev: { enabled: true, apiKey: "key" } }, threadId),
+        [{ threadId, capabilities: ["jev"] }],
+      );
+      assert.deepEqual(
+        yield* startSessionWith({ ...allOff, jev: { enabled: false, apiKey: "key" } }, threadId),
+        [],
+      );
+      assert.deepEqual(
+        yield* startSessionWith({ ...allOff, jev: { enabled: true, apiKey: "" } }, threadId),
+        [],
+      );
     }).pipe(Effect.provide(NodeServices.layer)),
   );
 });

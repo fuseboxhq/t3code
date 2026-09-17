@@ -12,7 +12,7 @@ import * as Effect from "effect/Effect";
  * sub-threads in the calling thread's project. Each maps to its own server
  * setting and is minted into the credential independently.
  */
-export type McpCapability = "preview" | "threads";
+export type McpCapability = "preview" | "threads" | "jev";
 
 export interface McpInvocationScope {
   readonly environmentId: EnvironmentId;
