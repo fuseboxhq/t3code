@@ -1,6 +1,7 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import {
   DEFAULT_SERVER_SETTINGS,
+  JEV_API_KEY_REDACTED,
   ProviderDriverKind,
   ProviderInstanceId,
   resolveProviderInstanceEnabled,
@@ -24,6 +25,7 @@ import { SqlitePersistenceMemory } from "./persistence/Layers/Sqlite.ts";
 import * as ServerSettingsModule from "./serverSettings.ts";
 
 const decodeSettingsPatch = Schema.decodeUnknownEffect(ServerSettingsPatch);
+const decodePersistedSettings = Schema.decodeUnknownEffect(Schema.fromJsonString(ServerSettings));
 const decodeServerSettings = Schema.decodeUnknownEffect(ServerSettings);
 
 const makeServerSettingsLayer = () =>
@@ -1099,6 +1101,122 @@ it.layer(NodeServices.layer)("server settings", (it) => {
       assert.equal(
         roundTripped.providerInstances[instanceId]?.environment?.[0]?.value,
         "sk-or-secret",
+      );
+    }).pipe(Effect.provide(makeServerSettingsLayer())),
+  );
+  it.effect(
+    "persists Jev keys separately, redacts clients, and preserves, replaces, and removes them",
+    () =>
+      Effect.gen(function* () {
+        const settings = yield* ServerSettingsModule.ServerSettingsService;
+        const config = yield* ServerConfig.ServerConfig;
+        const fs = yield* FileSystem.FileSystem;
+        assert.deepEqual((yield* settings.getSettings).jev, { enabled: false, apiKey: "" });
+        const saved = yield* settings.updateSettings({
+          jev: { enabled: true, apiKey: " jev-secret " },
+        });
+        assert.equal(saved.jev.apiKey, "jev-secret");
+        const client = ServerSettingsModule.redactServerSettingsForClient(saved);
+        assert.deepEqual(client.jev, { enabled: true, apiKey: JEV_API_KEY_REDACTED });
+        assert.notInclude(yield* fs.readFileString(config.settingsPath), "jev-secret");
+        const persisted = yield* decodePersistedSettings(
+          yield* fs.readFileString(config.settingsPath),
+        );
+        assert.equal(persisted.jev.apiKey, JEV_API_KEY_REDACTED);
+        const reloaded = yield* Effect.gen(function* () {
+          return yield* (yield* ServerSettingsModule.ServerSettingsService).getSettings;
+        }).pipe(
+          Effect.provide(
+            Layer.fresh(ServerSettingsModule.layer.pipe(Layer.provide(ServerSecretStore.layer))),
+          ),
+        );
+        assert.equal(reloaded.jev.apiKey, "jev-secret");
+
+        assert.equal(
+          (yield* settings.updateSettings(yield* decodeSettingsPatch({ jev: { enabled: false } })))
+            .jev.apiKey,
+          "jev-secret",
+        );
+        assert.equal(
+          (yield* settings.updateSettings({ jev: client.jev })).jev.apiKey,
+          "jev-secret",
+        );
+        assert.equal(
+          (yield* settings.updateSettings({ jev: { apiKey: "replacement" } })).jev.apiKey,
+          "replacement",
+        );
+        yield* settings.updateSettings({ jev: { apiKey: "", enabled: false } });
+        assert.deepEqual((yield* settings.getSettings).jev, { enabled: false, apiKey: "" });
+        assert.notInclude(yield* fs.readFileString(config.settingsPath), "replacement");
+        const removed = yield* Effect.gen(function* () {
+          return yield* (yield* ServerSecretStore.ServerSecretStore).get("jev-api-key");
+        }).pipe(Effect.provide(ServerSecretStore.layer));
+        assert.equal(Option.isNone(removed), true);
+      }).pipe(Effect.provide(makeServerSettingsLayer())),
+  );
+  it.effect("keeps Jev secrets aligned with settings around commit failures", () =>
+    Effect.gen(function* () {
+      const config = yield* ServerConfig.ServerConfig;
+      const fs = yield* FileSystem.FileSystem;
+      let rejectCommit = false;
+      let rejectCleanup = false;
+      const failingFs = FileSystem.FileSystem.of({
+        ...fs,
+        makeTempDirectoryScoped: (options) =>
+          Effect.acquireRelease(fs.makeTempDirectory(options), (directory) =>
+            fs.remove(directory, { recursive: true }).pipe(
+              Effect.orDie,
+              Effect.andThen(() =>
+                rejectCleanup ? Effect.die("Cleanup failed after commit.") : Effect.void,
+              ),
+            ),
+          ),
+        rename: (from, to) =>
+          rejectCommit && to === config.settingsPath
+            ? Effect.fail(
+                PlatformError.systemError({
+                  _tag: "PermissionDenied",
+                  module: "FileSystem",
+                  method: "rename",
+                  pathOrDescriptor: to,
+                  description: "Settings commit rejected for test.",
+                }),
+              )
+            : fs.rename(from, to),
+      });
+      yield* Effect.gen(function* () {
+        const settings = yield* ServerSettingsModule.ServerSettingsService;
+        const secrets = yield* ServerSecretStore.ServerSecretStore;
+        rejectCommit = true;
+        yield* Effect.flip(settings.updateSettings({ jev: { apiKey: "first" } }));
+        assert.isTrue(Option.isNone(yield* secrets.get("jev-api-key")));
+        rejectCommit = false;
+        yield* settings.updateSettings({ jev: { enabled: true, apiKey: "original" } });
+        const originalFile = yield* fs.readFileString(config.settingsPath);
+        rejectCommit = true;
+        for (const apiKey of ["replacement", ""]) {
+          const error = yield* Effect.flip(settings.updateSettings({ jev: { apiKey } }));
+          assert.equal(error.operation, "write-file");
+          assert.equal((yield* settings.getSettings).jev.apiKey, "original");
+          assert.equal(yield* fs.readFileString(config.settingsPath), originalFile);
+        }
+        rejectCommit = false;
+        rejectCleanup = true;
+        const committed = yield* Effect.exit(
+          settings.updateSettings({ jev: { apiKey: "committed", enabled: false } }),
+        );
+        assert.equal(committed._tag, "Failure");
+        const key = yield* secrets.get("jev-api-key");
+        assert.equal(new TextDecoder().decode(Option.getOrThrow(key)), "committed");
+        const persisted = yield* decodePersistedSettings(
+          yield* fs.readFileString(config.settingsPath),
+        );
+        assert.deepEqual(persisted.jev, { enabled: false, apiKey: JEV_API_KEY_REDACTED });
+      }).pipe(
+        Effect.provide(
+          Layer.fresh(ServerSettingsModule.layer.pipe(Layer.provideMerge(ServerSecretStore.layer))),
+        ),
+        Effect.provideService(FileSystem.FileSystem, failingFs),
       );
     }).pipe(Effect.provide(makeServerSettingsLayer())),
   );

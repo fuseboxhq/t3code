@@ -36,6 +36,11 @@ export function useAvailableSettingsSearchItems() {
             hasServerConfig: environment.serverConfig !== null,
           }),
         ),
+        hasJev: environments.some(
+          (environment) =>
+            environment.connection.phase === "connected" &&
+            environment.serverConfig?.environment.capabilities.jev === true,
+        ),
         canManageLocalBackend,
         isWslSettingsRowVisible: isWslSettingsRowVisible({
           state: desktopWsl.data,

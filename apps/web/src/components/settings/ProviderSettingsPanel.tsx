@@ -78,6 +78,7 @@ import { AddProviderInstanceDialog } from "./AddProviderInstanceDialog";
 import { ExpandableText } from "./ExpandableText";
 import { ProviderInstanceCard } from "./ProviderInstanceCard";
 import { UsageProviderSettings } from "./UsageProviderSettings";
+import { JevSettings } from "./JevSettings";
 import { ProviderSetupSection, readAntigravityAuthMethod } from "./ProviderSetupSection";
 import { DRIVER_OPTIONS, getDriverOption } from "./providerDriverMeta";
 import { searchableSetting } from "./settingsSearch";
@@ -275,6 +276,25 @@ export function ProviderSettingsPanel(target: ProviderSettingsTarget) {
   );
 }
 
+/** Settings search selects a connected server that actually offers Jev. */
+function resolveJevEnvironmentId(
+  searchTargetId: string | null,
+  environments: ReadonlyArray<EnvironmentPresentation>,
+  preferred: EnvironmentId | null,
+): EnvironmentId | null {
+  if (searchTargetId !== "jev-mode") return preferred;
+  const supported = environments.filter(
+    (environment) =>
+      environment.connection.phase === "connected" &&
+      environment.serverConfig?.environment.capabilities.jev === true,
+  );
+  return (
+    supported.find((environment) => environment.environmentId === preferred)?.environmentId ??
+    supported[0]?.environmentId ??
+    preferred
+  );
+}
+
 function ProviderSettingsPanelContent(target: ProviderSettingsTarget) {
   const { environments, isReady } = useEnvironments();
   const primaryEnvironmentId = usePrimaryEnvironmentId();
@@ -293,9 +313,14 @@ function ProviderSettingsPanelContent(target: ProviderSettingsTarget) {
     target.environmentId !== undefined &&
     selectedEnvironmentId === target.environmentId &&
     !options.some((environment) => environment.environmentId === target.environmentId);
-  const effectiveEnvironmentId = targetEnvironmentMissing
+  const requestedEnvironmentId = targetEnvironmentMissing
     ? target.environmentId
     : resolveSelectedProviderEnvironmentId(options, selectedEnvironmentId, primaryEnvironmentId);
+  const effectiveEnvironmentId = resolveJevEnvironmentId(
+    searchTargetId,
+    options,
+    requestedEnvironmentId,
+  );
   const selectedEnvironment =
     options.find((environment) => environment.environmentId === effectiveEnvironmentId) ?? null;
   const selectedEnvironmentCanRenderSettings =
@@ -1082,6 +1107,16 @@ export function EnvironmentProviderSettings({
           </div>
         </div>
       </SettingsSection>
+
+      {capabilityEnvironments.find((environment) => environment.environmentId === environmentId)
+        ?.serverConfig?.environment.capabilities.jev ? (
+        <JevSettings
+          key={`jev-${environmentId}`}
+          environmentId={environmentId}
+          settings={settings.jev}
+          readOnly={readOnly}
+        />
+      ) : null}
 
       <UsageProviderSettings
         key={environmentId}

@@ -97,6 +97,19 @@ For provider-specific setup and accounts, see [Codex](./providers-codex.md),
 [Claude](./providers-claude.md), [OpenCode](./providers-opencode.md), and
 [Antigravity](./providers-antigravity.md).
 
+## Jev mode
+
+In **Settings > Providers**, select your environment, save a [TypeSafe API key](https://console.typesafe.ai), and enable **Jev mode**.
+On mobile, use the Jev section for that environment in Settings.
+Start a new agent session after enabling it.
+Agents can then ask Jev for choices, scores, and yes/no judgments through the `typesafe_evaluate` tool.
+Your selected coding agent still writes the code and conversation.
+
+Evaluations send the context supplied by the agent to TypeSafe and consume your TypeSafe API quota.
+The key stays on the selected server and is never sent back to clients or included in tool results.
+Turning Jev mode off blocks further evaluations; removing the key also disables it.
+Each request accepts up to 32 questions and 128 KiB of context and questions, and reports its token usage in the tool result.
+
 ## Next steps
 
 - [Working with threads](./thread-sidebar.md): start tasks and organize parallel work.

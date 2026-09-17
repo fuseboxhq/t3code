@@ -15,6 +15,7 @@ import {
   DEFAULT_TEXT_GENERATION_MODEL_BY_PROVIDER,
   DEFAULT_MODEL_BY_PROVIDER,
   DEFAULT_SERVER_SETTINGS,
+  JEV_API_KEY_REDACTED,
   type ModelSelection,
   type ProviderInstanceConfig,
   type ProviderInstanceEnvironmentVariable,
@@ -181,7 +182,12 @@ export function redactServerSettingsForClient(settings: ServerSettings): ServerS
       },
     ]),
   );
-  return { ...settings, providerInstances, usageLimitSources };
+  return {
+    ...settings,
+    jev: { ...settings.jev, apiKey: settings.jev.apiKey ? JEV_API_KEY_REDACTED : "" },
+    providerInstances,
+    usageLimitSources,
+  };
 }
 
 export class ServerSettingsService extends Context.Service<
@@ -554,8 +560,20 @@ const make = Effect.gen(function* () {
           managementKey: Option.isSome(secret) ? textDecoder.decode(secret.value) : "",
         };
       }
+      let jev = settings.jev;
+      if (jev.apiKey === JEV_API_KEY_REDACTED) {
+        const secret = yield* secretStore
+          .get("jev-api-key")
+          .pipe(
+            Effect.mapError(
+              (cause) => new ServerSettingsError({ settingsPath, operation: "read-secret", cause }),
+            ),
+          );
+        jev = { ...jev, apiKey: Option.isSome(secret) ? textDecoder.decode(secret.value) : "" };
+      }
       return {
         ...settings,
+        jev,
         providerInstances: providerInstances as ServerSettings["providerInstances"],
         usageLimitSources: usageLimitSources as ServerSettings["usageLimitSources"],
       };
@@ -746,6 +764,58 @@ const make = Effect.gen(function* () {
     ),
   );
 
+  /** Restore the previous key if committing the settings file fails. */
+  const writeSettingsWithJevKey = Effect.fnUntraced(function* (settings: ServerSettings) {
+    if (settings.jev.apiKey === JEV_API_KEY_REDACTED) {
+      yield* writeSettingsAtomically(settings);
+      return settings;
+    }
+    const previous = yield* secretStore
+      .get("jev-api-key")
+      .pipe(
+        Effect.mapError(
+          (cause) => new ServerSettingsError({ settingsPath, operation: "read-secret", cause }),
+        ),
+      );
+    const apiKey = settings.jev.apiKey.trim();
+    const next = {
+      ...settings,
+      jev: { ...settings.jev, apiKey: apiKey ? JEV_API_KEY_REDACTED : "" },
+    };
+    yield* (
+      apiKey
+        ? secretStore.set("jev-api-key", textEncoder.encode(apiKey))
+        : secretStore.remove("jev-api-key")
+    ).pipe(
+      Effect.mapError(
+        (cause) =>
+          new ServerSettingsError({
+            settingsPath,
+            operation: apiKey ? "write-secret" : "remove-secret",
+            cause,
+          }),
+      ),
+    );
+    // Scoped cleanup can die after the rename committed; only write errors require rollback.
+    yield* writeSettingsAtomically(next).pipe(
+      Effect.catch((failure) =>
+        Effect.gen(function* () {
+          yield* Option.match(previous, {
+            onNone: () => secretStore.remove("jev-api-key"),
+            onSome: (key) => secretStore.set("jev-api-key", key),
+          }).pipe(
+            Effect.mapError(
+              (cause) =>
+                new ServerSettingsError({ settingsPath, operation: "write-secret", cause }),
+            ),
+          );
+          return yield* failure;
+        }),
+      ),
+    );
+    return next;
+  }, Effect.uninterruptible);
+
   const revalidateAndEmit = writeSemaphore.withPermits(1)(
     Effect.gen(function* () {
       yield* Cache.invalidate(settingsCache, cacheKey);
@@ -829,8 +899,8 @@ const make = Effect.gen(function* () {
             current,
             applyServerSettingsPatch(current, patch),
           );
-          const next = yield* normalizeServerSettings(nextPersisted);
-          yield* writeSettingsAtomically(next);
+          const normalized = yield* normalizeServerSettings(nextPersisted);
+          const next = yield* writeSettingsWithJevKey(normalized);
           yield* Cache.set(settingsCache, cacheKey, next);
           yield* emitChange(next);
           const materialized = yield* materializeProviderEnvironmentSecrets(next);

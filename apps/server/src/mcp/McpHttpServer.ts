@@ -24,6 +24,9 @@ import {
 } from "./toolkits/preview/tools.ts";
 import { ThreadToolkitHandlersLive } from "./toolkits/threads/handlers.ts";
 import { ThreadToolkit } from "./toolkits/threads/tools.ts";
+import * as Jev from "../jev/Jev.ts";
+import { JevToolkitHandlersLive } from "./toolkits/jev/handlers.ts";
+import { JevToolkit } from "./toolkits/jev/tools.ts";
 
 const unauthorized = HttpServerResponse.jsonUnsafe(
   {
@@ -66,30 +69,29 @@ export const normalizeMcpHttpResponse = (
 };
 
 const makeMcpAuthMiddleware = McpSessionRegistry.McpSessionRegistry.pipe(
-  Effect.map(
-    (registry): McpAuthMiddleware =>
-      Effect.fn("McpHttpServer.authenticateRequest")(function* (httpEffect) {
-        const request = yield* HttpServerRequest.HttpServerRequest;
-        const authorization = request.headers.authorization;
-        const token =
-          authorization?.startsWith("Bearer ") === true
-            ? authorization.slice("Bearer ".length).trim()
-            : "";
-        const invocation = yield* registry.resolve(token);
-        if (!invocation) {
-          // Without this the only symptom of a dead credential is the agent
-          // quietly losing the whole `t3-code` toolkit for the rest of its
-          // session, with nothing on the server to explain why.
-          yield* Effect.logWarning("rejected MCP request with an unusable credential", {
-            reason: token.length === 0 ? "missing_bearer_token" : "unknown_or_expired_token",
-          });
-          return unauthorized;
-        }
-        return yield* httpEffect.pipe(
-          Effect.provideService(McpInvocationContext.McpInvocationContext, invocation),
-          Effect.map(normalizeMcpHttpResponse),
-        );
-      }),
+  Effect.map((registry): McpAuthMiddleware =>
+    Effect.fn("McpHttpServer.authenticateRequest")(function* (httpEffect) {
+      const request = yield* HttpServerRequest.HttpServerRequest;
+      const authorization = request.headers.authorization;
+      const token =
+        authorization?.startsWith("Bearer ") === true
+          ? authorization.slice("Bearer ".length).trim()
+          : "";
+      const invocation = yield* registry.resolve(token);
+      if (!invocation) {
+        // Without this the only symptom of a dead credential is the agent
+        // quietly losing the whole `t3-code` toolkit for the rest of its
+        // session, with nothing on the server to explain why.
+        yield* Effect.logWarning("rejected MCP request with an unusable credential", {
+          reason: token.length === 0 ? "missing_bearer_token" : "unknown_or_expired_token",
+        });
+        return unauthorized;
+      }
+      return yield* httpEffect.pipe(
+        Effect.provideService(McpInvocationContext.McpInvocationContext, invocation),
+        Effect.map(normalizeMcpHttpResponse),
+      );
+    }),
   ),
   Effect.withSpan("McpHttpServer.makeAuthMiddleware"),
 );
@@ -222,6 +224,10 @@ const ThreadToolkitRegistrationLive = McpServer.toolkit(ThreadToolkit).pipe(
   Layer.provide(ThreadToolkitHandlersLive),
 );
 
+export const JevToolkitRegistrationLive = McpServer.toolkit(JevToolkit).pipe(
+  Layer.provide(JevToolkitHandlersLive),
+);
+
 const McpTransportLive = McpServer.layerHttp({
   name: "T3 Code",
   version: packageJson.version,
@@ -234,4 +240,5 @@ const McpTransportLive = McpServer.layerHttp({
 export const layer = Layer.mergeAll(
   PreviewToolkitRegistrationLive,
   ThreadToolkitRegistrationLive,
+  JevToolkitRegistrationLive.pipe(Layer.provide(Jev.layer)),
 ).pipe(Layer.provideMerge(McpTransportLive));

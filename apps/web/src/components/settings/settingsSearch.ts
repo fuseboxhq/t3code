@@ -31,6 +31,7 @@ export interface SettingsSearchItem {
   readonly localBackendManagementOnly?: boolean;
   readonly wslAvailableOnly?: boolean;
   readonly requiresThreadAutoSettlement?: boolean;
+  readonly requiresJev?: boolean;
 }
 
 export interface SettingsSearchAvailability {
@@ -40,6 +41,7 @@ export interface SettingsSearchAvailability {
   readonly canManageLocalBackend: boolean;
   readonly isWslSettingsRowVisible: boolean;
   readonly hasThreadAutoSettlement: boolean;
+  readonly hasJev?: boolean;
 }
 
 /**
@@ -336,6 +338,14 @@ export const SETTINGS_SEARCH_ITEMS = [
     providerSettingsOnly: true,
   },
   {
+    id: "jev-mode",
+    requiresJev: true,
+    title: "Jev mode",
+    to: "/settings/providers",
+    searchTerms: ["typesafe API key evaluate choices scores judgments"],
+    providerSettingsOnly: true,
+  },
+  {
     id: "provider-health-check-interval",
     title: "Health check interval",
     to: "/settings/providers",
@@ -547,7 +557,8 @@ export function filterAvailableSettingsSearchItems(
       (!item.providerSettingsOnly || availability.hasProviderSettingsEnvironment) &&
       (!item.localBackendManagementOnly || availability.canManageLocalBackend) &&
       (!item.wslAvailableOnly || availability.isWslSettingsRowVisible) &&
-      (!item.requiresThreadAutoSettlement || availability.hasThreadAutoSettlement),
+      (!item.requiresThreadAutoSettlement || availability.hasThreadAutoSettlement) &&
+      (!item.requiresJev || availability.hasJev === true),
   );
 }
 

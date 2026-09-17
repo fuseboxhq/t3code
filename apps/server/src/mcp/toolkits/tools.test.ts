@@ -4,7 +4,9 @@ import { Tool } from "effect/unstable/ai";
 import { PreviewSnapshotToolkit, PreviewStandardToolkit } from "./preview/tools.ts";
 import { ThreadToolkit } from "./threads/tools.ts";
 
-const toolkits = { PreviewStandardToolkit, PreviewSnapshotToolkit, ThreadToolkit };
+import { JevToolkit } from "./jev/tools.ts";
+
+const toolkits = { PreviewStandardToolkit, PreviewSnapshotToolkit, ThreadToolkit, JevToolkit };
 
 describe("agent MCP toolkits", () => {
   // MCP clients validate every tool's input schema as `{ type: "object", ... }`.

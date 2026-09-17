@@ -57,6 +57,7 @@ import {
   runAppUpdateCheck,
 } from "../updates/app-updates";
 import { useSavedRemoteConnections } from "../../state/use-remote-environment-registry";
+import { JevSettingsSection } from "./JevSettingsSection";
 import { SettingsRow } from "./components/SettingsRow";
 import { SettingsSection } from "./components/SettingsSection";
 import { SettingsSwitchRow } from "./components/SettingsSwitchRow";
@@ -140,6 +141,8 @@ function LocalSettingsRouteScreen() {
         </SettingsSection>
 
         <GeneralSettingsSection />
+
+        <JevSettingsSection />
 
         <SettingsSection title="Appearance">
           <SettingsRow icon="paintbrush" label="Appearance" target="SettingsAppearance" />
@@ -526,6 +529,8 @@ function ConfiguredSettingsRouteScreen() {
         </SettingsSection>
 
         <GeneralSettingsSection />
+
+        <JevSettingsSection />
 
         <SettingsSection title="Appearance">
           <SettingsRow icon="paintbrush" label="Appearance" target="SettingsAppearance" />
