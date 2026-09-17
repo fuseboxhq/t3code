@@ -1154,13 +1154,23 @@ it.layer(NodeServices.layer)("server settings", (it) => {
         assert.equal(Option.isNone(removed), true);
       }).pipe(Effect.provide(makeServerSettingsLayer())),
   );
-  it.effect("restores Jev secrets when the settings file cannot be committed", () =>
+  it.effect("keeps Jev secrets aligned with settings around commit failures", () =>
     Effect.gen(function* () {
       const config = yield* ServerConfig.ServerConfig;
       const fs = yield* FileSystem.FileSystem;
       let rejectCommit = false;
+      let rejectCleanup = false;
       const failingFs = FileSystem.FileSystem.of({
         ...fs,
+        makeTempDirectoryScoped: (options) =>
+          Effect.acquireRelease(fs.makeTempDirectory(options), (directory) =>
+            fs.remove(directory, { recursive: true }).pipe(
+              Effect.orDie,
+              Effect.andThen(() =>
+                rejectCleanup ? Effect.die("Cleanup failed after commit.") : Effect.void,
+              ),
+            ),
+          ),
         rename: (from, to) =>
           rejectCommit && to === config.settingsPath
             ? Effect.fail(
@@ -1190,6 +1200,18 @@ it.layer(NodeServices.layer)("server settings", (it) => {
           assert.equal((yield* settings.getSettings).jev.apiKey, "original");
           assert.equal(yield* fs.readFileString(config.settingsPath), originalFile);
         }
+        rejectCommit = false;
+        rejectCleanup = true;
+        const committed = yield* Effect.exit(
+          settings.updateSettings({ jev: { apiKey: "committed", enabled: false } }),
+        );
+        assert.equal(committed._tag, "Failure");
+        const key = yield* secrets.get("jev-api-key");
+        assert.equal(new TextDecoder().decode(Option.getOrThrow(key)), "committed");
+        const persisted = yield* decodePersistedSettings(
+          yield* fs.readFileString(config.settingsPath),
+        );
+        assert.deepEqual(persisted.jev, { enabled: false, apiKey: JEV_API_KEY_REDACTED });
       }).pipe(
         Effect.provide(
           Layer.fresh(ServerSettingsModule.layer.pipe(Layer.provideMerge(ServerSecretStore.layer))),

@@ -788,11 +788,17 @@ const make = Effect.gen(function* () {
         : secretStore.remove("jev-api-key")
     ).pipe(
       Effect.mapError(
-        (cause) => new ServerSettingsError({ settingsPath, operation: "write-secret", cause }),
+        (cause) =>
+          new ServerSettingsError({
+            settingsPath,
+            operation: apiKey ? "write-secret" : "remove-secret",
+            cause,
+          }),
       ),
     );
+    // Scoped cleanup can die after the rename committed; only write errors require rollback.
     yield* writeSettingsAtomically(next).pipe(
-      Effect.catchCause((failure) =>
+      Effect.catch((failure) =>
         Effect.gen(function* () {
           yield* Option.match(previous, {
             onNone: () => secretStore.remove("jev-api-key"),
@@ -803,7 +809,7 @@ const make = Effect.gen(function* () {
                 new ServerSettingsError({ settingsPath, operation: "write-secret", cause }),
             ),
           );
-          return yield* Effect.failCause(failure);
+          return yield* failure;
         }),
       ),
     );
