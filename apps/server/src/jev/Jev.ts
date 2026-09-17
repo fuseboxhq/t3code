@@ -119,6 +119,7 @@ export const layer = Layer.effect(
       }
       return result;
     });
+    // Bound the whole request, including time waiting for an available permit.
     return Jev.of({
       evaluate: (input) =>
         permits
@@ -127,7 +128,9 @@ export const layer = Layer.effect(
             Effect.timeout("30 seconds"),
             Effect.catchTag("TimeoutError", () =>
               Effect.fail(
-                new JevError({ message: "Jev evaluation timed out. Try again with less context." }),
+                new JevError({
+                  message: "Jev request timed out while waiting or evaluating. Try again later.",
+                }),
               ),
             ),
           ),

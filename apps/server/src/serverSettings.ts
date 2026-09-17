@@ -733,28 +733,8 @@ const make = Effect.gen(function* () {
           );
       }
 
-      let jev = next.jev;
-      if (jev.apiKey !== JEV_API_KEY_REDACTED) {
-        const apiKey = jev.apiKey.trim();
-        yield* (
-          apiKey
-            ? secretStore.set("jev-api-key", textEncoder.encode(apiKey))
-            : secretStore.remove("jev-api-key")
-        ).pipe(
-          Effect.mapError(
-            (cause) =>
-              new ServerSettingsError({
-                settingsPath,
-                operation: apiKey ? "write-secret" : "remove-secret",
-                cause,
-              }),
-          ),
-        );
-        jev = { ...jev, apiKey: apiKey ? JEV_API_KEY_REDACTED : "" };
-      }
       return {
         ...next,
-        jev,
         providerInstances: providerInstances as ServerSettings["providerInstances"],
         usageLimitSources: usageLimitSources as ServerSettings["usageLimitSources"],
       };
@@ -783,6 +763,52 @@ const make = Effect.gen(function* () {
         }),
     ),
   );
+
+  /** Restore the previous key if committing the settings file fails. */
+  const writeSettingsWithJevKey = Effect.fnUntraced(function* (settings: ServerSettings) {
+    if (settings.jev.apiKey === JEV_API_KEY_REDACTED) {
+      yield* writeSettingsAtomically(settings);
+      return settings;
+    }
+    const previous = yield* secretStore
+      .get("jev-api-key")
+      .pipe(
+        Effect.mapError(
+          (cause) => new ServerSettingsError({ settingsPath, operation: "read-secret", cause }),
+        ),
+      );
+    const apiKey = settings.jev.apiKey.trim();
+    const next = {
+      ...settings,
+      jev: { ...settings.jev, apiKey: apiKey ? JEV_API_KEY_REDACTED : "" },
+    };
+    yield* (
+      apiKey
+        ? secretStore.set("jev-api-key", textEncoder.encode(apiKey))
+        : secretStore.remove("jev-api-key")
+    ).pipe(
+      Effect.mapError(
+        (cause) => new ServerSettingsError({ settingsPath, operation: "write-secret", cause }),
+      ),
+    );
+    yield* writeSettingsAtomically(next).pipe(
+      Effect.catchCause((failure) =>
+        Effect.gen(function* () {
+          yield* Option.match(previous, {
+            onNone: () => secretStore.remove("jev-api-key"),
+            onSome: (key) => secretStore.set("jev-api-key", key),
+          }).pipe(
+            Effect.mapError(
+              (cause) =>
+                new ServerSettingsError({ settingsPath, operation: "write-secret", cause }),
+            ),
+          );
+          return yield* Effect.failCause(failure);
+        }),
+      ),
+    );
+    return next;
+  }, Effect.uninterruptible);
 
   const revalidateAndEmit = writeSemaphore.withPermits(1)(
     Effect.gen(function* () {
@@ -867,8 +893,8 @@ const make = Effect.gen(function* () {
             current,
             applyServerSettingsPatch(current, patch),
           );
-          const next = yield* normalizeServerSettings(nextPersisted);
-          yield* writeSettingsAtomically(next);
+          const normalized = yield* normalizeServerSettings(nextPersisted);
+          const next = yield* writeSettingsWithJevKey(normalized);
           yield* Cache.set(settingsCache, cacheKey, next);
           yield* emitChange(next);
           const materialized = yield* materializeProviderEnvironmentSecrets(next);

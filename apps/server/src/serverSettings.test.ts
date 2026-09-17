@@ -1154,4 +1154,48 @@ it.layer(NodeServices.layer)("server settings", (it) => {
         assert.equal(Option.isNone(removed), true);
       }).pipe(Effect.provide(makeServerSettingsLayer())),
   );
+  it.effect("restores Jev secrets when the settings file cannot be committed", () =>
+    Effect.gen(function* () {
+      const config = yield* ServerConfig.ServerConfig;
+      const fs = yield* FileSystem.FileSystem;
+      let rejectCommit = false;
+      const failingFs = FileSystem.FileSystem.of({
+        ...fs,
+        rename: (from, to) =>
+          rejectCommit && to === config.settingsPath
+            ? Effect.fail(
+                PlatformError.systemError({
+                  _tag: "PermissionDenied",
+                  module: "FileSystem",
+                  method: "rename",
+                  pathOrDescriptor: to,
+                  description: "Settings commit rejected for test.",
+                }),
+              )
+            : fs.rename(from, to),
+      });
+      yield* Effect.gen(function* () {
+        const settings = yield* ServerSettingsModule.ServerSettingsService;
+        const secrets = yield* ServerSecretStore.ServerSecretStore;
+        rejectCommit = true;
+        yield* Effect.flip(settings.updateSettings({ jev: { apiKey: "first" } }));
+        assert.isTrue(Option.isNone(yield* secrets.get("jev-api-key")));
+        rejectCommit = false;
+        yield* settings.updateSettings({ jev: { enabled: true, apiKey: "original" } });
+        const originalFile = yield* fs.readFileString(config.settingsPath);
+        rejectCommit = true;
+        for (const apiKey of ["replacement", ""]) {
+          const error = yield* Effect.flip(settings.updateSettings({ jev: { apiKey } }));
+          assert.equal(error.operation, "write-file");
+          assert.equal((yield* settings.getSettings).jev.apiKey, "original");
+          assert.equal(yield* fs.readFileString(config.settingsPath), originalFile);
+        }
+      }).pipe(
+        Effect.provide(
+          Layer.fresh(ServerSettingsModule.layer.pipe(Layer.provideMerge(ServerSecretStore.layer))),
+        ),
+        Effect.provideService(FileSystem.FileSystem, failingFs),
+      );
+    }).pipe(Effect.provide(makeServerSettingsLayer())),
+  );
 });
